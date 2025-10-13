@@ -8,12 +8,12 @@ Created on Fri Mar 28 18:08:47 2025
 """
 
 import numpy as np
-import zernike as zer
-from lmfit_thiebaut import lmfit
-from utilib import regress, grint, rrint, line, let_me_stop_here
-import elt_pupil_simplified as eltps
-from long_messages import msg_high_ndof, msg_low_ndof, msg_huge_ndof
-from long_messages import msg_limited_zernike_basis, msg_shannon_violated
+from . import zernike as zer
+from .lmfit_thiebaut import lmfit
+from .utilib import regress, grint, rrint, line, let_me_stop_here
+from . import elt_pupil_simplified as eltps
+from .long_messages import msg_high_ndof, msg_low_ndof, msg_huge_ndof
+from .long_messages import msg_limited_zernike_basis, msg_shannon_violated
 
 import matplotlib.pyplot as plt
 plt.ion() # interactive mode on, no need for plt.show() any more

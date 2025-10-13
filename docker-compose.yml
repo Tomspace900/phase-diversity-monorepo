@@ -1,0 +1,48 @@
+# Docker Compose - Production Configuration
+# Phase Diversity Web Application
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phase-diversity-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist session storage
+      - ./backend/app/storage:/app/app/storage
+    environment:
+      - PYTHONUNBUFFERED=1
+      - STORAGE_PATH=/app/app/storage
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: phase-diversity-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+networks:
+  default:
+    name: phase-diversity-network

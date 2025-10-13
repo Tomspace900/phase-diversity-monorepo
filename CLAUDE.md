@@ -2,111 +2,364 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🔬 Project Philosophy
+
+**This is a RESEARCH TOOL, not a production application.**
+
+**Target Users:** Astronomers and astrophysicists who are Python experts and domain specialists.
+
+**Purpose:** Experimental/iterative research environment where scientists can:
+- Test and iterate on phase diversity algorithms
+- Visualize results in real-time through a web interface
+- Modify and experiment with the core algorithm as needed
+
+**Design Principles:**
+- ✅ **Simplicity over security** - No .env files, no CORS restrictions, no production complexity
+- ✅ **Flexibility over robustness** - Scientists need to experiment freely
+- ✅ **Transparency over polish** - Show all logs, expose all internals
+- ❌ **NOT for public deployment** - Runs locally or on trusted research networks
+- ❌ **NO security hardening** - Users are trusted experts with their own data
+
 ## Overview
 
-This is a Python implementation of phase diversity analysis for optical systems. The code performs phase retrieval from defocused focal plane images using Levenberg-Marquardt optimization to recover wavefront aberrations.
+This is a **scientific research tool** for phase diversity analysis in optical systems.
 
-## Core Architecture
+### Architecture
 
-### Main Module: `diversity.py`
+- **Backend**: FastAPI (Python 3.13) wrapping the phase diversity algorithm
+- **Frontend**: React with TypeScript for interactive visualization
+- **Core Algorithm**: Pure Python implementation in `backend/app/core/`
 
-This is the primary module containing the `Opticsetup` class, which models the entire optical system and performs phase retrieval.
+**⚠️ CRITICAL: The core algorithm is the RESEARCH SUBJECT - scientists will modify it!**
 
-**Key class: `Opticsetup`**
-- Encapsulates the complete optical model including pupil geometry, defocus coefficients, illumination, and wavefront representation
-- The phase is represented using modal decomposition (eigenmodes, Zernike, or zonal basis)
-- Image formation is computed via Fourier optics (FFT-based convolution)
-- The `search_phase()` method (diversity.py:1038) performs the fit using Levenberg-Marquardt optimization
+The application performs phase retrieval from defocused focal plane images using Levenberg-Marquardt optimization to recover wavefront aberrations.
 
-**Critical methods:**
-- `search_phase()`: Main fitting function that retrieves phase from defocused images
-- `psf()`: Computes PSF images from phase coefficients via Fourier propagation
-- `phase_generator()`: Converts modal coefficients to zonal (pixel-based) phase representation
-- `pupilModel()`: Generates pupil transmission function with support for disk, polygon, and ELT geometries
+## Project Structure
 
-### Phase Representation Basis
+### Monorepo Architecture
 
-The phase can be represented in three ways (selected via `basis` parameter):
-- `'eigen'`/`'eigenfull'`: Eigenmodes from covariance matrix diagonalization (lines 400-427)
-- `'zernike'`: Classical Zernike polynomials (lines 428-438)
-- `'zonal'`: Direct pixel representation (lines 441-456, experimental)
-
-The basis is computed at initialization and stored in `self.phase_basis`. Eigenmodes are preferred for most pupil shapes but become expensive for >1000 phase pixels.
-
-### Optimization Framework
-
-**lmfit_thiebaut.py**
-- Levenberg-Marquardt minimization adapted from Eric Thiébaut's Yorick implementation
-- The function `compute_psfs()` in diversity.py:1243 is the model that gets optimized
-- Parameters are encoded/decoded using `encode_coefficients()` and `decode_coefficients()` (lines 766-842)
-- Redundant degrees of freedom (e.g., tip-tilt vs optical axis shift) are automatically detected and resolved in `manage_fitting_flags()` (lines 846-931)
-
-### Supporting Modules
-
-- **zernike.py**: Computes Zernike polynomials using Noll indexing
-- **utilib.py**: Utility functions (regression, colored printing, formatting)
-- **elt_pupil_simplified.py**: Specialized ELT pupil geometry
-- **long_messages.py**: Warning messages for various edge cases
-- **test/test.py**: Test harness for debugging (not for production use per README)
-
-## Key Conventions
-
-**Image indexing**: Uses `[x, y]` convention where x is horizontal (first index) and y is vertical (second index). All images must be displayed with `.T` and `origin='lower'` in matplotlib.
-
-**Units**: All physical quantities use SI units (meters for wavelengths, distances, pixel sizes).
-
-**FFT centering**: Images are stored FFT-shifted so the center is at the four corners (for FFT efficiency). Use `np.fft.fftshift()` when displaying.
-
-**Phase units**: Internally represented in radians RMS of modal coefficients, converted to nm for display.
-
-## Common Development Commands
-
-This repository has no build system, linting, or test framework configured. Development is done directly with Python.
-
-**Running phase retrieval:**
-```python
-import diversity as div
-# Create optical setup from image data
-mysetup = div.Opticsetup(img_collection, xc=None, yc=None, N=64,
-                         defoc_z=[0.0, -0.5e-3, 1.0e-3],
-                         pupilType=0, flattening=1.0, obscuration=0.12,
-                         angle=0.0, nedges=0, spiderAngle=0.0,
-                         spiderArms=[], spiderOffset=[],
-                         illum=[1.0], wvl=550e-9, fratio=18.0,
-                         pixelSize=7.4e-6, edgeblur_percent=3.0,
-                         object_fwhm_pix=0.0, basis='eigen', Jmax=55)
-
-# Perform phase retrieval
-mysetup.search_phase(phase_flag=True, amplitude_flag=True,
-                     optax_flag=True, verbose=True)
-
-# Visualize results
-div.visualize_images(mysetup, alpha=0.5)
+```
+phase-diversity/
+├── backend/                    # FastAPI Backend (Python 3.13)
+│   ├── app/
+│   │   ├── main.py            # FastAPI app: REST API + WebSocket
+│   │   ├── core/              # Research algorithm - scientists modify this
+│   │   │   ├── diversity.py   # Main Opticsetup class
+│   │   │   ├── zernike.py
+│   │   │   ├── lmfit_thiebaut.py
+│   │   │   └── ...
+│   │   └── storage/           # Session JSON files (gitignored)
+│   ├── requirements.txt       # Python dependencies
+│   └── Dockerfile
+│
+├── frontend/                   # React + TypeScript Frontend
+│   ├── src/
+│   │   ├── main.tsx           # Entry point
+│   │   ├── App.tsx            # Root with routing
+│   │   ├── api.ts             # Typed API client
+│   │   └── pages/             # TypeScript pages
+│   │       ├── HomePage.tsx
+│   │       ├── ResultsPage.tsx
+│   │       └── SessionsPage.tsx
+│   ├── package.json           # Latest versions (React 18.3, TS 5.7, Vite 6)
+│   ├── tsconfig.json
+│   └── vite.config.ts
+│
+└── scripts/                   # Development automation
+    ├── setup.sh              # Install all dependencies
+    ├── dev.sh                # Start both servers
+    └── clean.sh              # Clean build artifacts
 ```
 
-**Displaying results:**
-```python
-import matplotlib.pyplot as plt
-# View cropped input image (FFT-shifted)
-plt.imshow(mysetup.img[0].T, origin='lower', cmap='gray')
+## Technology Stack
 
-# View pupil
-plt.imshow(mysetup.pupilmap.T, origin='lower', cmap='gray')
+### Backend
 
-# View retrieved phase as 2D map
-phase_map = mysetup.mappy(mysetup.phase_generator(mysetup.phase))
-plt.imshow(phase_map.T, origin='lower', cmap='gray')
+- **FastAPI 0.115.6** - Modern async web framework
+- **Python 3.10+** - Type hints and modern features
+- **NumPy 1.26.4, SciPy 1.14.1** - Scientific computing
+- **Pydantic 2.10.3** - Data validation
+- **WebSockets 14.1** - Real-time logging
+
+### Frontend
+
+- **React 18.3.1** + **TypeScript 5.7.2** - Type-safe UI
+- **Vite 6.0.3** - Fast build tool with HMR
+- **TailwindCSS 3.4.17** - Utility-first CSS
+- **React Router 7.1.1** - Client routing
+- **Plotly.js 2.35.2** - Interactive plots
+
+## Quick Start
+
+```bash
+# Install (once)
+./scripts/setup.sh
+
+# Develop
+./scripts/dev.sh
+# → Frontend: http://localhost:5173
+# → Backend:  http://localhost:8000
+# → API Docs: http://localhost:8000/docs
+```
+
+## Backend Architecture
+
+### API Endpoints ([backend/app/main.py](backend/app/main.py))
+
+```
+POST /api/upload              # Upload FITS/NPY images → session_id
+POST /api/setup               # Configure Opticsetup
+POST /api/search              # Launch phase retrieval
+GET  /api/results/{id}        # Get results
+GET  /api/sessions            # List sessions
+WS   /ws/logs                 # Real-time logging
+```
+
+### Core Algorithm (backend/app/core/)
+
+**⚠️ THIS IS THE RESEARCH CODE - Scientists WILL modify it!**
+
+The files in `backend/app/core/` contain the phase diversity algorithm that researchers are actively working on.
+
+**Core files:**
+
+- `diversity.py` - Opticsetup class, search_phase() at line 1038
+- `zernike.py` - Zernike polynomials (Noll indexing)
+- `lmfit_thiebaut.py` - Levenberg-Marquardt optimizer
+- `utilib.py`, `elt_pupil_simplified.py`, `long_messages.py`
+
+**Python 3.13 Compatibility:**
+- Uses relative imports (e.g., `from . import zernike`) for package structure
+- NumPy 2.1.3+ with pre-built wheels for fast installation
+- All core modules use package-relative imports
+
+**For AI assistants:**
+- Help scientists understand, debug, and improve the algorithm
+- Suggest optimizations and refactorings when relevant
+- Explain the math and physics when asked
+- Don't assume the algorithm is "frozen" - it's meant to evolve!
+
+**Phase Basis Options:**
+
+- `'eigen'` - Eigenmodes (preferred, fast for <1000 pixels)
+- `'zernike'` - Classical Zernike polynomials
+- `'zonal'` - Direct pixel representation (experimental)
+
+**Key Conventions:**
+
+- Image indexing: `[x, y]` (x=horizontal, y=vertical)
+- Display with matplotlib: `.T` and `origin='lower'`
+- Units: SI (meters for λ, distances, pixel sizes)
+- FFT: Images FFT-shifted (center at corners)
+- Phase: Radians RMS internally, nm for display
+
+## Frontend Architecture (TypeScript)
+
+### Type System ([frontend/src/api.ts](frontend/src/api.ts))
+
+**All API interactions fully typed:**
+
+```typescript
+interface SetupParams {
+  session_id: string;
+  defoc_z: number[];
+  pupilType: number;
+  wvl: number; // Wavelength in meters
+  fratio: number;
+  basis: "eigen" | "eigenfull" | "zernike" | "zonal";
+  Jmax: number;
+  // ... more fields
+}
+
+interface PhaseResults {
+  phase: number[]; // Modal coefficients
+  phase_map: number[][]; // 2D phase map
+  pupilmap: number[][]; // Pupil function
+  amplitude: number[];
+  background: number[];
+  // ...
+}
+```
+
+### React Pages (TypeScript)
+
+1. **HomePage.tsx** - 3-step workflow:
+
+   - Upload images (FITS/NPY)
+   - Configure optical parameters
+   - Launch phase search with flags
+
+2. **ResultsPage.tsx** - Visualize results:
+
+   - Plotly.js phase/pupil maps
+   - Numerical coefficients
+   - Fitted parameters
+
+3. **SessionsPage.tsx** - Session management:
+   - List saved sessions
+   - Navigate to results
+
+### Styling
+
+**TailwindCSS custom theme:**
+
+- `science-blue`: #0066cc
+- `science-dark`: #1a1a2e
+- `science-accent`: #00d4ff
+
+## Development Tasks
+
+### Add New API Endpoint
+
+1. Define Pydantic model in `backend/app/main.py`
+2. Add endpoint with type annotations
+3. Update frontend types in `api.ts`
+4. TypeScript will enforce type safety
+
+### Add New Frontend Page
+
+1. Create `NewPage.tsx` in `frontend/src/pages/`
+2. Add route in `App.tsx`:
+   ```tsx
+   <Route path="/new" element={<NewPage />} />
+   ```
+3. Add navigation link
+
+### Update Dependencies
+
+**Backend:**
+
+```bash
+cd backend && source venv/bin/activate
+pip install --upgrade <package>
+pip freeze > requirements.txt
+```
+
+**Frontend:**
+
+```bash
+cd frontend
+npm update              # Minor updates
+npm install pkg@latest  # Major updates
+```
+
+## TypeScript Development
+
+```bash
+cd frontend
+
+# Type check (no compilation)
+npm run type-check
+
+# Lint
+npm run lint
+
+# Build (includes type check)
+npm run build
+```
+
+## Docker Deployment (Optional)
+
+```bash
+# Development with hot reload
+docker-compose -f docker-compose.dev.yml up
+
+# Standard deployment
+docker-compose up -d
 ```
 
 ## Important Implementation Details
 
-**Parameter redundancy**: The code automatically detects and resolves redundant parameters (diversity.py:873-924). For example:
-- Tip/tilt in phase vs. optical axis position per image
-- Defocus in phase vs. defocus_z values vs. focus scale factor
-- Illumination piston vs. amplitude scaling
+### Parameter Redundancy
 
-**Pupil sampling**: The pupil diameter in pixels is computed to match the plate scale of the images after FFT (diversity.py:616-629). Formula: `pdiam = N / (fratio * wavelength / pixelSize)`
+Auto-detected and resolved (diversity.py:873-924):
 
-**Computation vs. data size**: If data images are smaller than computation size N, the data is cropped from larger computed PSFs. If larger, computation uses data size.
+- Tip/tilt vs optical axis shifts
+- Defocus in phase vs defoc_z values
+- Illumination piston vs amplitude
 
-**Weight estimation**: When `estimate_snr=True`, the code estimates photon noise and read noise to compute optimal weights for least-squares fitting (diversity.py:993-1036).
+### Pupil Sampling
+
+```python
+pdiam = N / (fratio * wavelength / pixelSize)
+```
+
+Ensures correct plate scale after FFT.
+
+### Weight Estimation
+
+When `estimate_snr=True`: estimates photon/read noise for optimal least-squares weights.
+
+## Code Style
+
+### Backend (Python)
+
+- PEP 8 compliance
+- Type hints (Python 3.10+)
+- Docstrings for public functions
+
+### Frontend (TypeScript)
+
+- TypeScript strict mode
+- Interfaces for all data structures
+- Functional components (React.FC)
+- Arrow functions, const over let
+
+## Debugging
+
+### Backend
+
+- Check terminal logs
+- Use `/docs` for API testing
+- Add `logger.info()` or `print()`
+
+### Frontend
+
+- Browser DevTools (F12)
+- React DevTools extension
+- TypeScript errors in terminal during `npm run dev`
+
+### WebSocket
+
+- Check browser console
+- Test at `ws://localhost:8000/ws/logs`
+- Use "WebSocket King" extension
+
+## Troubleshooting
+
+### TypeScript Errors
+
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+npm run type-check
+```
+
+### Backend Won't Start
+
+- Python 3.10+? `python3 --version`
+- Venv activated? `source backend/venv/bin/activate`
+- Port 8000 free? `lsof -i :8000`
+
+### Frontend Won't Start
+
+- Node 18+? `node --version`
+- Port 5173 free? `lsof -i :5173`
+- Try: `rm -rf node_modules && npm install`
+
+## Resources
+
+- [FastAPI Docs](https://fastapi.tiangolo.com/)
+- [React Docs](https://react.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Vite Docs](https://vitejs.dev/)
+- [TailwindCSS Docs](https://tailwindcss.com/)
+
+## Version Info
+
+- Backend: Python 3.10+, FastAPI 0.115.6
+- Frontend: Node 18+, React 18.3.1, TypeScript 5.7.2
+- Core: Original implementation (preserved)
+
+**Last updated:** January 2025

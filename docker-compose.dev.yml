@@ -1,0 +1,54 @@
+# Docker Compose - Development Configuration
+# Phase Diversity Web Application
+#
+# Run with: docker-compose -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: phase-diversity-backend-dev
+    command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for hot reload
+      - ./backend/app:/app/app
+      - ./backend/app/storage:/app/app/storage
+    environment:
+      - PYTHONUNBUFFERED=1
+      - STORAGE_PATH=/app/app/storage
+      - WATCHFILES_FORCE_POLLING=true  # For better file watching in Docker
+    stdin_open: true
+    tty: true
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: phase-diversity-frontend-dev
+    command: npm run dev -- --host
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.js:/app/vite.config.js
+      # Avoid mounting node_modules to prevent conflicts
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
+
+networks:
+  default:
+    name: phase-diversity-dev-network
