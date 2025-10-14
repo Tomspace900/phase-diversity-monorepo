@@ -47,6 +47,8 @@ class OpticSetupParams(BaseModel):
     """Parameters for creating an Opticsetup instance"""
 
     session_id: str
+    xc: Optional[int] = None
+    yc: Optional[int] = None
     N: Optional[int] = None
     defoc_z: List[float] = Field(..., description="Defocus values in meters")
     pupilType: int = Field(0, description="0: disk, 1: polygon, 2: ELT")
@@ -405,6 +407,9 @@ async def configure_setup(params: OpticSetupParams):
     """
     Configure an Opticsetup instance with the provided parameters.
     Requires a session_id from a previous upload.
+
+    Returns pupil preview images and detailed configuration info including
+    sampling warnings and degrees of freedom.
     """
     try:
         if params.session_id not in sessions:
@@ -413,42 +418,107 @@ async def configure_setup(params: OpticSetupParams):
         session = sessions[params.session_id]
         logger.info(f"⚙️  Configuring setup for session: {params.session_id}")
 
-        # Create Opticsetup instance
-        opticsetup = div.Opticsetup(
-            img_collection=session["img_collection"],
-            xc=session["xc"],
-            yc=session["yc"],
-            N=params.N,
-            defoc_z=params.defoc_z,
-            pupilType=params.pupilType,
-            flattening=params.flattening,
-            obscuration=params.obscuration,
-            angle=params.angle,
-            nedges=params.nedges,
-            spiderAngle=params.spiderAngle,
-            spiderArms=params.spiderArms,
-            spiderOffset=params.spiderOffset,
-            illum=params.illum,
-            wvl=params.wvl,
-            fratio=params.fratio,
-            pixelSize=params.pixelSize,
-            edgeblur_percent=params.edgeblur_percent,
-            object_fwhm_pix=params.object_fwhm_pix,
-            object_shape=params.object_shape,
-            basis=params.basis,
-            Jmax=params.Jmax,
-        )
+        # Use xc/yc from params if provided, otherwise from session
+        xc = params.xc if params.xc is not None else session["xc"]
+        yc = params.yc if params.yc is not None else session["yc"]
 
+        # Create Opticsetup instance with stdin mocked to avoid interactive prompts
+        # The core algorithm (diversity.py) uses input() for warnings - we auto-accept in API mode
+        from io import StringIO
+
+        old_stdin = sys.stdin
+        try:
+            # Mock stdin to return 'y' automatically to any input() call
+            # This simulates user accepting all prompts
+            sys.stdin = StringIO('y\n' * 100)  # Enough 'y' answers for any number of prompts
+
+            opticsetup = div.Opticsetup(
+                img_collection=session["img_collection"],
+                xc=xc,
+                yc=yc,
+                N=params.N,
+                defoc_z=params.defoc_z,
+                pupilType=params.pupilType,
+                flattening=params.flattening,
+                obscuration=params.obscuration,
+                angle=params.angle,
+                nedges=params.nedges,
+                spiderAngle=params.spiderAngle,
+                spiderArms=params.spiderArms,
+                spiderOffset=params.spiderOffset,
+                illum=params.illum,
+                wvl=params.wvl,
+                fratio=params.fratio,
+                pixelSize=params.pixelSize,
+                edgeblur_percent=params.edgeblur_percent,
+                object_fwhm_pix=params.object_fwhm_pix,
+                object_shape=params.object_shape,
+                basis=params.basis,
+                Jmax=params.Jmax,
+            )
+        finally:
+            # Restore original stdin
+            sys.stdin = old_stdin
+            logger.info("✅ Opticsetup created successfully (auto-accepted any warnings)")
+
+        # Generate pupil preview images
+        pupil_image = generate_thumbnail(opticsetup.pupilmap, size=256)
+
+        # Generate illumination map (pupil × illumination)
+        illumination_map = opticsetup.mappy(opticsetup.pupillum)
+        illumination_image = generate_thumbnail(illumination_map, size=256)
+
+        # Calculate sampling factor
+        sampling_factor = params.wvl * params.fratio / params.pixelSize
+
+        # Get number of phase points
+        nphi = opticsetup.idx[0].size
+
+        # Determine number of phase modes based on basis type
+        if opticsetup.basis_type in ['eigen', 'zernike']:
+            phase_modes = opticsetup.phase_basis.shape[1]
+        elif opticsetup.basis_type == 'eigenfull':
+            phase_modes = opticsetup.phase_basis.shape[1]
+        else:  # zonal
+            phase_modes = nphi
+
+        # Generate warnings
+        warnings = []
+        if sampling_factor < 2.0:
+            warnings.append(f"⚠️ Shannon sampling violated: {sampling_factor:.2f} < 2.0")
+        else:
+            warnings.append(f"✓ Shannon sampling OK: {sampling_factor:.2f}")
+
+        if nphi > 4000:
+            warnings.append(f"⚠️ High DoF count: {nphi} phase points (may be slow)")
+
+        if nphi < 100:
+            warnings.append(f"⚠️ Low DoF count: {nphi} phase points (limited accuracy)")
+
+        # Save to session
         session["opticsetup"] = opticsetup
         session["params"] = params.model_dump()
+        session["xc"] = xc
+        session["yc"] = yc
 
         logger.info(f"✅ Setup configured successfully")
+        logger.info(f"   pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}")
 
         return {
+            "success": True,
             "session_id": params.session_id,
-            "message": "Opticsetup configured successfully",
-            "pupil_diameter_pixels": opticsetup.pdiam,
-            "computation_size": opticsetup.N,
+            "pupil_image": pupil_image,
+            "illumination_image": illumination_image,
+            "info": {
+                "pdiam": float(opticsetup.pdiam),
+                "nphi": int(nphi),
+                "sampling_factor": float(sampling_factor),
+                "computation_format": f"{opticsetup.N}x{opticsetup.N}",
+                "data_format": f"{opticsetup.Ncrop}x{opticsetup.Ncrop}",
+                "basis_type": opticsetup.basis_type,
+                "phase_modes": int(phase_modes),
+            },
+            "warnings": warnings,
         }
 
     except Exception as e:

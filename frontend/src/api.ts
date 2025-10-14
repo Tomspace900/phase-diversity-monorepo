@@ -23,6 +23,60 @@ export interface UploadResponse {
   message: string;
 }
 
+export interface OpticSetupConfig {
+  session_id: string;
+
+  // Images
+  xc?: number;
+  yc?: number;
+  N?: number;
+  defoc_z: number[];
+
+  // Pupil
+  pupilType: number;
+  flattening: number;
+  obscuration: number;
+  angle: number;
+  nedges: number;
+  spiderAngle: number;
+  spiderArms: number[];
+  spiderOffset: number[];
+  illum: number[];
+
+  // Optics
+  wvl: number;
+  fratio: number;
+  pixelSize: number;
+  edgeblur_percent: number;
+
+  // Object
+  object_fwhm_pix: number;
+  object_shape: 'gaussian' | 'disk' | 'square';
+
+  // Phase basis
+  basis: 'eigen' | 'eigenfull' | 'zernike' | 'zonal';
+  Jmax: number;
+}
+
+export interface ConfigureResponse {
+  success: boolean;
+  session_id: string;
+  pupil_image: string;
+  illumination_image: string;
+  info: {
+    pdiam: number;
+    nphi: number;
+    sampling_factor: number;
+    computation_format: string;
+    data_format: string;
+    basis_type: string;
+    phase_modes: number;
+  };
+  warnings: string[];
+}
+
+// Legacy interface for backward compatibility (deprecated)
+/** @deprecated Use OpticSetupConfig instead */
 export interface SetupParams {
   session_id: string;
   defoc_z: number[];
@@ -37,6 +91,8 @@ export interface SetupParams {
   Jmax: number;
 }
 
+// Legacy interface for backward compatibility (deprecated)
+/** @deprecated Use ConfigureResponse instead */
 export interface SetupResponse {
   status: string;
   pupil_diameter_pixels: number;
@@ -106,15 +162,15 @@ export const uploadImages = async (formData: FormData): Promise<UploadResponse> 
 };
 
 /**
- * Configure optical setup parameters
+ * Configure optical setup parameters and get pupil preview
  */
-export const configureSetup = async (params: SetupParams): Promise<SetupResponse> => {
+export const configureSetup = async (config: OpticSetupConfig): Promise<ConfigureResponse> => {
   const response = await fetch(`${API_URL}/api/setup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(params),
+    body: JSON.stringify(config),
   });
 
   if (!response.ok) {
