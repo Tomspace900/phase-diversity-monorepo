@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 FastAPI Backend for Phase Diversity Web Application
-
-This module wraps the existing phase diversity Python code into a REST API
-with WebSocket support for real-time logging.
+Stateless compute gateway - all state managed by frontend
 """
 
 import io
 import sys
-import json
-import uuid
 import base64
 import logging
-from pathlib import Path
-from typing import Dict, List, Optional, Any
+import time
+from typing import List, Optional
 from contextlib import asynccontextmanager
 
 import numpy as np
@@ -23,10 +18,8 @@ from fastapi import FastAPI, File, UploadFile, WebSocket, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-# Import the existing phase diversity code
 from app.core import diversity as div
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -34,81 +27,61 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Storage directory for sessions
-STORAGE_DIR = Path(__file__).parent / "storage"
-STORAGE_DIR.mkdir(exist_ok=True)
-
-# WebSocket connections for live logging
 active_websockets: List[WebSocket] = []
 
 
-# Pydantic models for API
-class OpticSetupParams(BaseModel):
-    """Parameters for creating an Opticsetup instance"""
-
-    session_id: str
-    xc: Optional[int] = None
-    yc: Optional[int] = None
-    N: Optional[int] = None
+class OpticalConfigRequest(BaseModel):
+    xc: Optional[int] = Field(None, description="Center x coordinate (auto-detect if None)")
+    yc: Optional[int] = Field(None, description="Center y coordinate (auto-detect if None)")
+    N: Optional[int] = Field(None, description="Computation size (auto-detect if None)")
     defoc_z: List[float] = Field(..., description="Defocus values in meters")
     pupilType: int = Field(0, description="0: disk, 1: polygon, 2: ELT")
-    flattening: float = 1.0
-    obscuration: float = 0.0
-    angle: float = 0.0
-    nedges: int = 0
-    spiderAngle: float = 0.0
-    spiderArms: List[float] = Field(default_factory=list)
-    spiderOffset: List[float] = Field(default_factory=list)
-    illum: List[float] = Field(default_factory=lambda: [1.0])
+    flattening: float = Field(1.0, description="Pupil flattening (ellipticity)")
+    obscuration: float = Field(0.0, description="Central obscuration ratio")
+    angle: float = Field(0.0, description="Pupil rotation angle in degrees")
+    nedges: int = Field(0, description="Number of polygon edges (if pupilType=1)")
+    spiderAngle: float = Field(0.0, description="Spider rotation angle in degrees")
+    spiderArms: List[float] = Field(default_factory=list, description="Spider arm widths")
+    spiderOffset: List[float] = Field(default_factory=list, description="Spider arm offsets")
+    illum: List[float] = Field(default_factory=lambda: [1.0], description="Illumination per image")
     wvl: float = Field(550e-9, description="Wavelength in meters")
-    fratio: float = 18.0
+    fratio: float = Field(18.0, description="Focal ratio (f-number)")
     pixelSize: float = Field(7.4e-6, description="Pixel size in meters")
-    edgeblur_percent: float = 3.0
-    object_fwhm_pix: float = 0.0
-    object_shape: str = "gaussian"
-    basis: str = "eigen"
-    Jmax: int = 55
+    edgeblur_percent: float = Field(3.0, description="Edge blur percentage")
+    object_fwhm_pix: float = Field(0.0, description="Object FWHM in pixels (0 = point source)")
+    object_shape: str = Field("gaussian", description="Object shape: gaussian, airy, etc.")
+    basis: str = Field("eigen", description="Phase basis: eigen, eigenfull, zernike, or zonal")
+    Jmax: int = Field(55, description="Maximum number of phase modes")
 
 
-class SearchPhaseParams(BaseModel):
-    """Parameters for phase search"""
-
-    session_id: str
-    defoc_z_flag: bool = False
-    focscale_flag: bool = False
-    optax_flag: bool = False
-    amplitude_flag: bool = True
-    background_flag: bool = False
-    phase_flag: bool = True
-    illum_flag: bool = False
-    objsize_flag: bool = False
-    estimate_snr: bool = False
-    verbose: bool = True
-    tolerance: float = 1e-5
+class PreviewConfigRequest(BaseModel):
+    images: List[List[List[float]]] = Field(..., description="3D image array [N, H, W]")
+    config: OpticalConfigRequest
 
 
-class SessionInfo(BaseModel):
-    """Information about a saved session"""
-
-    session_id: str
-    created_at: str
-    params: Dict[str, Any]
-    has_results: bool
-
-
-# In-memory storage for active sessions
-sessions: Dict[str, Dict] = {}
+class SearchPhaseRequest(BaseModel):
+    images: List[List[List[float]]] = Field(..., description="3D image array [N, H, W]")
+    config: OpticalConfigRequest
+    defoc_z_flag: bool = Field(False, description="Fit defocus distances")
+    focscale_flag: bool = Field(False, description="Fit focal scale")
+    optax_flag: bool = Field(False, description="Fit optical axis shifts")
+    amplitude_flag: bool = Field(True, description="Fit image amplitudes")
+    background_flag: bool = Field(False, description="Fit background levels")
+    phase_flag: bool = Field(True, description="Fit phase aberrations")
+    illum_flag: bool = Field(False, description="Fit illumination")
+    objsize_flag: bool = Field(False, description="Fit object size")
+    estimate_snr: bool = Field(False, description="Estimate SNR for optimal weighting")
+    verbose: bool = Field(True, description="Verbose output")
+    tolerance: float = Field(1e-5, description="Convergence tolerance")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events"""
     logger.info("🚀 Phase Diversity API starting up...")
     yield
     logger.info("👋 Phase Diversity API shutting down...")
 
 
-# Create FastAPI app
 app = FastAPI(
     title="Phase Diversity API",
     description="REST API for optical phase retrieval from defocused images",
@@ -116,7 +89,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS - Allow all origins (research tool, not for public deployment)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -126,10 +98,7 @@ app.add_middleware(
 )
 
 
-# Custom logging handler to broadcast to WebSockets
 class WebSocketHandler(logging.Handler):
-    """Logging handler that broadcasts to all connected WebSockets"""
-
     async def emit_async(self, record):
         msg = self.format(record)
         disconnected = []
@@ -139,13 +108,11 @@ class WebSocketHandler(logging.Handler):
             except Exception:
                 disconnected.append(ws)
 
-        # Remove disconnected websockets
         for ws in disconnected:
             if ws in active_websockets:
                 active_websockets.remove(ws)
 
     def emit(self, record):
-        # This is called synchronously, we need to handle it carefully
         pass
 
 
@@ -154,39 +121,20 @@ ws_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(messa
 logger.addHandler(ws_handler)
 
 
-# Helper function for thumbnail generation
 def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
-    """
-    Generate a thumbnail PNG in base64 format from a 2D numpy array.
-
-    Args:
-        image_2d: 2D numpy array representing an image
-        size: Maximum size for thumbnail (default 128x128)
-
-    Returns:
-        Base64-encoded PNG as data URI string
-    """
-    # Handle edge case: empty or invalid array
+    """Generate base64 PNG thumbnail from 2D numpy array"""
     if image_2d.size == 0:
         raise ValueError("Cannot generate thumbnail from empty array")
 
-    # Normalize to 0-255 range
     img_min, img_max = image_2d.min(), image_2d.max()
     if img_max > img_min:
-        img_normalized = ((image_2d - img_min) / (img_max - img_min) * 255).astype(
-            np.uint8
-        )
+        img_normalized = ((image_2d - img_min) / (img_max - img_min) * 255).astype(np.uint8)
     else:
-        # All values are the same, create a uniform gray image
         img_normalized = np.full_like(image_2d, 128, dtype=np.uint8)
 
-    # Convert to PIL Image
     img_pil = Image.fromarray(img_normalized)
-
-    # Resize to thumbnail maintaining aspect ratio
     img_pil.thumbnail((size, size), Image.Resampling.LANCZOS)
 
-    # Convert to PNG in memory
     buffer = io.BytesIO()
     img_pil.save(buffer, format="PNG")
     img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
@@ -194,46 +142,26 @@ def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 
-# API Endpoints
-
-
 @app.get("/")
 async def root():
-    """Root endpoint"""
     return {"message": "Phase Diversity API", "version": "1.0.0", "docs": "/docs"}
 
 
-@app.post("/api/upload")
-async def upload_images(
-    files: List[UploadFile] = File(...),
-    xc: Optional[int] = None,
-    yc: Optional[int] = None,
-):
-    """
-    Upload images for phase diversity analysis.
-
-    Accepts:
-    1. Single FITS file with 2+ image extensions
-    2. Three separate FITS files (one image each)
-    3. NumPy array (.npy) with shape (N, H, W)
-
-    Returns session_id, thumbnails, stats, and metadata.
-    """
+@app.post("/api/parse-images")
+async def parse_images(files: List[UploadFile] = File(...)):
+    """Parse FITS/NPY images and return as JSON arrays with thumbnails and stats"""
     try:
         from astropy.io import fits
 
-        session_id = str(uuid.uuid4())
-        logger.info(f"📤 New upload session: {session_id}")
+        logger.info(f"📤 Parsing images from {len(files)} file(s)...")
 
         images = []
         original_dtype = None
 
-        # Case 1: Single NPY file
         if len(files) == 1 and files[0].filename.endswith(".npy"):
             content = await files[0].read()
             img_collection = np.load(io.BytesIO(content))
 
-            # Validate shape
             if img_collection.ndim != 3:
                 raise HTTPException(
                     status_code=400,
@@ -372,112 +300,92 @@ async def upload_images(
             "std": float(img_collection.std()),
         }
 
-        # Store in session
-        sessions[session_id] = {
-            "img_collection": img_collection,
-            "xc": xc,
-            "yc": yc,
-            "created_at": str(np.datetime64("now")),
-            "opticsetup": None,
-            "results": None,
-            "thumbnails": thumbnails,
-            "stats": stats,
-        }
-
         logger.info(
-            f"✅ Loaded {img_collection.shape[0]} images, shape {img_collection.shape}, dtype {img_collection.dtype}"
+            f"✅ Parsed {img_collection.shape[0]} images, shape {img_collection.shape}, dtype {img_collection.dtype}"
         )
 
+        # Return images as nested lists (JSON-serializable)
+        # Frontend will store this in localStorage
         return {
-            "session_id": session_id,
-            "num_images": img_collection.shape[0],
-            "image_shape": list(img_collection.shape),
+            "images": img_collection.tolist(),  # Convert numpy array to nested lists
             "thumbnails": thumbnails,
             "stats": stats,
-            "message": "Images uploaded successfully",
+            "original_dtype": original_dtype,
+            "message": "Images parsed successfully",
         }
 
     except Exception as e:
-        logger.error(f"❌ Upload error: {str(e)}")
+        logger.error(f"❌ Parse error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/setup")
-async def configure_setup(params: OpticSetupParams):
+@app.post("/api/preview-config")
+async def preview_config(request: PreviewConfigRequest):
     """
-    Configure an Opticsetup instance with the provided parameters.
-    Requires a session_id from a previous upload.
+    Preview optical configuration - stateless endpoint.
 
-    Returns pupil preview images and detailed configuration info including
-    sampling warnings and degrees of freedom.
+    Creates Opticsetup instance with images + config and returns pupil previews,
+    validation info, and warnings WITHOUT running search_phase.
+
+    This is for real-time preview in the configuration UI with debouncing.
     """
     try:
-        if params.session_id not in sessions:
-            raise HTTPException(status_code=404, detail="Session not found")
+        logger.info(f"🔍 Previewing optical configuration...")
 
-        session = sessions[params.session_id]
-        logger.info(f"⚙️  Configuring setup for session: {params.session_id}")
+        # Convert images from nested lists to numpy array
+        img_array = np.array(request.images, dtype=np.float64)
+        logger.info(f"📊 Image array shape: {img_array.shape}")
 
-        # Use xc/yc from params if provided, otherwise from session
-        xc = params.xc if params.xc is not None else session["xc"]
-        yc = params.yc if params.yc is not None else session["yc"]
-
-        # Create Opticsetup instance with stdin mocked to avoid interactive prompts
-        # The core algorithm (diversity.py) uses input() for warnings - we auto-accept in API mode
+        # Create Opticsetup instance with stdin mocked to auto-accept warnings
         from io import StringIO
-
         old_stdin = sys.stdin
-        try:
-            # Mock stdin to return 'y' automatically to any input() call
-            # This simulates user accepting all prompts
-            sys.stdin = StringIO('y\n' * 100)  # Enough 'y' answers for any number of prompts
 
+        try:
+            sys.stdin = StringIO("y\n" * 100)
+
+            logger.info(f"⚙️  Creating Opticsetup for preview...")
+            config = request.config
             opticsetup = div.Opticsetup(
-                img_collection=session["img_collection"],
-                xc=xc,
-                yc=yc,
-                N=params.N,
-                defoc_z=params.defoc_z,
-                pupilType=params.pupilType,
-                flattening=params.flattening,
-                obscuration=params.obscuration,
-                angle=params.angle,
-                nedges=params.nedges,
-                spiderAngle=params.spiderAngle,
-                spiderArms=params.spiderArms,
-                spiderOffset=params.spiderOffset,
-                illum=params.illum,
-                wvl=params.wvl,
-                fratio=params.fratio,
-                pixelSize=params.pixelSize,
-                edgeblur_percent=params.edgeblur_percent,
-                object_fwhm_pix=params.object_fwhm_pix,
-                object_shape=params.object_shape,
-                basis=params.basis,
-                Jmax=params.Jmax,
+                img_collection=img_array,
+                xc=config.xc,
+                yc=config.yc,
+                N=config.N,
+                defoc_z=config.defoc_z,
+                pupilType=config.pupilType,
+                flattening=config.flattening,
+                obscuration=config.obscuration,
+                angle=config.angle,
+                nedges=config.nedges,
+                spiderAngle=config.spiderAngle,
+                spiderArms=config.spiderArms,
+                spiderOffset=config.spiderOffset,
+                illum=config.illum,
+                wvl=config.wvl,
+                fratio=config.fratio,
+                pixelSize=config.pixelSize,
+                edgeblur_percent=config.edgeblur_percent,
+                object_fwhm_pix=config.object_fwhm_pix,
+                object_shape=config.object_shape,
+                basis=config.basis,
+                Jmax=config.Jmax,
             )
         finally:
-            # Restore original stdin
             sys.stdin = old_stdin
-            logger.info("✅ Opticsetup created successfully (auto-accepted any warnings)")
+            logger.info("✅ Opticsetup created for preview")
 
         # Generate pupil preview images
         pupil_image = generate_thumbnail(opticsetup.pupilmap, size=256)
-
-        # Generate illumination map (pupil × illumination)
         illumination_map = opticsetup.mappy(opticsetup.pupillum)
         illumination_image = generate_thumbnail(illumination_map, size=256)
 
-        # Calculate sampling factor
-        sampling_factor = params.wvl * params.fratio / params.pixelSize
-
-        # Get number of phase points
+        # Calculate configuration info
+        sampling_factor = config.wvl * config.fratio / config.pixelSize
         nphi = opticsetup.idx[0].size
 
-        # Determine number of phase modes based on basis type
-        if opticsetup.basis_type in ['eigen', 'zernike']:
+        # Determine number of phase modes
+        if opticsetup.basis_type in ["eigen", "zernike"]:
             phase_modes = opticsetup.phase_basis.shape[1]
-        elif opticsetup.basis_type == 'eigenfull':
+        elif opticsetup.basis_type == "eigenfull":
             phase_modes = opticsetup.phase_basis.shape[1]
         else:  # zonal
             phase_modes = nphi
@@ -495,21 +403,11 @@ async def configure_setup(params: OpticSetupParams):
         if nphi < 100:
             warnings.append(f"⚠️ Low DoF count: {nphi} phase points (limited accuracy)")
 
-        # Save to session
-        session["opticsetup"] = opticsetup
-        session["params"] = params.model_dump()
-        session["xc"] = xc
-        session["yc"] = yc
-
-        logger.info(f"✅ Setup configured successfully")
-        logger.info(f"   pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}")
+        logger.info(f"✅ Preview complete: pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}")
 
         return {
             "success": True,
-            "session_id": params.session_id,
-            "pupil_image": pupil_image,
-            "illumination_image": illumination_image,
-            "info": {
+            "config_info": {
                 "pdiam": float(opticsetup.pdiam),
                 "nphi": int(nphi),
                 "sampling_factor": float(sampling_factor),
@@ -518,55 +416,128 @@ async def configure_setup(params: OpticSetupParams):
                 "basis_type": opticsetup.basis_type,
                 "phase_modes": int(phase_modes),
             },
+            "pupil_image": pupil_image,
+            "illumination_image": illumination_image,
             "warnings": warnings,
         }
 
     except Exception as e:
-        logger.error(f"❌ Setup error: {str(e)}")
+        logger.error(f"❌ Preview error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/search")
-async def search_phase(params: SearchPhaseParams):
+@app.post("/api/search-phase")
+async def search_phase(request: SearchPhaseRequest):
     """
-    Launch phase search with the specified flags.
-    Returns results when computation is complete.
+    Complete phase diversity search - stateless endpoint.
+
+    Receives images + optical config + search flags, creates Opticsetup instance,
+    runs search_phase, and returns all results in one response.
+
+    This endpoint does NOT store anything - it's a pure compute function.
+    Frontend is responsible for storing the results.
     """
     try:
-        if params.session_id not in sessions:
-            raise HTTPException(status_code=404, detail="Session not found")
+        start_time = time.time()
+        logger.info(f"🔬 Starting phase diversity search...")
 
-        session = sessions[params.session_id]
+        # Convert images from nested lists to numpy array
+        img_array = np.array(request.images, dtype=np.float64)
+        logger.info(f"📊 Image array shape: {img_array.shape}, dtype: {img_array.dtype}")
 
-        if session["opticsetup"] is None:
-            raise HTTPException(
-                status_code=400, detail="Setup not configured. Call /api/setup first."
+        # Create Opticsetup instance with stdin mocked to auto-accept warnings
+        from io import StringIO
+        old_stdin = sys.stdin
+
+        try:
+            sys.stdin = StringIO("y\n" * 100)
+
+            logger.info(f"⚙️  Creating Opticsetup instance...")
+            config = request.config
+            opticsetup = div.Opticsetup(
+                img_collection=img_array,
+                xc=config.xc,
+                yc=config.yc,
+                N=config.N,
+                defoc_z=config.defoc_z,
+                pupilType=config.pupilType,
+                flattening=config.flattening,
+                obscuration=config.obscuration,
+                angle=config.angle,
+                nedges=config.nedges,
+                spiderAngle=config.spiderAngle,
+                spiderArms=config.spiderArms,
+                spiderOffset=config.spiderOffset,
+                illum=config.illum,
+                wvl=config.wvl,
+                fratio=config.fratio,
+                pixelSize=config.pixelSize,
+                edgeblur_percent=config.edgeblur_percent,
+                object_fwhm_pix=config.object_fwhm_pix,
+                object_shape=config.object_shape,
+                basis=config.basis,
+                Jmax=config.Jmax,
             )
+        finally:
+            sys.stdin = old_stdin
+            logger.info("✅ Opticsetup created successfully")
 
-        logger.info(f"🔍 Starting phase search for session: {params.session_id}")
+        # Generate pupil preview images
+        pupil_image = generate_thumbnail(opticsetup.pupilmap, size=256)
+        illumination_map = opticsetup.mappy(opticsetup.pupillum)
+        illumination_image = generate_thumbnail(illumination_map, size=256)
 
-        # Run search_phase
-        opticsetup = session["opticsetup"]
+        # Calculate configuration info
+        sampling_factor = config.wvl * config.fratio / config.pixelSize
+        nphi = opticsetup.idx[0].size
+
+        # Determine number of phase modes based on basis type
+        if opticsetup.basis_type in ["eigen", "zernike"]:
+            phase_modes = opticsetup.phase_basis.shape[1]
+        elif opticsetup.basis_type == "eigenfull":
+            phase_modes = opticsetup.phase_basis.shape[1]
+        else:  # zonal
+            phase_modes = nphi
+
+        # Generate warnings
+        warnings = []
+        if sampling_factor < 2.0:
+            warnings.append(f"⚠️ Shannon sampling violated: {sampling_factor:.2f} < 2.0")
+        else:
+            warnings.append(f"✓ Shannon sampling OK: {sampling_factor:.2f}")
+
+        if nphi > 4000:
+            warnings.append(f"⚠️ High DoF count: {nphi} phase points (may be slow)")
+
+        if nphi < 100:
+            warnings.append(f"⚠️ Low DoF count: {nphi} phase points (limited accuracy)")
+
+        logger.info(f"   pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}")
+
+        # Run phase search
+        logger.info(f"🔍 Starting phase search...")
         opticsetup.search_phase(
-            defoc_z_flag=params.defoc_z_flag,
-            focscale_flag=params.focscale_flag,
-            optax_flag=params.optax_flag,
-            amplitude_flag=params.amplitude_flag,
-            background_flag=params.background_flag,
-            phase_flag=params.phase_flag,
-            illum_flag=params.illum_flag,
-            objsize_flag=params.objsize_flag,
-            estimate_snr=params.estimate_snr,
-            verbose=params.verbose,
-            tolerance=params.tolerance,
+            defoc_z_flag=request.defoc_z_flag,
+            focscale_flag=request.focscale_flag,
+            optax_flag=request.optax_flag,
+            amplitude_flag=request.amplitude_flag,
+            background_flag=request.background_flag,
+            phase_flag=request.phase_flag,
+            illum_flag=request.illum_flag,
+            objsize_flag=request.objsize_flag,
+            estimate_snr=request.estimate_snr,
+            verbose=request.verbose,
+            tolerance=request.tolerance,
         )
+        logger.info(f"✅ Phase search completed")
 
-        # Extract results
+        # Extract all results
         phase_map = opticsetup.mappy(opticsetup.phase_generator(opticsetup.phase))
 
         results = {
             "phase": opticsetup.phase.tolist(),
             "phase_map": phase_map.tolist(),
+            "pupilmap": opticsetup.pupilmap.tolist(),
             "defoc_z": opticsetup.defoc_z.tolist(),
             "focscale": float(opticsetup.focscale),
             "optax_x": opticsetup.optax_x.tolist(),
@@ -575,20 +546,27 @@ async def search_phase(params: SearchPhaseParams):
             "background": opticsetup.background.tolist(),
             "illum": opticsetup.illum,
             "object_fwhm_pix": float(opticsetup.object_fwhm_pix),
-            "pupilmap": opticsetup.pupilmap.tolist(),
         }
 
-        session["results"] = results
-
-        # Save session to disk
-        save_session(params.session_id, session)
-
-        logger.info(f"✅ Phase search completed successfully")
+        duration_ms = int((time.time() - start_time) * 1000)
+        logger.info(f"✅ Search complete in {duration_ms}ms")
 
         return {
-            "session_id": params.session_id,
-            "message": "Phase search completed",
-            "results_available": True,
+            "success": True,
+            "config_info": {
+                "pdiam": float(opticsetup.pdiam),
+                "nphi": int(nphi),
+                "sampling_factor": float(sampling_factor),
+                "computation_format": f"{opticsetup.N}x{opticsetup.N}",
+                "data_format": f"{opticsetup.Ncrop}x{opticsetup.Ncrop}",
+                "basis_type": opticsetup.basis_type,
+                "phase_modes": int(phase_modes),
+            },
+            "pupil_image": pupil_image,
+            "illumination_image": illumination_image,
+            "results": results,
+            "duration_ms": duration_ms,
+            "warnings": warnings,
         }
 
     except Exception as e:
@@ -596,65 +574,8 @@ async def search_phase(params: SearchPhaseParams):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/results/{session_id}")
-async def get_results(session_id: str):
-    """
-    Retrieve results for a completed phase search.
-    """
-    try:
-        if session_id not in sessions:
-            # Try to load from disk
-            session = load_session(session_id)
-            if session is None:
-                raise HTTPException(status_code=404, detail="Session not found")
-            sessions[session_id] = session
-
-        session = sessions[session_id]
-
-        if session["results"] is None:
-            raise HTTPException(
-                status_code=404, detail="No results available. Run /api/search first."
-            )
-
-        return {
-            "session_id": session_id,
-            "results": session["results"],
-            "created_at": session["created_at"],
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Error retrieving results: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/sessions")
-async def list_sessions():
-    """
-    List all saved sessions.
-    """
-    try:
-        session_files = STORAGE_DIR.glob("*.json")
-        session_list = []
-
-        for file in session_files:
-            session_id = file.stem
-            session = load_session(session_id)
-            if session:
-                session_list.append(
-                    {
-                        "session_id": session_id,
-                        "created_at": session.get("created_at", "unknown"),
-                        "has_results": session.get("results") is not None,
-                    }
-                )
-
-        return {"sessions": session_list, "total": len(session_list)}
-
-    except Exception as e:
-        logger.error(f"❌ Error listing sessions: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+# All old session-based endpoints removed - backend is now fully stateless
+# Frontend manages all state in localStorage
 
 
 @app.websocket("/ws/logs")
@@ -677,56 +598,7 @@ async def websocket_logs(websocket: WebSocket):
             active_websockets.remove(websocket)
 
 
-# Helper functions
-
-
-def save_session(session_id: str, session: Dict):
-    """Save session to disk (excluding numpy arrays)"""
-    try:
-        file_path = STORAGE_DIR / f"{session_id}.json"
-
-        # Create a serializable version
-        save_data = {
-            "session_id": session_id,
-            "created_at": session["created_at"],
-            "params": session.get("params"),
-            "results": session.get("results"),
-            "has_opticsetup": session.get("opticsetup") is not None,
-        }
-
-        with open(file_path, "w") as f:
-            json.dump(save_data, f, indent=2)
-
-        logger.info(f"💾 Session saved: {session_id}")
-    except Exception as e:
-        logger.error(f"❌ Error saving session: {str(e)}")
-
-
-def load_session(session_id: str) -> Optional[Dict]:
-    """Load session from disk"""
-    try:
-        file_path = STORAGE_DIR / f"{session_id}.json"
-        if not file_path.exists():
-            return None
-
-        with open(file_path, "r") as f:
-            data = json.load(f)
-
-        # Create minimal session structure
-        session = {
-            "created_at": data.get("created_at"),
-            "params": data.get("params"),
-            "results": data.get("results"),
-            "img_collection": None,
-            "opticsetup": None,
-            "xc": None,
-            "yc": None,
-        }
-
-        return session
-    except Exception as e:
-        logger.error(f"❌ Error loading session: {str(e)}")
-        return None
+# No helper functions needed - backend is stateless except for in-memory sessions dict
 
 
 if __name__ == "__main__":

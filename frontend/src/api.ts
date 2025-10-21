@@ -1,243 +1,111 @@
-/**
- * API Module for Phase Diversity Backend
- *
- * Simple wrapper around fetch API to communicate with FastAPI backend.
- */
+import {
+  PreviewConfigResponse,
+  SearchPhaseResponse,
+  OpticalConfig,
+} from "./types/session";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-// API Response Types
-export interface UploadResponse {
-  session_id: string;
-  num_images: number;
-  image_shape: number[];
-  thumbnails: string[]; // Base64 PNG data URIs
+interface ErrorResponse {
+  detail: string;
+}
+
+export interface ParseImagesResponse {
+  images: number[][][];
+  thumbnails: string[];
   stats: {
-    shape: number[];
+    shape: [number, number, number];
     dtype: string;
     min: number;
     max: number;
     mean: number;
     std: number;
   };
+  original_dtype: string;
   message: string;
 }
 
-export interface OpticSetupConfig {
-  session_id: string;
-
-  // Images
-  xc?: number;
-  yc?: number;
-  N?: number;
-  defoc_z: number[];
-
-  // Pupil
-  pupilType: number;
-  flattening: number;
-  obscuration: number;
-  angle: number;
-  nedges: number;
-  spiderAngle: number;
-  spiderArms: number[];
-  spiderOffset: number[];
-  illum: number[];
-
-  // Optics
-  wvl: number;
-  fratio: number;
-  pixelSize: number;
-  edgeblur_percent: number;
-
-  // Object
-  object_fwhm_pix: number;
-  object_shape: 'gaussian' | 'disk' | 'square';
-
-  // Phase basis
-  basis: 'eigen' | 'eigenfull' | 'zernike' | 'zonal';
-  Jmax: number;
+export interface PreviewConfigRequest {
+  images: number[][][];
+  config: OpticalConfig;
 }
 
-export interface ConfigureResponse {
-  success: boolean;
-  session_id: string;
-  pupil_image: string;
-  illumination_image: string;
-  info: {
-    pdiam: number;
-    nphi: number;
-    sampling_factor: number;
-    computation_format: string;
-    data_format: string;
-    basis_type: string;
-    phase_modes: number;
-  };
-  warnings: string[];
-}
-
-// Legacy interface for backward compatibility (deprecated)
-/** @deprecated Use OpticSetupConfig instead */
-export interface SetupParams {
-  session_id: string;
-  defoc_z: number[];
-  pupilType: number;
-  flattening: number;
-  obscuration: number;
-  angle: number;
-  wvl: number;
-  fratio: number;
-  pixelSize: number;
-  basis: 'eigen' | 'eigenfull' | 'zernike' | 'zonal';
-  Jmax: number;
-}
-
-// Legacy interface for backward compatibility (deprecated)
-/** @deprecated Use ConfigureResponse instead */
-export interface SetupResponse {
-  status: string;
-  pupil_diameter_pixels: number;
-}
-
-export interface SearchParams {
-  session_id: string;
-  phase_flag: boolean;
-  amplitude_flag: boolean;
+export interface SearchPhaseRequest {
+  images: number[][][];
+  config: OpticalConfig;
+  defoc_z_flag: boolean;
+  focscale_flag: boolean;
   optax_flag: boolean;
+  amplitude_flag: boolean;
   background_flag: boolean;
+  phase_flag: boolean;
+  illum_flag: boolean;
+  objsize_flag: boolean;
   estimate_snr: boolean;
   verbose: boolean;
+  tolerance: number;
 }
 
-export interface SearchResponse {
-  status: string;
-  message: string;
-}
-
-export interface PhaseResults {
-  phase: number[];
-  phase_map: number[][];
-  pupilmap: number[][];
-  amplitude: number[];
-  background: number[];
-  optax_x: number[];
-  optax_y: number[];
-  focscale: number;
-  object_fwhm_pix: number;
-}
-
-export interface ResultsResponse {
-  session_id: string;
-  results: PhaseResults;
-}
-
-export interface Session {
-  session_id: string;
-  created_at: string;
-  has_results: boolean;
-}
-
-export interface SessionsResponse {
-  sessions: Session[];
-}
-
-interface ErrorResponse {
-  detail: string;
-}
-
-/**
- * Upload defocused images to the backend
- */
-export const uploadImages = async (formData: FormData): Promise<UploadResponse> => {
-  const response = await fetch(`${API_URL}/api/upload`, {
-    method: 'POST',
+export const parseImages = async (
+  formData: FormData
+): Promise<ParseImagesResponse> => {
+  const response = await fetch(`${API_URL}/api/parse-images`, {
+    method: "POST",
     body: formData,
   });
 
   if (!response.ok) {
     const error: ErrorResponse = await response.json();
-    throw new Error(error.detail || 'Upload failed');
+    throw new Error(error.detail || "Image parsing failed");
   }
 
   return response.json();
 };
 
-/**
- * Configure optical setup parameters and get pupil preview
- */
-export const configureSetup = async (config: OpticSetupConfig): Promise<ConfigureResponse> => {
-  const response = await fetch(`${API_URL}/api/setup`, {
-    method: 'POST',
+export const previewConfig = async (
+  request: PreviewConfigRequest
+): Promise<PreviewConfigResponse> => {
+  const response = await fetch(`${API_URL}/api/preview-config`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(config),
+    body: JSON.stringify(request),
   });
 
   if (!response.ok) {
     const error: ErrorResponse = await response.json();
-    throw new Error(error.detail || 'Setup configuration failed');
+    throw new Error(error.detail || "Config preview failed");
   }
 
   return response.json();
 };
 
-/**
- * Launch phase search with specified flags
- */
-export const launchSearch = async (params: SearchParams): Promise<SearchResponse> => {
-  const response = await fetch(`${API_URL}/api/search`, {
-    method: 'POST',
+export const searchPhase = async (
+  request: SearchPhaseRequest
+): Promise<SearchPhaseResponse> => {
+  const response = await fetch(`${API_URL}/api/search-phase`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(params),
+    body: JSON.stringify(request),
   });
 
   if (!response.ok) {
     const error: ErrorResponse = await response.json();
-    throw new Error(error.detail || 'Phase search failed');
+    throw new Error(error.detail || "Phase search failed");
   }
 
   return response.json();
 };
 
-/**
- * Get results for a completed phase search
- */
-export const getResults = async (sessionId: string): Promise<ResultsResponse> => {
-  const response = await fetch(`${API_URL}/api/results/${sessionId}`);
-
-  if (!response.ok) {
-    const error: ErrorResponse = await response.json();
-    throw new Error(error.detail || 'Failed to retrieve results');
-  }
-
-  return response.json();
-};
-
-/**
- * Get list of all saved sessions
- */
-export const getSessions = async (): Promise<SessionsResponse> => {
-  const response = await fetch(`${API_URL}/api/sessions`);
-
-  if (!response.ok) {
-    const error: ErrorResponse = await response.json();
-    throw new Error(error.detail || 'Failed to retrieve sessions');
-  }
-
-  return response.json();
-};
-
-/**
- * Connect to WebSocket for live logs
- */
 export const connectLogsWebSocket = (onMessage: (message: string) => void): WebSocket => {
-  const wsUrl = API_URL.replace('http', 'ws');
+  const wsUrl = API_URL.replace("http", "ws");
   const ws = new WebSocket(`${wsUrl}/ws/logs`);
 
   ws.onopen = (): void => {
-    console.log('WebSocket connected');
+    // WebSocket connected
   };
 
   ws.onmessage = (event: MessageEvent): void => {
@@ -245,21 +113,19 @@ export const connectLogsWebSocket = (onMessage: (message: string) => void): WebS
   };
 
   ws.onerror = (error: Event): void => {
-    console.error('WebSocket error:', error);
+    console.error("WebSocket error:", error);
   };
 
   ws.onclose = (): void => {
-    console.log('WebSocket disconnected');
+    // WebSocket disconnected
   };
 
   return ws;
 };
 
 export default {
-  uploadImages,
-  configureSetup,
-  launchSearch,
-  getResults,
-  getSessions,
+  parseImages,
+  previewConfig,
+  searchPhase,
   connectLogsWebSocket,
 };
