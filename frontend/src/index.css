@@ -29,3 +29,343 @@ body {
   width: 100%;
   min-height: 100vh;
 }
+
+
+
+@layer base {
+  :root {
+    /* ========================================
+       🎨 ELECTRIC SCIENCE PALETTE - LIGHT MODE
+       ======================================== */
+
+    /* Backgrounds */
+    --background: 0 0% 100%;           /* Pure white */
+    --foreground: 222 47% 11%;         /* Presque noir bleuté */
+
+    /* Surface (cards, panels) */
+    --card: 0 0% 98%;                  /* Off-white très léger */
+    --card-foreground: 222 47% 11%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Muted (disabled, secondary) */
+    --muted: 210 40% 96%;              /* Bleu très pâle */
+    --muted-foreground: 215 16% 47%;   /* Gris moyen */
+
+    /* Borders */
+    --border: 214 32% 91%;             /* Gris-bleu clair */
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
+    /* Primary - Bleu électrique */
+    --primary: 217 91% 60%;            /* #3B82F6 - Electric Blue */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Accent (default shadcn accent) */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Accents Néon */
+    --accent-cyan: 189 94% 43%;        /* #0EA5E9 - Cyan néon */
+    --accent-green: 142 76% 36%;       /* #10B981 - Vert néon */
+    --accent-pink: 330 81% 60%;        /* #EC4899 - Rose fushia */
+    --accent-purple: 271 91% 65%;      /* #A855F7 - Violet électrique */
+    --accent-orange: 31 100% 50%;      /* #FF8800 - Orange vif */
+
+    /* Semantic */
+    --success: 142 76% 36%;            /* Vert néon */
+    --warning: 31 100% 50%;            /* Orange vif */
+    --error: 0 84% 60%;                /* Rouge vif */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --info: 189 94% 43%;               /* Cyan néon */
+
+    /* Data visualization */
+    --chart-1: 217 91% 60%;            /* Bleu */
+    --chart-2: 142 76% 36%;            /* Vert */
+    --chart-3: 330 81% 60%;            /* Rose */
+    --chart-4: 271 91% 65%;            /* Violet */
+    --chart-5: 31 100% 50%;            /* Orange */
+
+    /* Radius */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* ========================================
+       🌙 ELECTRIC SCIENCE PALETTE - DARK MODE
+       Inspiré Linear dark
+       ======================================== */
+
+    /* Backgrounds - Noir bleuté profond */
+    --background: 224 71% 4%;          /* #09090B - Noir bleuté profond */
+    --foreground: 210 40% 98%;         /* Blanc cassé */
+
+    /* Surface */
+    --card: 224 71% 8%;                /* #18181B - Gris très foncé bleuté */
+    --card-foreground: 210 40% 98%;
+
+    /* Popover */
+    --popover: 224 71% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Muted */
+    --muted: 223 47% 11%;              /* #1E1E2E - Gris foncé */
+    --muted-foreground: 215 20% 65%;   /* Gris moyen */
+
+    /* Borders */
+    --border: 216 34% 17%;             /* #27272A - Gris foncé avec hint bleu */
+    --input: 216 34% 17%;
+    --ring: 217 91% 70%;
+
+    /* Primary - Bleu électrique PLUS VIF en dark */
+    --primary: 217 91% 70%;            /* Plus clair/vif en dark */
+    --primary-foreground: 224 71% 4%;  /* Texte sombre sur bleu */
+
+    /* Secondary */
+    --secondary: 223 47% 11%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Accent (default shadcn accent) */
+    --accent: 223 47% 11%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Accents Néon - BOOSTED en dark mode */
+    --accent-cyan: 189 94% 55%;        /* Plus vif */
+    --accent-green: 142 76% 46%;       /* Plus vif */
+    --accent-pink: 330 81% 70%;        /* Plus vif */
+    --accent-purple: 271 91% 75%;      /* Plus vif */
+    --accent-orange: 31 100% 60%;      /* Plus vif */
+
+    /* Semantic - versions vives */
+    --success: 142 76% 46%;
+    --warning: 31 100% 60%;
+    --error: 0 84% 70%;
+    --destructive: 0 84% 70%;
+    --destructive-foreground: 224 71% 4%;
+    --info: 189 94% 55%;
+
+    /* Data viz - versions dark */
+    --chart-1: 217 91% 70%;
+    --chart-2: 142 76% 46%;
+    --chart-3: 330 81% 70%;
+    --chart-4: 271 91% 75%;
+    --chart-5: 31 100% 60%;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ========================================
+   🎨 ACCENT NÉON UTILITIES
+   ======================================== */
+@layer utilities {
+  /* Cyan */
+  .text-accent-cyan {
+    color: hsl(var(--accent-cyan));
+  }
+  .bg-accent-cyan {
+    background-color: hsl(var(--accent-cyan));
+  }
+  .border-accent-cyan {
+    border-color: hsl(var(--accent-cyan));
+  }
+
+  /* Green */
+  .text-accent-green {
+    color: hsl(var(--accent-green));
+  }
+  .bg-accent-green {
+    background-color: hsl(var(--accent-green));
+  }
+  .border-accent-green {
+    border-color: hsl(var(--accent-green));
+  }
+
+  /* Pink */
+  .text-accent-pink {
+    color: hsl(var(--accent-pink));
+  }
+  .bg-accent-pink {
+    background-color: hsl(var(--accent-pink));
+  }
+  .border-accent-pink {
+    border-color: hsl(var(--accent-pink));
+  }
+
+  /* Purple */
+  .text-accent-purple {
+    color: hsl(var(--accent-purple));
+  }
+  .bg-accent-purple {
+    background-color: hsl(var(--accent-purple));
+  }
+  .border-accent-purple {
+    border-color: hsl(var(--accent-purple));
+  }
+
+  /* Orange */
+  .text-accent-orange {
+    color: hsl(var(--accent-orange));
+  }
+  .bg-accent-orange {
+    background-color: hsl(var(--accent-orange));
+  }
+  .border-accent-orange {
+    border-color: hsl(var(--accent-orange));
+  }
+
+  /* Semantic colors */
+  .text-success {
+    color: hsl(var(--success));
+  }
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  .text-error {
+    color: hsl(var(--error));
+  }
+  .text-info {
+    color: hsl(var(--info));
+  }
+}
+
+/* ========================================
+   🎬 MICRO-INTERACTIONS & ANIMATIONS
+   ======================================== */
+
+@layer utilities {
+  /* Interactive Cards */
+  .interactive-card {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  .interactive-card:hover {
+    @apply scale-[1.02] shadow-lg;
+  }
+
+  /* Glow Effects */
+  .glow-accent-cyan {
+    @apply shadow-accent-cyan/20;
+  }
+
+  .glow-accent-cyan:hover {
+    @apply shadow-accent-cyan/40 shadow-lg;
+  }
+
+  .glow-accent-green {
+    @apply shadow-accent-green/20;
+  }
+
+  .glow-accent-green:hover {
+    @apply shadow-accent-green/40 shadow-lg;
+  }
+
+  .glow-accent-purple {
+    @apply shadow-accent-purple/20;
+  }
+
+  .glow-accent-purple:hover {
+    @apply shadow-accent-purple/40 shadow-lg;
+  }
+
+  .glow-accent-pink {
+    @apply shadow-accent-pink/20;
+  }
+
+  .glow-accent-pink:hover {
+    @apply shadow-accent-pink/40 shadow-lg;
+  }
+
+  .glow-accent-orange {
+    @apply shadow-accent-orange/20;
+  }
+
+  .glow-accent-orange:hover {
+    @apply shadow-accent-orange/40 shadow-lg;
+  }
+
+  /* Focus Rings with Neon Accents */
+  .focus-ring-cyan {
+    @apply focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-background focus:outline-none;
+  }
+
+  .focus-ring-green {
+    @apply focus:ring-2 focus:ring-accent-green focus:ring-offset-2 focus:ring-offset-background focus:outline-none;
+  }
+
+  .focus-ring-purple {
+    @apply focus:ring-2 focus:ring-accent-purple focus:ring-offset-2 focus:ring-offset-background focus:outline-none;
+  }
+
+  .focus-ring-pink {
+    @apply focus:ring-2 focus:ring-accent-pink focus:ring-offset-2 focus:ring-offset-background focus:outline-none;
+  }
+
+  .focus-ring-orange {
+    @apply focus:ring-2 focus:ring-accent-orange focus:ring-offset-2 focus:ring-offset-background focus:outline-none;
+  }
+
+  /* Link Hover Effects */
+  .link-accent {
+    @apply underline decoration-accent-cyan decoration-2 underline-offset-4 transition-colors hover:text-accent-cyan;
+  }
+}
+
+/* ========================================
+   🌊 CUSTOM ANIMATIONS
+   ======================================== */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px hsl(var(--accent-cyan) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--accent-cyan) / 0.6), 0 0 30px hsl(var(--accent-cyan) / 0.3);
+  }
+}
+
+@keyframes pulse-glow-green {
+  0%, 100% {
+    box-shadow: 0 0 10px hsl(var(--accent-green) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--accent-green) / 0.6), 0 0 30px hsl(var(--accent-green) / 0.3);
+  }
+}
+
+@keyframes pulse-glow-purple {
+  0%, 100% {
+    box-shadow: 0 0 10px hsl(var(--accent-purple) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--accent-purple) / 0.6), 0 0 30px hsl(var(--accent-purple) / 0.3);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow-green {
+  animation: pulse-glow-green 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow-purple {
+  animation: pulse-glow-purple 2s ease-in-out infinite;
+}
