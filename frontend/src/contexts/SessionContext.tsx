@@ -20,18 +20,27 @@ import { searchPhase } from "../api";
 interface SessionContextType {
   sessions: Session[];
   currentSession: Session | null;
+  setCurrentSession: (session: Session | null) => void;
   favoriteConfigs: FavoriteConfig[];
   isLoading: boolean;
-  createSession: (name: string) => Promise<Session>;
+  createSession: () => Session;
   loadSession: (id: string) => void;
   deleteSession: (id: string) => void;
-  renameSession: (id: string, name: string) => void;
   updateSessionConfig: (config: OpticalConfig) => void;
   updateSessionImages: (images: ParsedImages) => void;
   resetSessionConfig: () => void;
-  runAnalysis: (flags: SearchFlags) => Promise<AnalysisRun>;
+  runAnalysis: (
+    flags: SearchFlags,
+    parentRunId?: string
+  ) => Promise<AnalysisRun>;
+  continueFromRun: (runId: string) => void;
+  resetToInitialConfig: () => void;
   deleteRun: (runId: string) => void;
-  saveFavoriteConfig: (name: string, config: OpticalConfig, description?: string) => void;
+  saveFavoriteConfig: (
+    name: string,
+    config: OpticalConfig,
+    description?: string
+  ) => void;
   loadFavoriteConfig: (id: string) => void;
   deleteFavoriteConfig: (id: string) => void;
   exportSession: (id: string) => void;
@@ -63,7 +72,9 @@ const saveToLocalStorage = <T,>(key: string, value: T): void => {
   } catch (error) {
     console.error(`Error saving ${key} to localStorage:`, error);
     if (error instanceof DOMException && error.name === "QuotaExceededError") {
-      alert("Storage quota exceeded! Please delete some old sessions or export them as backups.");
+      alert(
+        "Storage quota exceeded! Please delete some old sessions or export them as backups."
+      );
     }
   }
 };
@@ -76,7 +87,9 @@ const generateUUID = (): string => {
   });
 };
 
-export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SessionProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [favoriteConfigs, setFavoriteConfigs] = useState<FavoriteConfig[]>([]);
@@ -144,10 +157,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   }, [favoriteConfigs]);
 
-  const createSession = useCallback(async (name: string): Promise<Session> => {
+  const createSession = useCallback((): Session => {
     const newSession: Session = {
       id: generateUUID(),
-      name,
+      name: `Session ${new Date().toLocaleString("fr-FR")}`,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       images: null,
@@ -174,19 +187,6 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const deleteSession = useCallback((id: string) => {
     setSessions((prev) => prev.filter((s) => s.id !== id));
     setCurrentSession((prev) => (prev?.id === id ? null : prev));
-  }, []);
-
-  const renameSession = useCallback((id: string, name: string) => {
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, name, updated_at: new Date().toISOString() } : s
-      )
-    );
-    setCurrentSession((prev) =>
-      prev?.id === id
-        ? { ...prev, name, updated_at: new Date().toISOString() }
-        : prev
-    );
   }, []);
 
   const updateSessionConfig = useCallback(
@@ -241,7 +241,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, [currentSession]);
 
   const runAnalysis = useCallback(
-    async (flags: SearchFlags): Promise<AnalysisRun> => {
+    async (flags: SearchFlags, parentRunId?: string): Promise<AnalysisRun> => {
       if (!currentSession) {
         throw new Error("No current session");
       }
@@ -261,6 +261,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
         const run: AnalysisRun = {
           id: generateUUID(),
           timestamp: new Date().toISOString(),
+          parent_run_id: parentRunId,
           config: { ...currentSession.currentConfig },
           flags: { ...flags },
           response,
@@ -284,6 +285,50 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
     },
     [currentSession]
   );
+
+  const continueFromRun = useCallback(
+    (runId: string) => {
+      if (!currentSession) return;
+
+      const run = currentSession.runs.find((r) => r.id === runId);
+      if (!run) return;
+
+      const newConfig: OpticalConfig = {
+        ...currentSession.currentConfig,
+        initial_phase: run.response.results.phase,
+        initial_illum: run.response.results.illum,
+        initial_defoc_z: run.response.results.defoc_z,
+        initial_optax_x: run.response.results.optax_x,
+        initial_optax_y: run.response.results.optax_y,
+        initial_focscale: run.response.results.focscale,
+        initial_object_fwhm_pix: run.response.results.object_fwhm_pix,
+        initial_amplitude: run.response.results.amplitude,
+        initial_background: run.response.results.background,
+      };
+
+      updateSessionConfig(newConfig);
+    },
+    [currentSession, updateSessionConfig]
+  );
+
+  const resetToInitialConfig = useCallback(() => {
+    if (!currentSession) return;
+
+    const cleanConfig: OpticalConfig = {
+      ...currentSession.currentConfig,
+      initial_phase: undefined,
+      initial_illum: undefined,
+      initial_defoc_z: undefined,
+      initial_optax_x: undefined,
+      initial_optax_y: undefined,
+      initial_focscale: undefined,
+      initial_object_fwhm_pix: undefined,
+      initial_amplitude: undefined,
+      initial_background: undefined,
+    };
+
+    updateSessionConfig(cleanConfig);
+  }, [currentSession, updateSessionConfig]);
 
   const deleteRun = useCallback(
     (runId: string) => {
@@ -394,16 +439,18 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children })
   const value: SessionContextType = {
     sessions,
     currentSession,
+    setCurrentSession,
     favoriteConfigs,
     isLoading,
     createSession,
     loadSession,
     deleteSession,
-    renameSession,
     updateSessionConfig,
     updateSessionImages,
     resetSessionConfig,
     runAnalysis,
+    continueFromRun,
+    resetToInitialConfig,
     deleteRun,
     saveFavoriteConfig,
     loadFavoriteConfig,

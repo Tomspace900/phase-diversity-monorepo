@@ -39,12 +39,14 @@ The application performs phase retrieval from defocused focal plane images using
 ### Key Architecture Decisions
 
 **Backend is STATELESS:**
+
 - No session storage, no database, no file system writes
 - Acts as pure compute gateway to Python core algorithm
 - All endpoints return complete responses - no state maintained between calls
 - WebSocket only for live logging broadcast
 
 **Frontend is STATE MANAGER:**
+
 - ALL state stored in browser localStorage
 - Sessions, images, configurations, analysis runs - everything client-side
 - Images are small (~100KB FITS files) so localStorage is feasible
@@ -78,7 +80,7 @@ phase-diversity/
 │   │   │   └── SessionContext.tsx  # State management + localStorage
 │   │   ├── pages/             # TypeScript pages
 │   │   │   ├── UploadPage.tsx
-│   │   │   ├── ConfigurePage.tsx
+│   │   │   ├── SetupPage.tsx
 │   │   │   ├── SearchPage.tsx
 │   │   │   ├── ResultsPage.tsx
 │   │   │   └── SessionsPage.tsx
@@ -143,11 +145,13 @@ WS   /ws/logs                 # Real-time logging broadcast
 ### Endpoint Details
 
 **POST /api/parse-images**
+
 - Accepts: FITS files (single with multiple HDUs or multiple files) or NPY arrays
 - Returns: Images as nested JSON arrays, thumbnails (base64 PNG), stats
 - Stateless: Does NOT store anything - frontend receives data and stores in localStorage
 
 **POST /api/preview-config**
+
 - Purpose: Real-time preview for configuration UI (500ms debounce)
 - Receives: Images + OpticalConfig
 - Creates: Opticsetup instance
@@ -155,6 +159,7 @@ WS   /ws/logs                 # Real-time logging broadcast
 - Does NOT run: search_phase (fast preview only)
 
 **POST /api/search-phase**
+
 - Purpose: Complete phase diversity search
 - Receives: Images + OpticalConfig + SearchFlags
 - Creates: Opticsetup instance
@@ -208,6 +213,7 @@ The files in `backend/app/core/` contain the phase diversity algorithm that rese
 ### State Management Architecture
 
 **SessionContext** ([frontend/src/contexts/SessionContext.tsx](frontend/src/contexts/SessionContext.tsx)):
+
 - Central state manager using React Context API
 - Persists everything to localStorage (sessions, configs, runs)
 - Provides hooks: `useSession()` for all pages
@@ -218,26 +224,26 @@ The files in `backend/app/core/` contain the phase diversity algorithm that rese
 
 ```typescript
 interface Session {
-  id: string;                    // UUID
-  name: string;                  // User-editable
-  created_at: string;            // ISO timestamp
+  id: string; // UUID
+  name: string; // User-editable
+  created_at: string; // ISO timestamp
   updated_at: string;
-  images: ParsedImages | null;   // Uploaded images
-  currentConfig: OpticalConfig;  // Current optical setup
-  runs: AnalysisRun[];          // History of all searches
+  images: ParsedImages | null; // Uploaded images
+  currentConfig: OpticalConfig; // Current optical setup
+  runs: AnalysisRun[]; // History of all searches
 }
 
 interface AnalysisRun {
-  id: string;                    // UUID
+  id: string; // UUID
   timestamp: string;
-  config: OpticalConfig;         // Snapshot of config used
-  flags: SearchFlags;            // Search parameters used
+  config: OpticalConfig; // Snapshot of config used
+  flags: SearchFlags; // Search parameters used
   response: SearchPhaseResponse; // Complete backend response
 }
 
 interface ParsedImages {
-  images: number[][][];          // 3D array [N, H, W]
-  thumbnails: string[];          // base64 PNG
+  images: number[][][]; // 3D array [N, H, W]
+  thumbnails: string[]; // base64 PNG
   stats: ImageStats;
   original_dtype: string;
 }
@@ -267,7 +273,7 @@ interface SearchPhaseRequest {
 interface PreviewConfigResponse {
   success: boolean;
   config_info: ConfigInfo;
-  pupil_image: string;          // base64 PNG
+  pupil_image: string; // base64 PNG
   illumination_image: string;
   warnings: string[];
 }
@@ -277,7 +283,7 @@ interface SearchPhaseResponse {
   config_info: ConfigInfo;
   pupil_image: string;
   illumination_image: string;
-  results: PhaseResults;        // phase map, coefficients, etc.
+  results: PhaseResults; // phase map, coefficients, etc.
   duration_ms: number;
   warnings: string[];
 }
@@ -286,18 +292,21 @@ interface SearchPhaseResponse {
 ### React Pages (TypeScript)
 
 1. **SessionsPage.tsx** (NEW - now homepage):
+
    - Lists all sessions from localStorage
    - Create new session or continue existing
    - View results from completed analyses
    - Delete/export sessions
 
 2. **UploadPage.tsx**:
+
    - Upload FITS/NPY images
    - Calls parseImages() API
    - Creates new session in SessionContext
    - Displays thumbnails and stats
 
-3. **ConfigurePage.tsx**:
+3. **SetupPage.tsx**:
+
    - 5 tabs: Images, Pupil, Optics, Object, Phase Basis
    - Real-time preview with 500ms debounce
    - Calls previewConfig() API on every config change
@@ -305,6 +314,7 @@ interface SearchPhaseResponse {
    - Navigate to SearchPage when done
 
 4. **SearchPage.tsx**:
+
    - Configure search flags (which parameters to optimize)
    - Calls runAnalysis() from SessionContext
    - Creates new AnalysisRun in session
@@ -323,7 +333,7 @@ SessionsPage (home)
     ↓ "New Session"
 UploadPage
     ↓ Upload images → parseImages() → Create Session in localStorage
-ConfigurePage
+SetupPage
     ↓ Configure params → previewConfig() (debounced, real-time)
     ↓ Edit until satisfied
 SearchPage
@@ -449,7 +459,7 @@ When `estimate_snr=True`: estimates photon/read noise for optimal least-squares 
 
 ### Real-time Preview Debouncing
 
-ConfigurePage uses 500ms debounce to avoid overwhelming backend with preview requests. Preview is lightweight (no search_phase), so it's fast enough for real-time feedback.
+SetupPage uses 500ms debounce to avoid overwhelming backend with preview requests. Preview is lightweight (no search_phase), so it's fast enough for real-time feedback.
 
 ## Code Style
 

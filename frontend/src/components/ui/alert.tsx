@@ -9,7 +9,7 @@ const alertVariants = cva("relative w-full rounded-lg border", {
       info: "bg-info/10 border-info/30 text-info",
       success: "bg-success/10 border-success/30 text-success",
       warning: "bg-warning/10 border-warning/30 text-warning",
-      destructive: "bg-destructive/10 border-destructive/30 text-destructive",
+      error: "bg-error/10 border-error/30 text-error",
     },
     size: {
       xs: "p-2",

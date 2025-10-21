@@ -1,5 +1,5 @@
 import React from "react";
-import ParamInput from "../../components/ParamInput";
+import ParamInput from "../common/ParamInput";
 import { Button } from "../../components/ui/button";
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
 import { Label } from "../../components/ui/label";
@@ -172,7 +172,7 @@ const PupilTab: React.FC<PupilTabProps> = ({
               <Button
                 onClick={removeSpiderArm}
                 size="sm"
-                variant="secondary"
+                color="secondary"
                 disabled={config.spiderArms.length <= 0}
               >
                 - Remove
@@ -235,7 +235,7 @@ const PupilTab: React.FC<PupilTabProps> = ({
             <Button
               onClick={removeIllumCoeff}
               size="sm"
-              variant="secondary"
+              color="secondary"
               disabled={config.illum.length <= 1}
             >
               - Remove

@@ -270,7 +270,6 @@ Located in `frontend/src/components/ui/`
 <Button variant="secondary">Secondary</Button>
 <Button variant="outline">Outlined</Button>
 <Button variant="ghost">Ghost</Button>
-<Button variant="destructive">Delete</Button>
 ```
 
 **Enhancements:**
@@ -361,6 +360,12 @@ All interactive elements should have neon focus rings:
 ```css
 /* Pulse Glow (for running status) */
 .animate-pulse-glow          /* Cyan glow */
+/* Cyan glow */
+/* Cyan glow */
+/* Cyan glow */
+/* Cyan glow */
+/* Cyan glow */
+/* Cyan glow */
 /* Cyan glow */
 .animate-pulse-glow-green    /* Green glow */
 .animate-pulse-glow-purple; /* Purple glow */
@@ -590,7 +595,7 @@ frontend/src/
 │   └── ThemeSwitcher.tsx     # Dark/light toggle
 ├── pages/
 │   ├── UploadPage.tsx
-│   ├── ConfigurePage.tsx
+│   ├── SetupPage.tsx
 │   ├── SessionsPage.tsx
 │   └── ResultsPage.tsx
 ├── index.css                 # Global styles, theme

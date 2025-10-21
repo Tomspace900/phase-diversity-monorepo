@@ -7,7 +7,7 @@ const ScientificValue: React.FC<Stat> = ({
   unit,
   precision = 3,
   notation = "standard",
-  color = "default",
+  color,
 }) => {
   // Format value with graceful handling of edge cases
   const formatValue = (): string => {
@@ -36,6 +36,33 @@ const ScientificValue: React.FC<Stat> = ({
     }
   };
 
+  // Automatic color mapping by unit
+  const getColorByUnit = (unit?: string): "default" | "cyan" | "green" | "pink" | "purple" | "orange" => {
+    if (!unit) return "default";
+
+    const unitLower = unit.toLowerCase();
+
+    // Time units
+    if (unitLower === "s" || unitLower === "ms" || unitLower === "μs") return "cyan";
+
+    // Spatial units (pixels, image-related)
+    if (unitLower === "px" || unitLower === "pixel" || unitLower === "pixels") return "purple";
+
+    // Distance units
+    if (unitLower === "m" || unitLower === "mm" || unitLower === "μm" || unitLower === "cm") return "orange";
+
+    // Wavelength/optical units
+    if (unitLower === "nm" || unitLower === "λ") return "green";
+
+    // Phase/angle units
+    if (unitLower === "rad" || unitLower === "°" || unitLower === "deg") return "pink";
+
+    // ADU (Analog-to-Digital Units) - astronomical pixel values
+    if (unitLower === "adu") return "cyan";
+
+    return "default";
+  };
+
   // Color mapping
   const colorClasses = {
     default: "text-foreground",
@@ -46,12 +73,14 @@ const ScientificValue: React.FC<Stat> = ({
     orange: "text-accent-orange",
   };
 
-  const valueColor = colorClasses[color];
+  // Use manual color if specified, otherwise use automatic mapping by unit
+  const finalColor = color || getColorByUnit(unit);
+  const valueColor = colorClasses[finalColor];
 
   return (
-    <div className="flex justify-between items-center hover:bg-muted/30 px-2 -mx-2 rounded transition-colors">
-      <span className="text-muted-foreground text-sm">{label}:</span>
-      <span className={`font-mono text-sm ${valueColor}`}>
+    <div className="flex justify-between items-center py-1">
+      <span className="text-sm text-muted-foreground">{label}:</span>
+      <span className={`font-mono text-sm font-medium ${valueColor}`}>
         {formatValue()}
         {unit && <span className="ml-1">{unit}</span>}
       </span>

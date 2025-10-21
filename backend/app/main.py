@@ -53,6 +53,17 @@ class OpticalConfigRequest(BaseModel):
     basis: str = Field("eigen", description="Phase basis: eigen, eigenfull, zernike, or zonal")
     Jmax: int = Field(55, description="Maximum number of phase modes")
 
+    # Initial values for continuation from previous run
+    initial_phase: Optional[List[float]] = Field(None, description="Initial phase coefficients (from previous run)")
+    initial_illum: Optional[List[float]] = Field(None, description="Initial illumination coefficients")
+    initial_defoc_z: Optional[List[float]] = Field(None, description="Initial defocus values")
+    initial_optax_x: Optional[List[float]] = Field(None, description="Initial optical axis X shifts")
+    initial_optax_y: Optional[List[float]] = Field(None, description="Initial optical axis Y shifts")
+    initial_focscale: Optional[float] = Field(None, description="Initial focal scale")
+    initial_object_fwhm_pix: Optional[float] = Field(None, description="Initial object FWHM")
+    initial_amplitude: Optional[List[float]] = Field(None, description="Initial amplitude values")
+    initial_background: Optional[List[float]] = Field(None, description="Initial background values")
+
 
 class PreviewConfigRequest(BaseModel):
     images: List[List[List[float]]] = Field(..., description="3D image array [N, H, W]")
@@ -481,6 +492,43 @@ async def search_phase(request: SearchPhaseRequest):
         finally:
             sys.stdin = old_stdin
             logger.info("✅ Opticsetup created successfully")
+
+        # Inject initial values if provided (for continuation from previous run)
+        if config.initial_phase is not None:
+            opticsetup.phase = np.array(config.initial_phase)
+            logger.info(f"   ↻ Continuing with initial phase ({len(config.initial_phase)} coefficients)")
+
+        if config.initial_illum is not None:
+            opticsetup.illum = config.initial_illum
+            logger.info(f"   ↻ Continuing with initial illumination")
+
+        if config.initial_defoc_z is not None:
+            opticsetup.defoc_z = np.array(config.initial_defoc_z)
+            logger.info(f"   ↻ Continuing with initial defoc_z")
+
+        if config.initial_optax_x is not None:
+            opticsetup.optax_x = np.array(config.initial_optax_x)
+            logger.info(f"   ↻ Continuing with initial optax_x")
+
+        if config.initial_optax_y is not None:
+            opticsetup.optax_y = np.array(config.initial_optax_y)
+            logger.info(f"   ↻ Continuing with initial optax_y")
+
+        if config.initial_focscale is not None:
+            opticsetup.focscale = config.initial_focscale
+            logger.info(f"   ↻ Continuing with initial focscale={config.initial_focscale}")
+
+        if config.initial_object_fwhm_pix is not None:
+            opticsetup.object_fwhm_pix = config.initial_object_fwhm_pix
+            logger.info(f"   ↻ Continuing with initial object_fwhm_pix={config.initial_object_fwhm_pix}")
+
+        if config.initial_amplitude is not None:
+            opticsetup.amplitude = np.array(config.initial_amplitude)
+            logger.info(f"   ↻ Continuing with initial amplitude")
+
+        if config.initial_background is not None:
+            opticsetup.background = np.array(config.initial_background)
+            logger.info(f"   ↻ Continuing with initial background")
 
         # Generate pupil preview images
         pupil_image = generate_thumbnail(opticsetup.pupilmap, size=256)

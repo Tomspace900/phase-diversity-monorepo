@@ -1,16 +1,16 @@
 import React, { useState, useMemo } from "react";
-import { type ValidationResult } from "../utils/validation";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { ValidationResult } from "@/utils/validation";
+import { InfoIcon } from "lucide-react";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import { InfoIcon } from "lucide-react";
-import { Slider } from "./ui/slider";
+} from "../ui/select";
+import { Input } from "../ui/input";
+import { Slider } from "../ui/slider";
 
 export interface ParamInputProps {
   label: string;
@@ -71,7 +71,7 @@ const ParamInput: React.FC<ParamInputProps> = ({
 
   const validationClass = useMemo(() => {
     if (validation && !validation.isValid) {
-      return "border-destructive focus-visible:ring-destructive";
+      return "border-error focus-visible:ring-error";
     }
     if (validation?.warning) {
       return "border-yellow-500 focus-visible:ring-yellow-500";
@@ -85,7 +85,7 @@ const ParamInput: React.FC<ParamInputProps> = ({
       <div className="flex items-center gap-2">
         <Label className="text-sm font-medium">
           {label}
-          {required && <span className="ml-1 text-destructive">*</span>}
+          {required && <span className="ml-1 text-error">*</span>}
         </Label>
 
         {tooltip && (
@@ -121,7 +121,7 @@ const ParamInput: React.FC<ParamInputProps> = ({
               className="flex-1"
               variant={
                 validation && !validation.isValid
-                  ? "destructive"
+                  ? "error"
                   : validation?.warning
                   ? "warning"
                   : "default"
@@ -190,7 +190,7 @@ const ParamInput: React.FC<ParamInputProps> = ({
         <div className="space-y-1">
           {/* Error message */}
           {!validation.isValid && validation.error && (
-            <p className="text-xs text-destructive flex items-start gap-1">
+            <p className="text-xs text-error flex items-start gap-1">
               <span>❌</span>
               <span>{validation.error}</span>
             </p>

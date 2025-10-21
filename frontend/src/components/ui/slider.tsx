@@ -5,7 +5,7 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 
 import { cn } from "@/lib/utils";
 
-type SliderVariant = "default" | "destructive" | "warning" | "success";
+type SliderVariant = "default" | "error" | "warning" | "success";
 
 type SliderProps = React.ComponentPropsWithoutRef<
   typeof SliderPrimitive.Root
@@ -15,7 +15,7 @@ type SliderProps = React.ComponentPropsWithoutRef<
 
 const variantClasses = (v: SliderVariant = "default") => {
   switch (v) {
-    case "destructive":
+    case "error":
       return {
         track: "bg-red-500/20",
         range: "bg-red-500",

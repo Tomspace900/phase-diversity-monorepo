@@ -1,5 +1,5 @@
 import React from "react";
-import ParamInput from "../../components/ParamInput";
+import ParamInput from "../common/ParamInput";
 import { Alert } from "../../components/ui/alert";
 import type { OpticalConfig } from "../../types/session";
 import type { ValidationResult } from "../../utils/validation";
@@ -112,7 +112,7 @@ const ImagesTab: React.FC<ImagesTabProps> = ({
 
         {/* Display defocus array validation */}
         {validations.defoc_z.error && (
-          <Alert variant="destructive" icon="❌" size="xs" className="mt-2">
+          <Alert variant="error" icon="❌" size="xs" className="mt-2">
             {validations.defoc_z.error}
           </Alert>
         )}

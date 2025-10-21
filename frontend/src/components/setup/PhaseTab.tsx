@@ -1,8 +1,8 @@
-import React from 'react';
-import ParamInput from '../../components/ParamInput';
-import { Alert } from '../../components/ui/alert';
-import type { OpticalConfig } from '../../types/session';
-import type { ValidationResult } from '../../utils/validation';
+import React from "react";
+import ParamInput from "../common/ParamInput";
+import { Alert } from "../../components/ui/alert";
+import type { OpticalConfig } from "../../types/session";
+import type { ValidationResult } from "../../utils/validation";
 
 interface PhaseTabProps {
   config: OpticalConfig;
@@ -26,7 +26,10 @@ const PhaseTab: React.FC<PhaseTabProps> = ({
         label="Basis Type"
         value={config.basis}
         onChange={(val) =>
-          updateConfig("basis", val as "eigen" | "eigenfull" | "zernike" | "zonal")
+          updateConfig(
+            "basis",
+            val as "eigen" | "eigenfull" | "zernike" | "zonal"
+          )
         }
         type="select"
         options={["eigen", "eigenfull", "zernike", "zonal"]}
@@ -48,7 +51,13 @@ const PhaseTab: React.FC<PhaseTabProps> = ({
         validation={validations.Jmax}
       />
 
-      <Alert variant="info" icon="📘" title="Basis Selection Guide" size="sm" className="mt-6">
+      <Alert
+        variant="info"
+        icon="📘"
+        title="Basis Selection Guide"
+        size="sm"
+        className="mt-6"
+      >
         <ul className="space-y-1">
           <li>
             <strong>eigen:</strong> Best for {"<"}1000 pixels, fast computation

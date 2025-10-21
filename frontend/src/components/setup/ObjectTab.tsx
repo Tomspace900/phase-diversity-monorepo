@@ -1,5 +1,5 @@
 import React from "react";
-import ParamInput from "../../components/ParamInput";
+import ParamInput from "../common/ParamInput";
 import type { OpticalConfig } from "../../types/session";
 import type { ValidationResult } from "../../utils/validation";
 
