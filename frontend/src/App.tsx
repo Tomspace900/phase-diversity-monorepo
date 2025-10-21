@@ -1,62 +1,44 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import HomePage from './pages/HomePage'
-import ConfigurePage from './pages/ConfigurePage'
-import ResultsPage from './pages/ResultsPage'
-import SessionsPage from './pages/SessionsPage'
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Header } from "./components/Header";
+import { SessionProvider } from "./contexts/SessionContext";
+import UploadPage from "./pages/UploadPage";
+import ConfigurePage from "./pages/ConfigurePage";
+import SearchPage from "./pages/SearchPage";
+import ResultsPage from "./pages/ResultsPage";
+import SessionsPage from "./pages/SessionsPage";
 
 const App: React.FC = () => {
   return (
     <Router>
-      <div className="min-h-screen bg-science-dark text-white">
-        {/* Navigation */}
-        <nav className="bg-science-blue shadow-lg">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-8">
-                <Link to="/" className="text-2xl font-bold hover:text-science-accent">
-                  Phase Diversity
-                </Link>
-                <div className="flex space-x-4">
-                  <Link
-                    to="/"
-                    className="px-3 py-2 rounded hover:bg-science-accent hover:text-science-dark transition"
-                  >
-                    Upload
-                  </Link>
-                  <Link
-                    to="/sessions"
-                    className="px-3 py-2 rounded hover:bg-science-accent hover:text-science-dark transition"
-                  >
-                    Sessions
-                  </Link>
-                </div>
-              </div>
+      <SessionProvider>
+        <div className="min-h-screen bg-background text-foreground">
+          {/* Header with theme switcher */}
+          <Header />
+
+          {/* Main content */}
+          <main className="container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={<SessionsPage />} />
+              <Route path="/upload" element={<UploadPage />} />
+              <Route path="/configure" element={<ConfigurePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/results" element={<ResultsPage />} />
+            </Routes>
+          </main>
+
+          {/* Footer */}
+          <footer className="border-t bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/60 mt-16 py-6">
+            <div className="container mx-auto px-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                Phase Diversity Analysis Tool • Optical Wavefront Retrieval
+              </p>
             </div>
-          </div>
-        </nav>
-
-        {/* Main content */}
-        <main className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/configure/:sessionId" element={<ConfigurePage />} />
-            <Route path="/results/:sessionId" element={<ResultsPage />} />
-            <Route path="/sessions" element={<SessionsPage />} />
-          </Routes>
-        </main>
-
-        {/* Footer */}
-        <footer className="bg-science-blue mt-16 py-6">
-          <div className="container mx-auto px-4 text-center">
-            <p className="text-sm">
-              Phase Diversity Analysis Tool • Optical Wavefront Retrieval
-            </p>
-          </div>
-        </footer>
-      </div>
+          </footer>
+        </div>
+      </SessionProvider>
     </Router>
-  )
-}
+  );
+};
 
-export default App
+export default App;
