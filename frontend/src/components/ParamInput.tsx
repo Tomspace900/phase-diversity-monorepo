@@ -1,22 +1,33 @@
-import React, { useState, useMemo } from 'react'
-import { type ValidationResult } from '../utils/validation'
+import React, { useState, useMemo } from "react";
+import { type ValidationResult } from "../utils/validation";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { InfoIcon } from "lucide-react";
+import { Slider } from "./ui/slider";
 
 export interface ParamInputProps {
-  label: string
-  value: number | string
-  onChange: (value: number | string) => void
-  unit?: string
-  type?: 'number' | 'text' | 'select'
-  options?: string[]
-  min?: number
-  max?: number
-  step?: number
-  tooltip?: string
-  placeholder?: string
-  required?: boolean
-  validation?: ValidationResult
-  className?: string
-  disabled?: boolean
+  label: string;
+  value: number | string;
+  onChange: (value: number | string) => void;
+  unit?: string;
+  type?: "number" | "text" | "select" | "slider";
+  options?: string[];
+  min?: number;
+  max?: number;
+  step?: number;
+  tooltip?: string;
+  placeholder?: string;
+  required?: boolean;
+  validation?: ValidationResult;
+  className?: string;
+  disabled?: boolean;
 }
 
 const ParamInput: React.FC<ParamInputProps> = ({
@@ -24,7 +35,7 @@ const ParamInput: React.FC<ParamInputProps> = ({
   value,
   onChange,
   unit,
-  type = 'number',
+  type = "number",
   options = [],
   min,
   max,
@@ -33,83 +44,63 @@ const ParamInput: React.FC<ParamInputProps> = ({
   placeholder,
   required = false,
   validation,
-  className = '',
+  className = "",
   disabled = false,
 }) => {
-  const [showTooltip, setShowTooltip] = useState(false)
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
-    const rawValue = e.target.value
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const rawValue = e.target.value;
 
-    if (type === 'number') {
+    if (type === "number") {
       // Support scientific notation (e.g., 5.5e-7)
-      const numValue = parseFloat(rawValue)
-      onChange(isNaN(numValue) ? rawValue : numValue)
+      const numValue = parseFloat(rawValue);
+      onChange(isNaN(numValue) ? rawValue : numValue);
     } else {
-      onChange(rawValue)
+      onChange(rawValue);
     }
-  }
+  };
 
-  // Determine border color based on validation state (memoized)
-  const baseInputClass = useMemo(() => {
-    let borderClass = 'border-gray-600 focus:ring-science-blue focus:border-science-blue'
+  const handleSelectChange = (newValue: string): void => {
+    onChange(newValue);
+  };
 
-    if (validation) {
-      if (!validation.isValid) {
-        borderClass = 'border-red-500 focus:ring-red-500 focus:border-red-500'
-      } else if (validation.warning) {
-        borderClass = 'border-yellow-500 focus:ring-yellow-500 focus:border-yellow-500'
-      } else {
-        borderClass = 'border-green-500 focus:ring-green-500 focus:border-green-500'
-      }
+  const handleSliderChange = (newValue: number[]): void => {
+    onChange(newValue[0]);
+  };
+
+  const validationClass = useMemo(() => {
+    if (validation && !validation.isValid) {
+      return "border-destructive focus-visible:ring-destructive";
     }
-
-    return `
-      flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg
-      focus:outline-none focus:ring-2 transition
-      disabled:opacity-50 disabled:cursor-not-allowed
-      ${borderClass}
-    `.trim()
-  }, [validation])
+    if (validation?.warning) {
+      return "border-yellow-500 focus-visible:ring-yellow-500";
+    }
+    return "";
+  }, [validation]);
 
   return (
-    <div className={`mb-4 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       {/* Label with optional tooltip and required indicator */}
-      <div className="flex items-center mb-1">
-        <label className="block text-sm font-medium text-gray-200">
+      <div className="flex items-center gap-2">
+        <Label className="text-sm font-medium">
           {label}
-          {required && <span className="ml-1 text-red-400">*</span>}
-        </label>
+          {required && <span className="ml-1 text-destructive">*</span>}
+        </Label>
 
         {tooltip && (
-          <div className="relative ml-2">
-            <button
-              type="button"
+          <div className="flex items-center relative">
+            <InfoIcon
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              className="text-gray-400 hover:text-science-accent transition"
+              className="h-4 w-4 text-muted-foreground transition-colors"
               aria-label="Show tooltip"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </button>
-
+            />
             {/* Tooltip popup */}
             {showTooltip && (
-              <div className="absolute left-6 top-0 z-10 w-64 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg border border-gray-700">
+              <div className="absolute left-6 -top-4 z-10 w-64 px-3 py-2 text-xs bg-popover text-popover-foreground rounded-lg shadow-lg border border-border">
                 {tooltip}
-                <div className="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-2 h-2 bg-gray-900 border-l border-b border-gray-700 rotate-45"></div>
+                <div className="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-2 h-2 bg-popover border-l border-b border-border rotate-45"></div>
               </div>
             )}
           </div>
@@ -117,71 +108,113 @@ const ParamInput: React.FC<ParamInputProps> = ({
       </div>
 
       {/* Input field with optional unit */}
-      <div className="flex items-center">
-        {type === 'select' ? (
-          <select
-            value={value}
-            onChange={handleChange}
+      <div className="flex items-center gap-2">
+        {type === "slider" ? (
+          <div className="flex flex-1 items-center gap-4">
+            <Slider
+              min={min}
+              max={max}
+              step={step}
+              value={[Number(value)]}
+              onValueChange={handleSliderChange}
+              disabled={disabled}
+              className="flex-1"
+              variant={
+                validation && !validation.isValid
+                  ? "destructive"
+                  : validation?.warning
+                  ? "warning"
+                  : "default"
+              }
+            />
+            <div className="w-1/5 min-w-24 relative">
+              <Input
+                type="number"
+                value={value}
+                onChange={handleInputChange}
+                min={min}
+                max={max}
+                step={step}
+                placeholder={placeholder}
+                disabled={disabled}
+                className={`${unit ? "pr-10" : ""} ${validationClass}`}
+              />
+              {unit && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                  {unit}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : type === "select" ? (
+          <Select
+            value={String(value)}
+            onValueChange={handleSelectChange}
             disabled={disabled}
-            className={baseInputClass}
           >
-            {options.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className={`flex-1 ${validationClass}`}>
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         ) : (
-          <input
-            type={type}
-            value={value}
-            onChange={handleChange}
-            min={min}
-            max={max}
-            step={step}
-            placeholder={placeholder}
-            disabled={disabled}
-            className={baseInputClass}
-          />
-        )}
-
-        {unit && (
-          <span className="ml-2 text-sm text-gray-400 whitespace-nowrap">
-            {unit}
-          </span>
+          <div className="relative flex-1">
+            <Input
+              type={type}
+              value={value}
+              onChange={handleInputChange}
+              min={min}
+              max={max}
+              step={step}
+              placeholder={placeholder}
+              disabled={disabled}
+              className={`w-full ${unit ? "pr-10" : ""} ${validationClass}`}
+            />
+            {unit && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                {unit}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
       {/* Validation messages */}
       {validation && (
-        <div className="mt-1 space-y-1">
+        <div className="space-y-1">
           {/* Error message */}
           {!validation.isValid && validation.error && (
-            <p className="text-xs text-red-400 flex items-start">
-              <span className="mr-1">❌</span>
+            <p className="text-xs text-destructive flex items-start gap-1">
+              <span>❌</span>
               <span>{validation.error}</span>
             </p>
           )}
 
           {/* Warning message */}
           {validation.isValid && validation.warning && (
-            <p className="text-xs text-yellow-400 flex items-start">
-              <span className="mr-1">⚠️</span>
+            <p className="text-xs text-yellow-500 flex items-start gap-1">
+              <span>⚠️</span>
               <span>{validation.warning}</span>
             </p>
           )}
 
           {/* Helper text (always shown if present) */}
           {validation.helperText && (
-            <p className="text-xs text-gray-400 flex items-start">
-              <span className="mr-1">ℹ️</span>
+            <p className="text-xs text-muted-foreground flex items-start gap-1">
+              <span>ℹ️</span>
               <span>{validation.helperText}</span>
             </p>
           )}
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ParamInput
+export default ParamInput;
