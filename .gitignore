@@ -211,10 +211,6 @@ frontend/.vite/
 # ==================
 # Project Specific - Phase Diversity
 # ==================
-# Session storage (JSON files)
-backend/app/storage/*.json
-!backend/app/storage/.gitkeep
-
 # Test data and results
 *.fits
 *.npy

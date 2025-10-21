@@ -7,6 +7,7 @@
 **This is a research tool for astronomers and astrophysicists**, not a production application.
 
 **Purpose:** Provide an experimental web interface where scientists can:
+
 - Iterate on phase diversity algorithms
 - Visualize results interactively
 - Test different optical configurations
@@ -19,6 +20,7 @@
 Phase retrieval from defocused focal plane images using Levenberg-Marquardt optimization to recover wavefront aberrations in optical systems.
 
 **Features:**
+
 - 🖼️ Upload and analyze images (FITS/NPY format)
 - ⚙️ Configure optical parameters (pupil, wavelength, basis)
 - 🔍 Run phase diversity analysis
@@ -48,6 +50,7 @@ cd phase-diversity
 ```
 
 This will:
+
 - Create a Python virtual environment
 - Install all Python dependencies
 - Install all Node.js dependencies
@@ -59,6 +62,7 @@ This will:
 ```
 
 This starts:
+
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
 - **Frontend UI:** http://localhost:5173
@@ -114,6 +118,7 @@ phase-diversity/
 ### Manual Setup (Alternative to scripts)
 
 **Backend:**
+
 ```bash
 cd backend
 python3 -m venv venv
@@ -123,6 +128,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Frontend:**
+
 ```bash
 cd frontend
 npm install
@@ -132,6 +138,7 @@ npm run dev
 ### Using Conda (Alternative to venv)
 
 Edit `scripts/setup.sh` and uncomment the conda lines:
+
 ```bash
 conda create -n phase-diversity python=3.10 -y
 conda activate phase-diversity
@@ -141,11 +148,13 @@ pip install -r backend/requirements.txt
 ### Environment Variables
 
 Copy `.env.example` to `.env` and adjust as needed:
+
 ```bash
 cp .env.example .env
 ```
 
 Key variables:
+
 - `BACKEND_PORT`: Backend API port (default: 8000)
 - `VITE_API_URL`: Backend URL for frontend (default: http://localhost:8000)
 - `STORAGE_PATH`: Path for session storage
@@ -153,33 +162,39 @@ Key variables:
 ## 🐳 Docker Deployment
 
 ### Development Mode
+
 ```bash
 docker-compose -f docker-compose.dev.yml up
 ```
 
 Features:
+
 - Hot reload for both frontend and backend
 - Source code mounted as volumes
 - Logs visible in terminal
 
 ### Production Mode
+
 ```bash
 docker-compose up -d
 ```
 
 Features:
+
 - Optimized builds
 - nginx serving frontend
 - Automatic restart on failure
 - Health checks
 
 Access:
+
 - **Frontend:** http://localhost
 - **Backend:** http://localhost:8000
 
 ## 📚 API Documentation
 
 Once the backend is running, visit:
+
 - **Interactive API docs:** http://localhost:8000/docs
 - **Alternative docs:** http://localhost:8000/redoc
 
@@ -188,13 +203,14 @@ Once the backend is running, visit:
 - `POST /api/upload` - Upload defocused images
 - `POST /api/setup` - Configure optical setup
 - `POST /api/search` - Launch phase search
-- `GET /api/results/{session_id}` - Retrieve results
+- `GET /api/results` - Retrieve results
 - `GET /api/sessions` - List saved sessions
 - `WS /ws/logs` - Real-time logging WebSocket
 
 ## 🧪 Testing
 
 ### Backend Tests
+
 ```bash
 cd backend
 source venv/bin/activate
@@ -202,6 +218,7 @@ pytest
 ```
 
 ### Frontend Tests
+
 ```bash
 cd frontend
 npm run test
@@ -210,11 +227,13 @@ npm run test
 ## 🧹 Cleanup
 
 Remove build artifacts and caches:
+
 ```bash
 ./scripts/clean.sh
 ```
 
 This script will prompt you before removing:
+
 - Python cache files (automatic)
 - Build directories (automatic)
 - `node_modules` (confirmation required)
@@ -231,12 +250,14 @@ The core phase diversity algorithm is based on:
 > algorithm.
 
 For detailed information about the algorithm and parameters, see:
+
 - [Core Algorithm Documentation](backend/app/core/README.md)
 - [Original Research](backend/app/core/README.md)
 
 ## 🤝 Contributing
 
 The core phase diversity code in `backend/app/core/` is the original scientific implementation and should **NOT** be modified. All development should focus on:
+
 - Backend API improvements (`backend/app/main.py`)
 - Frontend features and UI (`frontend/src/`)
 - DevOps and deployment configurations
@@ -244,18 +265,21 @@ The core phase diversity code in `backend/app/core/` is the original scientific 
 ## 📝 Architecture Notes
 
 ### Backend Design
+
 - FastAPI provides REST API and WebSocket endpoints
 - Original Python code wrapped without modification
 - Session management with UUID-based storage
 - Real-time logging via WebSocket for progress monitoring
 
 ### Frontend Design
+
 - React with Vite for fast development
 - TailwindCSS for styling
 - Plotly.js for interactive visualizations
 - Simple fetch-based API client (no heavy dependencies)
 
 ### Data Flow
+
 1. User uploads images → Backend stores with session ID
 2. User configures parameters → Backend creates `Opticsetup` instance
 3. User launches search → Backend runs `search_phase()` method
@@ -264,21 +288,25 @@ The core phase diversity code in `backend/app/core/` is the original scientific 
 ## 🐛 Troubleshooting
 
 ### Backend won't start
+
 - Verify Python 3.10+ is installed: `python3 --version`
 - Check port 8000 is available: `lsof -i :8000`
 - Try recreating virtual environment
 
 ### Frontend won't start
+
 - Verify Node 18+ is installed: `node --version`
 - Check port 5173 is available: `lsof -i :5173`
 - Try removing `node_modules` and reinstalling
 
 ### WebSocket connection fails
+
 - Ensure both backend and frontend are running
 - Check browser console for CORS errors
 - Verify firewall settings
 
 ### Docker issues
+
 - Ensure Docker daemon is running
 - Try rebuilding images: `docker-compose build --no-cache`
 - Check logs: `docker-compose logs`
@@ -295,5 +323,6 @@ The core phase diversity code in `backend/app/core/` is the original scientific 
 ## 📧 Support
 
 For issues related to:
+
 - **Web Application:** Open an issue in this repository
 - **Core Algorithm:** Refer to [backend/app/core/README.md](backend/app/core/README.md)
