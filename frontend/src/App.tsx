@@ -2,11 +2,10 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Header } from "./components/Header";
 import { SessionProvider } from "./contexts/SessionContext";
-import UploadPage from "./pages/UploadPage";
-import ConfigurePage from "./pages/ConfigurePage";
-import SearchPage from "./pages/SearchPage";
-import ResultsPage from "./pages/ResultsPage";
 import SessionsPage from "./pages/SessionsPage";
+import UploadPage from "./pages/UploadPage";
+import SetupPage from "./pages/SetupPage";
+import PhaseSearchPage from "./pages/SearchPage";
 
 const App: React.FC = () => {
   return (
@@ -17,21 +16,24 @@ const App: React.FC = () => {
           <Header />
 
           {/* Main content */}
-          <main className="container mx-auto px-4 py-8">
+          <main className="px-4 py-8">
             <Routes>
               <Route path="/" element={<SessionsPage />} />
               <Route path="/upload" element={<UploadPage />} />
-              <Route path="/configure" element={<ConfigurePage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/results" element={<ResultsPage />} />
+              <Route path="/setup" element={<SetupPage />} />
+              <Route path="/search" element={<PhaseSearchPage />} />
             </Routes>
           </main>
 
           {/* Footer */}
-          <footer className="border-t bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/60 mt-16 py-6">
-            <div className="container mx-auto px-4 text-center">
-              <p className="text-sm text-muted-foreground">
+          <footer className="border-t bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/60 py-3">
+            <div className="px-4 text-center">
+              <p className="text-xs text-muted-foreground">
                 Phase Diversity Analysis Tool • Optical Wavefront Retrieval
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                © {new Date().getFullYear()} Eric Gendron • Research tool for
+                astronomers and astrophysicists
               </p>
             </div>
           </footer>

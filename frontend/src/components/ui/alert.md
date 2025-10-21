@@ -26,21 +26,21 @@ import { Alert } from './components/ui/alert';
 </Alert>
 
 // Alert compact (taille xs)
-<Alert variant="destructive" icon="❌" size="xs">
+<Alert variant="error" icon="❌" size="xs">
   Erreur de validation
 </Alert>
 ```
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `variant` | `'default' \| 'info' \| 'success' \| 'warning' \| 'destructive'` | `'default'` | Variant visuel de l'alerte |
-| `size` | `'xs' \| 'sm'` | `'sm'` | Taille de l'alerte (padding et taille de texte) |
-| `icon` | `React.ReactNode` | - | Icône à afficher (emoji ou composant) |
-| `title` | `string` | - | Titre optionnel de l'alerte |
-| `children` | `React.ReactNode` | - | Contenu/description de l'alerte |
-| `className` | `string` | - | Classes CSS additionnelles |
+| Prop        | Type                                                       | Default     | Description                                     |
+| ----------- | ---------------------------------------------------------- | ----------- | ----------------------------------------------- |
+| `variant`   | `'default' \| 'info' \| 'success' \| 'warning' \| 'error'` | `'default'` | Variant visuel de l'alerte                      |
+| `size`      | `'xs' \| 'sm'`                                             | `'sm'`      | Taille de l'alerte (padding et taille de texte) |
+| `icon`      | `React.ReactNode`                                          | -           | Icône à afficher (emoji ou composant)           |
+| `title`     | `string`                                                   | -           | Titre optionnel de l'alerte                     |
+| `children`  | `React.ReactNode`                                          | -           | Contenu/description de l'alerte                 |
+| `className` | `string`                                                   | -           | Classes CSS additionnelles                      |
 
 ## Variants
 
@@ -48,7 +48,7 @@ import { Alert } from './components/ui/alert';
 - **`info`**: Information (bleu cyan) 💡 ℹ️ 📘
 - **`success`**: Succès (vert) ✓ ✅
 - **`warning`**: Avertissement (orange/jaune) ⚠️
-- **`destructive`**: Erreur (rouge) ❌
+- **`error`**: Erreur (rouge) ❌
 
 ## Sizes
 
@@ -70,10 +70,18 @@ import { Alert } from './components/ui/alert';
 ```tsx
 <Alert variant="info" icon="📘" title="Basis Selection Guide" size="sm">
   <ul className="space-y-1">
-    <li><strong>eigen:</strong> Best for &lt;1000 pixels, fast computation</li>
-    <li><strong>eigenfull:</strong> All modes, slow for large pupils</li>
-    <li><strong>zernike:</strong> Classical polynomials, good for circular pupils</li>
-    <li><strong>zonal:</strong> Direct pixel representation (experimental)</li>
+    <li>
+      <strong>eigen:</strong> Best for &lt;1000 pixels, fast computation
+    </li>
+    <li>
+      <strong>eigenfull:</strong> All modes, slow for large pupils
+    </li>
+    <li>
+      <strong>zernike:</strong> Classical polynomials, good for circular pupils
+    </li>
+    <li>
+      <strong>zonal:</strong> Direct pixel representation (experimental)
+    </li>
   </ul>
 </Alert>
 ```
@@ -83,11 +91,7 @@ import { Alert } from './components/ui/alert';
 ```tsx
 <Alert
   variant={
-    !validation.isValid
-      ? "destructive"
-      : validation.warning
-      ? "warning"
-      : "success"
+    !validation.isValid ? "error" : validation.warning ? "warning" : "success"
   }
   icon="🔍"
   title="Shannon Sampling Check"
@@ -100,35 +104,39 @@ import { Alert } from './components/ui/alert';
 ### Messages de validation compacts
 
 ```tsx
-{validation.error && (
-  <Alert variant="destructive" icon="❌" size="xs">
-    {validation.error}
-  </Alert>
-)}
+{
+  validation.error && (
+    <Alert variant="error" icon="❌" size="xs">
+      {validation.error}
+    </Alert>
+  );
+}
 ```
 
 ### Liste d'avertissements
 
 ```tsx
-{warnings.length > 0 && (
-  <Alert variant="warning" icon="⚠️" title="Warnings" size="sm">
-    <ul className="space-y-1">
-      {warnings.map((warning, idx) => (
-        <li key={idx}>{warning}</li>
-      ))}
-    </ul>
-  </Alert>
-)}
+{
+  warnings.length > 0 && (
+    <Alert variant="warning" icon="⚠️" title="Warnings" size="sm">
+      <ul className="space-y-1">
+        {warnings.map((warning, idx) => (
+          <li key={idx}>{warning}</li>
+        ))}
+      </ul>
+    </Alert>
+  );
+}
 ```
 
 ## Tailles de texte automatiques
 
 Le composant gère automatiquement les tailles de texte selon la prop `size` :
 
-| Size | Padding | Titre | Description | Espacement titre |
-|------|---------|-------|-------------|------------------|
-| `xs` | `p-2` | `text-xs` | `text-xs` | `mb-1` |
-| `sm` | `p-3` | `text-sm` | `text-sm` | `mb-2` |
+| Size | Padding | Titre     | Description | Espacement titre |
+| ---- | ------- | --------- | ----------- | ---------------- |
+| `xs` | `p-2`   | `text-xs` | `text-xs`   | `mb-1`           |
+| `sm` | `p-3`   | `text-sm` | `text-sm`   | `mb-2`           |
 
 ## Migration depuis les anciens styles inline
 
@@ -151,7 +159,7 @@ Le composant gère automatiquement les tailles de texte selon la prop `size` :
 ## Notes de conception
 
 - Utilise `class-variance-authority` pour la gestion des variants et sizes
-- Compatible avec le design system du projet (couleurs info/success/warning/destructive)
+- Compatible avec le design system du projet (couleurs info/success/warning/error)
 - API simplifiée : juste `title` + `children` au lieu de sous-composants
 - Layout flexible avec `flex items-start gap-2` pour aligner icône et contenu
 - Support complet des props HTML standard via spread

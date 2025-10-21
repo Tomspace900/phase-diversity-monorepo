@@ -51,6 +51,17 @@ export interface OpticalConfig {
   // Phase basis
   basis: "eigen" | "eigenfull" | "zernike" | "zonal";
   Jmax: number;
+
+  // Initial values for continuation from previous run
+  initial_phase?: number[];
+  initial_illum?: number[];
+  initial_defoc_z?: number[];
+  initial_optax_x?: number[];
+  initial_optax_y?: number[];
+  initial_focscale?: number;
+  initial_object_fwhm_pix?: number;
+  initial_amplitude?: number[];
+  initial_background?: number[];
 }
 
 
@@ -115,9 +126,11 @@ export interface SearchPhaseResponse {
 export interface AnalysisRun {
   id: string; // UUID
   timestamp: string; // ISO timestamp
+  parent_run_id?: string; // ID of parent run if this is a continuation
   config: OpticalConfig; // snapshot of config used
   flags: SearchFlags;
   response: SearchPhaseResponse; // full response from backend
+  notes?: string; // User notes about this run
 }
 
 

@@ -1,5 +1,5 @@
 import React from "react";
-import ParamInput from "../../components/ParamInput";
+import ParamInput from "../common/ParamInput";
 import { Alert } from "../../components/ui/alert";
 import type { OpticalConfig } from "../../types/session";
 import type { ValidationResult } from "../../utils/validation";
@@ -99,7 +99,7 @@ const OpticsTab: React.FC<OpticsTabProps> = ({
       <Alert
         variant={
           !validations.shannon.isValid
-            ? "destructive"
+            ? "error"
             : validations.shannon.warning
             ? "warning"
             : "success"

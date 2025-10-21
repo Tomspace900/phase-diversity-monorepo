@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import ScientificValue from "./ScientificValue";
 
 export interface Stat {
@@ -8,7 +7,7 @@ export interface Stat {
   unit?: string;
   precision?: number;
   notation?: "standard" | "scientific" | "engineering";
-  color?: "default" | "cyan" | "green" | "pink" | "purple" | "orange";
+  color?: "default" | "cyan" | "green" | "pink" | "purple" | "orange"; // Optional: auto-detected from unit if not specified
 }
 
 interface StatsGridProps {
@@ -34,20 +33,20 @@ const StatsGrid: React.FC<StatsGridProps> = ({
   const gridClass = gridColsClasses[columns];
 
   return (
-    <Card className={className}>
+    <div className={`overflow-hidden rounded-lg border border-border ${className}`}>
       {title && (
-        <CardHeader>
-          <CardTitle className="text-primary">{title}</CardTitle>
-        </CardHeader>
+        <div className="bg-muted/30 px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        </div>
       )}
-      <CardContent className={title ? "" : "pt-6"}>
+      <div className="p-4">
         <div className={`grid ${gridClass} gap-x-6 gap-y-2`}>
           {stats.map((stat, index) => (
             <ScientificValue key={index} {...stat} />
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

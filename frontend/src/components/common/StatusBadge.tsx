@@ -81,9 +81,9 @@ const statusConfig: Record<
   error: {
     label: "Error",
     icon: XCircle, // Ou AlertTriangle
-    bg: "bg-destructive/10",
-    text: "text-destructive",
-    border: "border-destructive/50",
+    bg: "bg-error/10",
+    text: "text-error",
+    border: "border-error/50",
   },
 };
 

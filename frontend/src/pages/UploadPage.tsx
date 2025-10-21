@@ -1,71 +1,64 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { useSession } from "../contexts/SessionContext";
-import ImageUploader from "../components/ImageUploader";
-import { Button } from "../components/ui/button";
+import ImageUploader from "../components/upload/ImageUploader";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { StatsGrid, type Stat } from "../components/scientific";
+import { LoadingState, StatsGrid, type Stat } from "../components/common";
 import { type ParsedImages } from "../types/session";
 
 const UploadPage: React.FC = () => {
   const navigate = useNavigate();
-  const { currentSession, updateSessionImages } = useSession();
+  const {
+    currentSession,
+    updateSessionImages,
+    isLoading: isSessionLoading,
+  } = useSession();
 
   const [uploadData, setUploadData] = useState<ParsedImages | null>(null);
 
-  // Restore upload data from existing session if available
+  useEffect(() => {
+    if (!isSessionLoading && !currentSession) navigate("/");
+  }, [currentSession, isSessionLoading]);
+
   useEffect(() => {
     if (currentSession?.images) {
       setUploadData(currentSession.images);
     }
   }, [currentSession]);
 
-  const handleUploadComplete = async (data: ParsedImages): Promise<void> => {
-    if (!currentSession) {
-      console.error("Upload complete but no active session found.");
-      alert("Error: No active session. Please create a new session first.");
-      return;
-    }
+  if (!currentSession) {
+    return <LoadingState message="No active session..." />;
+  }
 
+  const handleUploadComplete = (images: ParsedImages) => {
     try {
-      updateSessionImages(data);
-      setUploadData(data);
+      updateSessionImages(images);
+      setUploadData(images);
     } catch (error) {
       console.error("Failed to update session with images:", error);
     }
   };
 
-  const handleNextStep = (): void => {
-    if (currentSession) {
-      navigate(`/configure`);
-    }
-  };
-
-  const handleNewSession = async (): Promise<void> => {
-    setUploadData(null);
-  };
-
-  // Prepare stats for StatsGrid
   const stats: Stat[] = uploadData
     ? [
         {
           label: "Images",
           value: uploadData.stats.shape[0],
           precision: 0,
-          color: "cyan",
         },
         {
           label: "Dimensions",
-          value: uploadData.stats.shape[1],
-          unit: "× " + uploadData.stats.shape[2] + " px",
-          precision: 0,
-          color: "green",
+          value: `${uploadData.stats.shape[1]} × ${uploadData.stats.shape[2]}`,
+          unit: "px",
+        },
+        {
+          label: "Data Type",
+          value: uploadData.original_dtype as any,
         },
         {
           label: "Dynamic Range",
@@ -73,7 +66,6 @@ const UploadPage: React.FC = () => {
           unit: "ADU",
           notation: "scientific",
           precision: 2,
-          color: "purple",
         },
         {
           label: "Mean Flux",
@@ -81,7 +73,6 @@ const UploadPage: React.FC = () => {
           unit: "ADU",
           notation: "scientific",
           precision: 3,
-          color: "orange",
         },
         {
           label: "Std Dev",
@@ -90,15 +81,11 @@ const UploadPage: React.FC = () => {
           notation: "scientific",
           precision: 3,
         },
-        {
-          label: "Data Type",
-          value: uploadData.original_dtype as any,
-        },
       ]
     : [];
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="h-[calc(100vh-8rem)] max-w-5xl mx-auto">
       {/* Upload or Preview */}
       {!uploadData ? (
         <ImageUploader onUploadComplete={handleUploadComplete} />
@@ -109,9 +96,11 @@ const UploadPage: React.FC = () => {
               {/* Thumbnails */}
               <Card className="border-accent-green/20">
                 <CardHeader className="bg-accent-green/5">
-                  <CardTitle className="text-accent-green">
-                    Uploaded Images
-                  </CardTitle>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-accent-green">
+                      Uploaded Images
+                    </CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4 mt-4">
@@ -146,21 +135,6 @@ const UploadPage: React.FC = () => {
               />
             </>
           )}
-
-          {/* Next Button */}
-          <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={handleNewSession}>
-              Upload New Images
-            </Button>
-            <Button
-              onClick={handleNextStep}
-              size="lg"
-              className="group shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
-            >
-              Next: Configure Setup
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </div>
         </div>
       )}
     </div>

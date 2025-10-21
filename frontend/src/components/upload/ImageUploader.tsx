@@ -5,12 +5,12 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Alert } from "./ui/alert";
-import { Button } from "./ui/button";
-import { parseImages } from "../api";
-import { type ParsedImages } from "../types/session";
-import { LoadingState } from "./scientific";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Alert } from "../ui/alert";
+import { Button } from "../ui/button";
+import { parseImages } from "../../api";
+import { type ParsedImages } from "../../types/session";
+import { LoadingState } from "../common";
 
 interface ImageUploaderProps {
   onUploadComplete: (data: ParsedImages) => void;
@@ -220,7 +220,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               <div className="flex gap-2 pt-2">
                 <Button
                   onClick={handleSelectNew}
-                  variant="secondary"
+                  color="secondary"
                   size="sm"
                   className="flex-1"
                 >
@@ -277,13 +277,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         {/* Error Display */}
         {error && !uploading && (
           <Alert
-            variant="destructive"
+            variant="error"
             icon={<XCircle className="h-4 w-4" />}
             title="Upload Failed"
             size="sm"
           >
             <p className="mb-3">{error}</p>
-            <Button onClick={handleSelectNew} variant="secondary" size="sm">
+            <Button onClick={handleSelectNew} color="secondary" size="sm">
               Select New Files
             </Button>
           </Alert>
