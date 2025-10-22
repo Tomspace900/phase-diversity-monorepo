@@ -8,11 +8,14 @@ import {
   Search,
   Upload,
   type LucideIcon,
+  SquareTerminal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/contexts/SessionContext";
+import { useLogs } from "@/contexts/LogsContext";
+import { Badge } from "@/components/ui/badge";
 import React from "react";
-import { getCurrentSessionStatus } from "./common";
+import { getCurrentSessionStatus } from "@/components/common";
 
 type AccentColor = "green" | "cyan" | "purple" | "pink" | "orange";
 
@@ -115,11 +118,8 @@ const workflowSteps: Step[] = [
 export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    currentSession,
-    createSession,
-    isLoading: isSessionLoading,
-  } = useSession();
+  const { currentSession } = useSession();
+  const { toggleDrawer, unreadCount } = useLogs();
 
   const currentPath = location.pathname;
   const currentStepIndex = workflowSteps.findIndex(
@@ -128,15 +128,6 @@ export function Header() {
   const currentStep = workflowSteps[currentStepIndex];
 
   const styles = currentStep ? colorStyles[currentStep.color] : null;
-
-  const handleCreateNewSession = async () => {
-    try {
-      await createSession();
-      navigate("/upload");
-    } catch (error) {
-      console.error("Failed to create new session:", error);
-    }
-  };
 
   const canAccessStep = (step: Step): boolean => {
     const status = getCurrentSessionStatus(currentSession);
@@ -172,54 +163,72 @@ export function Header() {
               </h1>
             </Link>
 
-            {currentSession ? (
-              <>
-                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
-                  {workflowSteps.slice(1).map((step, index) => {
-                    const isCurrentStep = step.path === currentPath;
-                    const isAccessible = canAccessStep(step);
+            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
 
-                    return (
-                      <React.Fragment key={step.path}>
-                        {index > 0 && (
-                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
-                        )}
-                        <HeaderButton
-                          step={step}
-                          isAccessible={isAccessible}
-                          isCurrentStep={isCurrentStep}
-                        />
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              </>
+            {currentSession ? (
+              <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
+                {workflowSteps.slice(1).map((step, index) => {
+                  const isCurrentStep = step.path === currentPath;
+                  const isAccessible = canAccessStep(step);
+
+                  return (
+                    <React.Fragment key={step.path}>
+                      {index > 0 && (
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+                      )}
+                      <Button
+                        variant={isCurrentStep ? "default" : "ghost"}
+                        color={isCurrentStep ? step.color : "muted"}
+                        size="sm"
+                        icon={step.icon}
+                        disabled={!isAccessible}
+                        onClick={() => isAccessible && navigate(step.path)}
+                      >
+                        {step.shortTitle}
+                      </Button>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
             ) : (
-              <>
-                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                <HeaderButton
-                  step={workflowSteps[0]}
-                  isAccessible
-                  isCurrentStep={workflowSteps[0].path === currentPath}
-                />
-              </>
+              (() => {
+                const step = workflowSteps[0];
+                const isCurrentStep = step.path === currentPath;
+                return (
+                  <Button
+                    variant={isCurrentStep ? "default" : "ghost"}
+                    color={isCurrentStep ? step.color : "muted"}
+                    size="sm"
+                    icon={step.icon}
+                    onClick={() => navigate(step.path)}
+                  >
+                    {step.shortTitle}
+                  </Button>
+                );
+              })()
             )}
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {currentSession && (
-              <Button
-                color="secondary"
-                size="sm"
-                onClick={handleCreateNewSession}
-                disabled={isSessionLoading}
-              >
-                New Session
-              </Button>
-            )}
-            <div className="border-l h-6 mx-1"></div>
+            <Button
+              variant="icon"
+              size="md"
+              color="secondary"
+              onClick={toggleDrawer}
+              className="relative"
+              title="Backend Logs"
+              icon={SquareTerminal}
+            >
+              {unreadCount > 0 && (
+                <Badge
+                  variant="error"
+                  className="absolute top-0 right-0 h-3.5 min-w-3.5 px-1 text-[8px] font-semibold"
+                >
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </Badge>
+              )}
+            </Button>
             <ThemeSwitcher />
           </div>
         </nav>
@@ -227,54 +236,3 @@ export function Header() {
     </header>
   );
 }
-
-const HeaderButton = ({
-  step,
-  isAccessible,
-  isCurrentStep,
-}: {
-  step: Step;
-  isAccessible: boolean;
-  isCurrentStep: boolean;
-}) => {
-  const navigate = useNavigate();
-
-  const styles = colorStyles[step.color];
-  const StepIcon = step.icon;
-
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => isAccessible && navigate(step.path)}
-      disabled={!isAccessible}
-      className={cn(
-        "flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all flex-shrink-0",
-        "text-muted-foreground hover:text-foreground",
-        isCurrentStep && [
-          styles.iconBg,
-          styles.iconBorder,
-          "border",
-          "text-foreground",
-        ],
-        !isAccessible && "opacity-40 cursor-not-allowed"
-      )}
-    >
-      <StepIcon
-        className={cn(
-          "h-3.5 w-3.5",
-          isCurrentStep ? styles.iconText : "text-muted-foreground"
-        )}
-      />
-      <span
-        className={cn(
-          "text-sm font-medium whitespace-nowrap",
-          isCurrentStep && styles.titleGradient,
-          !isCurrentStep && "text-muted-foreground"
-        )}
-      >
-        {step.shortTitle}
-      </span>
-    </Button>
-  );
-};

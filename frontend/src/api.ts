@@ -104,20 +104,8 @@ export const connectLogsWebSocket = (onMessage: (message: string) => void): WebS
   const wsUrl = API_URL.replace("http", "ws");
   const ws = new WebSocket(`${wsUrl}/ws/logs`);
 
-  ws.onopen = (): void => {
-    // WebSocket connected
-  };
-
   ws.onmessage = (event: MessageEvent): void => {
     onMessage(event.data);
-  };
-
-  ws.onerror = (error: Event): void => {
-    console.error("WebSocket error:", error);
-  };
-
-  ws.onclose = (): void => {
-    // WebSocket disconnected
   };
 
   return ws;
