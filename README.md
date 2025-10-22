@@ -34,7 +34,6 @@ Phase retrieval from defocused focal plane images using Levenberg-Marquardt opti
 
 - **Python 3.13** (recommended) or **3.10+** (for backend)
   - ✅ Python 3.13 fully supported with pre-built wheels
-  - See [PYTHON_313_COMPATIBILITY.md](PYTHON_313_COMPATIBILITY.md) for details
 - **Node.js 18+** (for frontend)
 - **Git** (for version control)
 - **Docker** (optional, for containerized deployment)
@@ -214,39 +213,6 @@ Once the backend is running, visit:
 - `POST /api/search-phase` - Run complete phase diversity search and return results
 - `WS /ws/logs` - Real-time logging WebSocket for monitoring algorithm progress
 
-## 🧪 Testing
-
-### Backend Tests
-
-```bash
-cd backend
-source venv/bin/activate
-pytest
-```
-
-### Frontend Tests
-
-```bash
-cd frontend
-npm run test
-```
-
-## 🧹 Cleanup
-
-Remove build artifacts and caches:
-
-```bash
-./scripts/clean.sh
-```
-
-This script will prompt you before removing:
-
-- Python cache files (automatic)
-- Build directories (automatic)
-- `node_modules` (confirmation required)
-- Python virtual environment (confirmation required)
-- Session storage files (confirmation required)
-
 ## 📖 Scientific Background
 
 The core phase diversity algorithm is based on:
@@ -266,6 +232,7 @@ For detailed information about the algorithm and parameters, see:
 The core algorithm lives in `backend/app/core/` as a **Git submodule** pointing to the original research repository by Eric Gendron.
 
 **Why a submodule?**
+
 - Stay synchronized with upstream research developments
 - Clear provenance and link to original implementation
 - Enable collaboration with the research community
