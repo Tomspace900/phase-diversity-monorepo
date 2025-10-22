@@ -10,7 +10,7 @@ import base64
 import logging
 import time
 from typing import List, Optional
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, redirect_stdout
 
 import numpy as np
 from PIL import Image
@@ -28,6 +28,27 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 active_websockets: List[WebSocket] = []
+
+
+class StdoutToLogger:
+    """
+    Captures stdout prints and forwards them to logging system.
+    This allows us to capture print() statements from diversity.py.
+    """
+
+    def __init__(self, logger_instance, log_level=logging.INFO, source="CORE"):
+        self.logger = logger_instance
+        self.log_level = log_level
+        self.source = source
+        self.linebuf = ""
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            # Add source prefix to distinguish core logs
+            self.logger.log(self.log_level, f"[{self.source}] {line.rstrip()}")
+
+    def flush(self):
+        pass
 
 
 class OpticalConfigRequest(BaseModel):
@@ -110,8 +131,38 @@ app.add_middleware(
 
 
 class WebSocketHandler(logging.Handler):
-    async def emit_async(self, record):
-        msg = self.format(record)
+    def emit(self, record):
+        if not active_websockets:
+            return
+
+        # Only send logs that come from CORE (stdout redirects)
+        msg = record.getMessage()
+
+        if "[CORE]" not in msg:
+            # Skip API logs, only broadcast CORE logs
+            return
+
+        # Remove the [CORE] prefix as frontend doesn't need it
+        clean_msg = msg.replace("[CORE]", "").strip()
+
+        # Skip empty messages
+        if not clean_msg:
+            return
+
+        # Format: timestamp|message (simple pipe-separated format)
+        timestamp = self.format(record)
+        formatted_msg = f"{timestamp}|{clean_msg}"
+
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Create task and immediately schedule it
+                asyncio.create_task(self.emit_async(formatted_msg))
+        except RuntimeError:
+            pass
+
+    async def emit_async(self, msg: str):
         disconnected = []
         for ws in active_websockets:
             try:
@@ -123,13 +174,14 @@ class WebSocketHandler(logging.Handler):
             if ws in active_websockets:
                 active_websockets.remove(ws)
 
-    def emit(self, record):
-        pass
-
 
 ws_handler = WebSocketHandler()
-ws_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-logger.addHandler(ws_handler)
+ws_handler.setFormatter(logging.Formatter("%(asctime)s"))
+
+# Attach to root logger ONLY to capture ALL logs (including from core modules)
+# Don't add to logger directly as it propagates to root, causing duplicates
+root_logger = logging.getLogger()
+root_logger.addHandler(ws_handler)
 
 
 def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
@@ -348,11 +400,14 @@ async def preview_config(request: PreviewConfigRequest):
         logger.info(f"📊 Image array shape: {img_array.shape}")
 
         # Create Opticsetup instance with stdin mocked to auto-accept warnings
+        # Also redirect stdout to logger to capture print() statements
         from io import StringIO
         old_stdin = sys.stdin
+        old_stdout = sys.stdout
 
         try:
             sys.stdin = StringIO("y\n" * 100)
+            sys.stdout = StdoutToLogger(logger)
 
             logger.info(f"⚙️  Creating Opticsetup for preview...")
             config = request.config
@@ -382,6 +437,7 @@ async def preview_config(request: PreviewConfigRequest):
             )
         finally:
             sys.stdin = old_stdin
+            sys.stdout = old_stdout
             logger.info("✅ Opticsetup created for preview")
 
         # Generate pupil preview images
@@ -457,11 +513,14 @@ async def search_phase(request: SearchPhaseRequest):
         logger.info(f"📊 Image array shape: {img_array.shape}, dtype: {img_array.dtype}")
 
         # Create Opticsetup instance with stdin mocked to auto-accept warnings
+        # Also redirect stdout to logger to capture print() statements
         from io import StringIO
         old_stdin = sys.stdin
+        old_stdout = sys.stdout
 
         try:
             sys.stdin = StringIO("y\n" * 100)
+            sys.stdout = StdoutToLogger(logger)
 
             logger.info(f"⚙️  Creating Opticsetup instance...")
             config = request.config
@@ -491,6 +550,7 @@ async def search_phase(request: SearchPhaseRequest):
             )
         finally:
             sys.stdin = old_stdin
+            sys.stdout = old_stdout
             logger.info("✅ Opticsetup created successfully")
 
         # Inject initial values if provided (for continuation from previous run)
@@ -562,21 +622,26 @@ async def search_phase(request: SearchPhaseRequest):
 
         logger.info(f"   pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}")
 
-        # Run phase search
+        # Run phase search with stdout redirected to capture print() statements
         logger.info(f"🔍 Starting phase search...")
-        opticsetup.search_phase(
-            defoc_z_flag=request.defoc_z_flag,
-            focscale_flag=request.focscale_flag,
-            optax_flag=request.optax_flag,
-            amplitude_flag=request.amplitude_flag,
-            background_flag=request.background_flag,
-            phase_flag=request.phase_flag,
-            illum_flag=request.illum_flag,
-            objsize_flag=request.objsize_flag,
-            estimate_snr=request.estimate_snr,
-            verbose=request.verbose,
-            tolerance=request.tolerance,
-        )
+        old_stdout_search = sys.stdout
+        try:
+            sys.stdout = StdoutToLogger(logger)
+            opticsetup.search_phase(
+                defoc_z_flag=request.defoc_z_flag,
+                focscale_flag=request.focscale_flag,
+                optax_flag=request.optax_flag,
+                amplitude_flag=request.amplitude_flag,
+                background_flag=request.background_flag,
+                phase_flag=request.phase_flag,
+                illum_flag=request.illum_flag,
+                objsize_flag=request.objsize_flag,
+                estimate_snr=request.estimate_snr,
+                verbose=request.verbose,
+                tolerance=request.tolerance,
+            )
+        finally:
+            sys.stdout = old_stdout_search
         logger.info(f"✅ Phase search completed")
 
         # Extract all results
@@ -635,9 +700,14 @@ async def websocket_logs(websocket: WebSocket):
     active_websockets.append(websocket)
     logger.info(f"🔌 WebSocket connected. Active connections: {len(active_websockets)}")
 
+    # Send a welcome message - this is a SYSTEM message, not CORE
+    import datetime
+    welcome_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+    await websocket.send_text(f"{welcome_timestamp}|✅ Connected to Phase Diversity Backend")
+
     try:
         while True:
-            # Keep connection alive
+            # Keep connection alive and allow client to send pings
             await websocket.receive_text()
     except Exception as e:
         logger.info(f"🔌 WebSocket disconnected: {str(e)}")
