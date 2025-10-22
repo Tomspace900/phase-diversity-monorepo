@@ -23,6 +23,7 @@ interface SessionContextType {
   currentSession: Session | null;
   favoriteConfigs: FavoriteConfig[];
   isLoading: boolean;
+  isAnalysisLoading: boolean;
 
   // Session management
   createSession: () => Session;
@@ -104,6 +105,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [favoriteConfigs, setFavoriteConfigs] = useState<FavoriteConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
 
   useEffect(() => {
     let loadedSessions = loadFromLocalStorage<Session[]>(
@@ -240,6 +242,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
 
   const runAnalysis = useCallback(
     async (flags: SearchFlags, parentRunId?: string): Promise<AnalysisRun> => {
+      setIsAnalysisLoading(true);
       return new Promise((resolve, reject) => {
         setCurrentSession((current) => {
           if (!current) {
@@ -250,8 +253,6 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
             reject(new Error("Images not loaded in the current session"));
             return current;
           }
-
-          setIsLoading(true);
 
           searchPhase({
             images: current.images.images,
@@ -282,7 +283,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
               resolve(run);
             })
             .catch(reject)
-            .finally(() => setIsLoading(false));
+            .finally(() => setIsAnalysisLoading(false));
 
           return current;
         });
@@ -482,6 +483,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     currentSession,
     favoriteConfigs,
     isLoading,
+    isAnalysisLoading,
 
     // Session management
     createSession,

@@ -58,7 +58,7 @@ const PhaseSearchPage: React.FC = () => {
         className="h-full rounded-lg border"
       >
         {/* Left Panel - Configuration */}
-        <ResizablePanel defaultSize={20} minSize={20} maxSize={35}>
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
           <ConfigPanel
             hasContinuation={hasContinuation}
             parentRunId={currentRun?.id}
@@ -75,7 +75,7 @@ const PhaseSearchPage: React.FC = () => {
         <ResizableHandle withHandle />
 
         {/* Right Panel - Runs History */}
-        <ResizablePanel defaultSize={20} minSize={20} maxSize={35}>
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={35}>
           <RunsHistoryPanel
             runs={currentSession.runs}
             selectedRunId={selectedRunId}

@@ -4,7 +4,7 @@ import { CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Alert } from "../ui/alert";
 import { Badge } from "../ui/badge";
-import { EmptyState, StatsGrid, DataTable } from "../common";
+import { EmptyState, StatsGrid, DataTable, LoadingState } from "../common";
 import { ScrollArea } from "../ui/scroll-area";
 import { useSession } from "../../contexts/SessionContext";
 import { PhaseMapPlot } from "./PhaseMapPlot";
@@ -18,7 +18,15 @@ interface VisualizationPanelProps {
 export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
   run,
 }) => {
-  const { currentSession } = useSession();
+  const { currentSession, isAnalysisLoading } = useSession();
+
+  if (isAnalysisLoading)
+    return (
+      <LoadingState
+        message="Analysis running..."
+        className="h-full justify-center"
+      />
+    );
 
   if (!run) {
     return (
