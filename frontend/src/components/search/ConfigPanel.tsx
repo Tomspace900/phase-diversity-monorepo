@@ -8,11 +8,6 @@ import { Switch } from "../ui/switch";
 import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { ScrollArea } from "../ui/scroll-area";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../ui/collapsible";
 import { Alert } from "../ui/alert";
 import { DEFAULT_SEARCH_FLAGS, type SearchFlags } from "../../types/session";
 
@@ -138,56 +133,49 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   onCheckedChange={() => toggleFlag("background_flag")}
                 />
               </div>
+
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="focscale_flag"
+                  className="text-sm cursor-pointer"
+                >
+                  Focal Scale
+                </Label>
+                <Switch
+                  id="focscale_flag"
+                  checked={flags.focscale_flag}
+                  onCheckedChange={() => toggleFlag("focscale_flag")}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="objsize_flag"
+                  className="text-sm cursor-pointer"
+                >
+                  Object Size
+                </Label>
+                <Switch
+                  id="objsize_flag"
+                  checked={flags.objsize_flag}
+                  onCheckedChange={() => toggleFlag("objsize_flag")}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="estimate_snr"
+                  className="text-sm cursor-pointer"
+                >
+                  Estimate SNR
+                </Label>
+                <Switch
+                  id="estimate_snr"
+                  checked={flags.estimate_snr}
+                  onCheckedChange={() => toggleFlag("estimate_snr")}
+                />
+              </div>
             </div>
-
-            <Collapsible>
-              <CollapsibleTrigger className="text-xs text-muted-foreground hover:text-foreground">
-                Advanced options...
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-2 mt-2">
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="focscale_flag"
-                    className="text-sm cursor-pointer"
-                  >
-                    Focal Scale
-                  </Label>
-                  <Switch
-                    id="focscale_flag"
-                    checked={flags.focscale_flag}
-                    onCheckedChange={() => toggleFlag("focscale_flag")}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="objsize_flag"
-                    className="text-sm cursor-pointer"
-                  >
-                    Object Size
-                  </Label>
-                  <Switch
-                    id="objsize_flag"
-                    checked={flags.objsize_flag}
-                    onCheckedChange={() => toggleFlag("objsize_flag")}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label
-                    htmlFor="estimate_snr"
-                    className="text-sm cursor-pointer"
-                  >
-                    Estimate SNR
-                  </Label>
-                  <Switch
-                    id="estimate_snr"
-                    checked={flags.estimate_snr}
-                    onCheckedChange={() => toggleFlag("estimate_snr")}
-                  />
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
           </div>
 
           <Separator />
