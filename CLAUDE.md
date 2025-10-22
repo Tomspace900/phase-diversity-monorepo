@@ -139,27 +139,29 @@ The core algorithm in `backend/app/core/` is managed as a **Git submodule** poin
 
 - **Stay synchronized** with upstream research developments
 - **Track provenance** - clear link to original implementation
-- **Maintain modifications** - local patches applied automatically
+- **Minimal modifications** - only one file patched automatically
 - **Enable collaboration** - can contribute back to original repo
 
 ### Local Modifications
 
-The submodule requires two modifications to work as a Python package:
+The submodule requires **one simple modification** to work as a Python package:
 
-1. **Relative imports** in `diversity.py`:
-   - Original: `import zernike as zer`
-   - Modified: `from . import zernike as zer`
+**Relative imports in `diversity.py`:**
+- Original: `import zernike as zer`
+- Modified: `from . import zernike as zer`
 
-2. **Package initialization** - added `__init__.py` to expose modules
+This single change is applied automatically by `scripts/setup-core.sh`.
 
-These modifications are applied automatically by `scripts/setup-core.sh`.
+**Note:** No `__init__.py` needed - Python 3.3+ treats directories as namespace packages automatically.
 
 ### Working with the Submodule
 
 **Initial clone (for new contributors):**
 ```bash
-git clone --recurse-submodules <your-repo-url>
-./scripts/setup-core.sh  # Apply necessary patches
+git clone --recurse-submodules https://github.com/Tomspace900/phase-diversity-monorepo.git
+cd phase-diversity-monorepo
+./scripts/setup-core.sh  # Apply import patch (takes 1 second)
+./scripts/setup.sh       # Install dependencies
 ```
 
 **Update core to latest upstream:**
@@ -167,7 +169,7 @@ git clone --recurse-submodules <your-repo-url>
 cd backend/app/core
 git pull origin main
 cd ../../..
-./scripts/setup-core.sh  # Re-apply patches after update
+./scripts/setup-core.sh  # Re-apply import patch
 git add backend/app/core
 git commit -m "Update core submodule to latest upstream"
 ```
@@ -179,8 +181,8 @@ git submodule status
 
 **Important Notes:**
 
-- **DO NOT commit changes inside the submodule** - patches are temporary and will be lost
-- After any `git pull` in the submodule, run `./scripts/setup-core.sh` to re-apply patches
+- **DO NOT commit changes inside the submodule** - the import patch is temporary
+- After any `git pull` in the submodule, run `./scripts/setup-core.sh` (it's fast!)
 - The submodule always points to a specific commit - update explicitly when needed
 - To contribute changes to the core algorithm, work in the original repository
 
