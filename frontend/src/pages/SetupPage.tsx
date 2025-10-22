@@ -48,8 +48,8 @@ const SetupPage: React.FC = () => {
     }
   }, [currentSession]);
 
-  if (!currentSession) {
-    return <LoadingState message="No active session..." />;
+  if (isSessionLoading || !currentSession) {
+    return <LoadingState message="Loading session..." />;
   }
 
   // Check if we have images
@@ -90,7 +90,6 @@ const SetupPage: React.FC = () => {
         err instanceof Error ? err.message : "Preview failed";
       setError(errorMessage);
       setPreviewData(null);
-      console.error("❌ Preview error:", err);
     } finally {
       setIsLoadingPreview(false);
     }

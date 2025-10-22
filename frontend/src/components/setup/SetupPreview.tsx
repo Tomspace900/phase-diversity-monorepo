@@ -44,7 +44,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
         },
         {
           label: "Basis Type",
-          value: previewData.config_info.basis_type as any,
+          value: previewData.config_info.basis_type,
           color: "default",
         },
       ]

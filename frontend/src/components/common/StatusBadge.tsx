@@ -32,12 +32,11 @@ export const getCurrentSessionStatus = (
 interface StatusBadgeProps {
   status: SessionStatus;
   customLabel?: string;
-  pulse?: boolean; // Garder pulse pour l'état 'running'
-  size?: "xs" | "sm"; // Ajouter une option de taille
+  pulse?: boolean;
+  size?: "xs" | "sm";
   className?: string;
 }
 
-// Mappage des statuts vers les configurations visuelles
 const statusConfig: Record<
   SessionStatus,
   {
@@ -52,24 +51,24 @@ const statusConfig: Record<
   "needs-images": {
     label: "Needs Images",
     icon: ImageIcon,
-    bg: "bg-muted/50", // Gris neutre
+    bg: "bg-muted/50",
     text: "text-muted-foreground",
     border: "border-border",
   },
   ready: {
     label: "Ready to Analyze",
     icon: Settings,
-    bg: "bg-accent-orange/10", // Orange pour "prêt mais pas encore lancé"
+    bg: "bg-accent-orange/10",
     text: "text-accent-orange",
     border: "border-accent-orange/50",
   },
   running: {
     label: "Running Analysis",
-    icon: Loader2, // Icône de chargement
+    icon: Loader2,
     bg: "bg-accent-cyan/10",
     text: "text-accent-cyan",
     border: "border-accent-cyan/50",
-    pulseClass: "animate-spin", // Utiliser animate-spin pour l'icône Loader2
+    pulseClass: "animate-spin",
   },
   completed: {
     label: "Results Available",
@@ -80,7 +79,7 @@ const statusConfig: Record<
   },
   error: {
     label: "Error",
-    icon: XCircle, // Ou AlertTriangle
+    icon: XCircle,
     bg: "bg-error/10",
     text: "text-error",
     border: "border-error/50",

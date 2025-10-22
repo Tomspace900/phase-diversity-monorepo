@@ -1,4 +1,3 @@
-
 export interface ImageStats {
   shape: [number, number, number]; // [N, H, W]
   dtype: string;
@@ -14,7 +13,6 @@ export interface ParsedImages {
   stats: ImageStats;
   original_dtype: string;
 }
-
 
 export interface OpticalConfig {
   // Image positioning
@@ -64,7 +62,6 @@ export interface OpticalConfig {
   initial_background?: number[];
 }
 
-
 export interface SearchFlags {
   defoc_z_flag: boolean;
   focscale_flag: boolean;
@@ -78,7 +75,6 @@ export interface SearchFlags {
   verbose: boolean;
   tolerance: number;
 }
-
 
 export interface ConfigInfo {
   pdiam: number;
@@ -122,7 +118,6 @@ export interface SearchPhaseResponse {
   warnings: string[];
 }
 
-
 export interface AnalysisRun {
   id: string; // UUID
   timestamp: string; // ISO timestamp
@@ -132,7 +127,6 @@ export interface AnalysisRun {
   response: SearchPhaseResponse; // full response from backend
   notes?: string; // User notes about this run
 }
-
 
 export interface Session {
   id: string; // UUID
@@ -150,7 +144,6 @@ export interface Session {
   runs: AnalysisRun[];
 }
 
-
 export interface FavoriteConfig {
   id: string; // UUID
   name: string;
@@ -159,7 +152,6 @@ export interface FavoriteConfig {
   tags?: string[];
   created_at: string; // ISO timestamp
 }
-
 
 export const DEFAULT_OPTICAL_CONFIG: OpticalConfig = {
   xc: null,
@@ -188,13 +180,13 @@ export const DEFAULT_OPTICAL_CONFIG: OpticalConfig = {
 export const DEFAULT_SEARCH_FLAGS: SearchFlags = {
   defoc_z_flag: false,
   focscale_flag: false,
-  optax_flag: false,
+  optax_flag: true,
   amplitude_flag: true,
   background_flag: false,
-  phase_flag: true,
+  phase_flag: false,
   illum_flag: false,
   objsize_flag: false,
   estimate_snr: false,
-  verbose: true,
+  verbose: false,
   tolerance: 1e-5,
 };

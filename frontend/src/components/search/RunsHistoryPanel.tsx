@@ -132,8 +132,8 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
                           Continue
                         </Button>
                         <Button
-                          size="icon"
-                          variant="ghost"
+                          size="sm"
+                          variant="icon"
                           color="error"
                           icon={Trash2}
                           onClick={(e) => {
