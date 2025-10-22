@@ -129,6 +129,61 @@ phase-diversity/
 # → API Docs: http://localhost:8000/docs
 ```
 
+## Core Algorithm (Git Submodule)
+
+The core algorithm in `backend/app/core/` is managed as a **Git submodule** pointing to the original research repository:
+
+**Original Repository:** https://github.com/ricogendron/phase-diversity.git
+
+### Why a Submodule?
+
+- **Stay synchronized** with upstream research developments
+- **Track provenance** - clear link to original implementation
+- **Maintain modifications** - local patches applied automatically
+- **Enable collaboration** - can contribute back to original repo
+
+### Local Modifications
+
+The submodule requires two modifications to work as a Python package:
+
+1. **Relative imports** in `diversity.py`:
+   - Original: `import zernike as zer`
+   - Modified: `from . import zernike as zer`
+
+2. **Package initialization** - added `__init__.py` to expose modules
+
+These modifications are applied automatically by `scripts/setup-core.sh`.
+
+### Working with the Submodule
+
+**Initial clone (for new contributors):**
+```bash
+git clone --recurse-submodules <your-repo-url>
+./scripts/setup-core.sh  # Apply necessary patches
+```
+
+**Update core to latest upstream:**
+```bash
+cd backend/app/core
+git pull origin main
+cd ../../..
+./scripts/setup-core.sh  # Re-apply patches after update
+git add backend/app/core
+git commit -m "Update core submodule to latest upstream"
+```
+
+**View submodule status:**
+```bash
+git submodule status
+```
+
+**Important Notes:**
+
+- **DO NOT commit changes inside the submodule** - patches are temporary and will be lost
+- After any `git pull` in the submodule, run `./scripts/setup-core.sh` to re-apply patches
+- The submodule always points to a specific commit - update explicitly when needed
+- To contribute changes to the core algorithm, work in the original repository
+
 ## Backend Architecture
 
 ### API Endpoints ([backend/app/main.py](backend/app/main.py))
