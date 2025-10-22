@@ -221,7 +221,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
         <Button
           icon={Play}
           color="primary"
-          size="md"
+          size="lg"
           onClick={handleRunAnalysis}
           disabled={isLoading}
           loading={isLoading}

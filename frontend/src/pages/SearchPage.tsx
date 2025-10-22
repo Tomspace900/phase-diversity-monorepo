@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useSession } from "../contexts/SessionContext";
@@ -19,20 +19,12 @@ const PhaseSearchPage: React.FC = () => {
   const { currentSession, isLoading: isSessionLoading } = useSession();
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
 
-  if (isSessionLoading) {
-    return <LoadingState message="Loading session..." />;
-  }
+  useEffect(() => {
+    if (!isSessionLoading && !currentSession) navigate("/");
+  }, [currentSession, isSessionLoading]);
 
-  if (!currentSession) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <Alert>No active session. Please create or load a session first.</Alert>
-        <Button onClick={() => navigate("/")} className="mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Sessions
-        </Button>
-      </div>
-    );
+  if (isSessionLoading || !currentSession) {
+    return <LoadingState message="Loading session..." />;
   }
 
   if (!currentSession.images) {
@@ -66,7 +58,7 @@ const PhaseSearchPage: React.FC = () => {
         className="h-full rounded-lg border"
       >
         {/* Left Panel - Configuration */}
-        <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+        <ResizablePanel defaultSize={20} minSize={20} maxSize={35}>
           <ConfigPanel
             hasContinuation={hasContinuation}
             parentRunId={currentRun?.id}
@@ -76,14 +68,14 @@ const PhaseSearchPage: React.FC = () => {
         <ResizableHandle withHandle />
 
         {/* Center Panel - Visualization */}
-        <ResizablePanel defaultSize={50} minSize={35}>
+        <ResizablePanel defaultSize={60} minSize={35}>
           <VisualizationPanel run={currentRun} />
         </ResizablePanel>
 
         <ResizableHandle withHandle />
 
         {/* Right Panel - Runs History */}
-        <ResizablePanel defaultSize={25} minSize={20} maxSize={35}>
+        <ResizablePanel defaultSize={20} minSize={20} maxSize={35}>
           <RunsHistoryPanel
             runs={currentSession.runs}
             selectedRunId={selectedRunId}

@@ -31,17 +31,13 @@ const UploadPage: React.FC = () => {
     }
   }, [currentSession]);
 
-  if (!currentSession) {
-    return <LoadingState message="No active session..." />;
+  if (isSessionLoading || !currentSession) {
+    return <LoadingState message="Loading session..." />;
   }
 
   const handleUploadComplete = (images: ParsedImages) => {
-    try {
-      updateSessionImages(images);
-      setUploadData(images);
-    } catch (error) {
-      console.error("Failed to update session with images:", error);
-    }
+    updateSessionImages(images);
+    setUploadData(images);
   };
 
   const stats: Stat[] = uploadData
@@ -58,7 +54,7 @@ const UploadPage: React.FC = () => {
         },
         {
           label: "Data Type",
-          value: uploadData.original_dtype as any,
+          value: uploadData.original_dtype,
         },
         {
           label: "Dynamic Range",

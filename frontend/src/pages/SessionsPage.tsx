@@ -32,16 +32,16 @@ const SessionsPage: React.FC = () => {
     loadSession,
     createSession,
     deleteSession,
-    setCurrentSession,
+    unsetCurrentSession,
     isLoading,
   } = useSession();
 
   // Reset current session when landing on sessions page
   useEffect(() => {
-    setCurrentSession(null);
-  }, [setCurrentSession]);
+    unsetCurrentSession();
+  }, [unsetCurrentSession]);
 
-  // Ordonner les sessions par date de mise à jour (plus récente en premier)
+  // Sort sessions by last updated (newest first)
   const sortedSessions = React.useMemo(() => {
     return [...sessions].sort(
       (a, b) =>
@@ -50,12 +50,8 @@ const SessionsPage: React.FC = () => {
   }, [sessions]);
 
   const handleCreateNewSession = () => {
-    try {
-      createSession();
-      navigate("/upload");
-    } catch (error) {
-      console.error("Failed to create new session:", error);
-    }
+    createSession();
+    navigate("/upload");
   };
 
   const handleDeleteSession = (
@@ -136,7 +132,7 @@ const SessionsPage: React.FC = () => {
         <Button
           icon={Plus}
           color="primary"
-          size="sm"
+          size="md"
           onClick={handleCreateNewSession}
         >
           New Session
@@ -338,15 +334,15 @@ const SessionsPage: React.FC = () => {
                     <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all" />
 
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      variant="icon"
+                      size="sm"
+                      color="error"
                       onClick={(e) =>
                         handleDeleteSession(e, session.id, session.name)
                       }
                       className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/10 hover:text-error"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      icon={Trash2}
+                    />
                   </div>
                 </div>
               </Card>

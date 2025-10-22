@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 type CTAColor =
   | "primary"
   | "secondary"
+  | "muted"
   | "green"
   | "cyan"
   | "purple"
@@ -13,7 +14,7 @@ type CTAColor =
   | "success"
   | "warning"
   | "error";
-type CTAVariant = "default" | "outline" | "ghost";
+type CTAVariant = "default" | "outline" | "ghost" | "icon";
 
 const colorStyles: Record<
   CTAColor,
@@ -33,8 +34,14 @@ const colorStyles: Record<
   secondary: {
     bg: "bg-muted/50 hover:bg-muted",
     border: "border border-border",
-    icon: "text-muted-foreground",
+    icon: "text-foreground",
     text: "text-foreground",
+  },
+  muted: {
+    bg: "bg-muted/50 hover:bg-muted",
+    border: "border border-border",
+    icon: "text-muted-foreground",
+    text: "text-muted-foreground",
   },
   green: {
     bg: "bg-accent-green/10 hover:bg-accent-green/20",
@@ -92,7 +99,7 @@ export interface ButtonProps
   iconPosition?: "left" | "right";
   color?: CTAColor;
   variant?: CTAVariant;
-  size?: "sm" | "md" | "lg" | "icon";
+  size?: "sm" | "md" | "lg" | "xl";
   loading?: boolean;
   children?: React.ReactNode;
 }
@@ -114,26 +121,35 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const colorStyle = colorStyles[color];
-    const isIconOnly = size === "icon";
+    const isIconOnly = variant === "icon";
 
-    const sizeClasses = {
-      sm: "gap-1.5 px-3 py-1.5 text-sm",
-      md: "gap-2 px-4 py-2 text-base",
-      lg: "gap-2.5 px-5 py-2.5 text-base",
-      icon: "p-2",
-    };
+    const sizeClasses = isIconOnly
+      ? {}
+      : {
+          sm: "gap-1.5 px-2 py-1 text-sm",
+          md: "gap-1.5 px-3 py-1.5 text-sm",
+          lg: "gap-2 px-4 py-2 text-base",
+          xl: "gap-2.5 px-5 py-2.5 text-base",
+        };
 
-    const iconSizeClasses = {
-      sm: "h-4 w-4",
-      md: "h-4 w-4",
-      lg: "h-5 w-5",
-      icon: "h-4 w-4",
-    };
+    const iconSizeClasses = isIconOnly
+      ? {
+          sm: "h-4 w-4",
+          md: "h-5 w-5",
+          lg: "h-6 w-6",
+        }
+      : {
+          sm: "h-3.5 w-3.5",
+          md: "h-4 w-4",
+          lg: "h-4.5 w-4.5",
+          xl: "h-5 w-5",
+        };
 
     const variantClasses = {
       default: cn(colorStyle.bg, colorStyle.border),
       outline: cn("bg-transparent hover:bg-muted/50", colorStyle.border),
       ghost: "bg-transparent hover:bg-muted/50 border-transparent",
+      icon: "p-2",
     };
 
     const textClasses = {
@@ -146,6 +162,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       default: colorStyle.icon,
       outline: colorStyle.icon,
       ghost: colorStyle.icon,
+      icon: colorStyle.icon,
     };
 
     return (
@@ -166,14 +183,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {isIconOnly ? (
           Icon ? (
-            <Icon
-              className={cn(
-                iconSizeClasses[size],
-                iconClasses[variant],
-                "transition-transform group-hover:scale-110",
-                loading && "animate-spin"
-              )}
-            />
+            <>
+              <Icon
+                className={cn(
+                  iconSizeClasses[size],
+                  iconClasses[variant],
+                  "transition-transform group-hover:scale-110",
+                  loading && "animate-spin"
+                )}
+              />
+              {children}
+            </>
           ) : (
             <>{children}</>
           )

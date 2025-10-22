@@ -18,17 +18,23 @@ import {
 import { searchPhase } from "../api";
 
 interface SessionContextType {
+  // Read-only state
   sessions: Session[];
   currentSession: Session | null;
-  setCurrentSession: (session: Session | null) => void;
   favoriteConfigs: FavoriteConfig[];
   isLoading: boolean;
+
+  // Session management
   createSession: () => Session;
   loadSession: (id: string) => void;
+  unsetCurrentSession: () => void;
   deleteSession: (id: string) => void;
+
+  // Session data updates
   updateSessionConfig: (config: OpticalConfig) => void;
   updateSessionImages: (images: ParsedImages) => void;
-  resetSessionConfig: () => void;
+
+  // Analysis
   runAnalysis: (
     flags: SearchFlags,
     parentRunId?: string
@@ -36,6 +42,8 @@ interface SessionContextType {
   continueFromRun: (runId: string) => void;
   resetToInitialConfig: () => void;
   deleteRun: (runId: string) => void;
+
+  // Favorites
   saveFavoriteConfig: (
     name: string,
     config: OpticalConfig,
@@ -43,6 +51,8 @@ interface SessionContextType {
   ) => void;
   loadFavoriteConfig: (id: string) => void;
   deleteFavoriteConfig: (id: string) => void;
+
+  // Import/Export
   exportSession: (id: string) => void;
   importSession: (file: File) => Promise<void>;
   exportAllSessions: () => void;
@@ -51,9 +61,9 @@ interface SessionContextType {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  SESSIONS: "pd_sessions",
-  CURRENT_SESSION_ID: "pd_current_session_id",
-  FAVORITE_CONFIGS: "pd_favorite_configs",
+  SESSIONS: "sessions",
+  CURRENT_SESSION_ID: "current_session_id",
+  FAVORITE_CONFIGS: "favorite_configs",
 };
 
 const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
@@ -93,10 +103,9 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [favoriteConfigs, setFavoriteConfigs] = useState<FavoriteConfig[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setIsLoading(true);
     let loadedSessions = loadFromLocalStorage<Session[]>(
       STORAGE_KEYS.SESSIONS,
       []
@@ -140,10 +149,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   useEffect(() => {
-    if (sessions.length > 0) {
+    if (!isLoading) {
       saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
     }
-  }, [sessions]);
+  }, [sessions, isLoading]);
 
   useEffect(() => {
     if (currentSession) {
@@ -152,9 +161,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   }, [currentSession]);
 
   useEffect(() => {
-    if (favoriteConfigs.length > 0) {
-      saveToLocalStorage(STORAGE_KEYS.FAVORITE_CONFIGS, favoriteConfigs);
-    }
+    saveToLocalStorage(STORAGE_KEYS.FAVORITE_CONFIGS, favoriteConfigs);
   }, [favoriteConfigs]);
 
   const createSession = useCallback((): Session => {
@@ -184,117 +191,115 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  const deleteSession = useCallback((id: string) => {
-    setSessions((prev) => prev.filter((s) => s.id !== id));
-    setCurrentSession((prev) => (prev?.id === id ? null : prev));
+  const unsetCurrentSession = useCallback(() => {
+    setCurrentSession(null);
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION_ID);
   }, []);
 
-  const updateSessionConfig = useCallback(
-    (config: OpticalConfig) => {
-      if (!currentSession) return;
+  const deleteSession = useCallback((id: string) => {
+    setSessions((prev) => prev.filter((s) => s.id !== id));
+    setCurrentSession((current) => (current?.id === id ? null : current));
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION_ID);
+  }, []);
+
+  const updateSessionConfig = useCallback((config: OpticalConfig) => {
+    setCurrentSession((current) => {
+      if (!current) return null;
 
       const updatedSession = {
-        ...currentSession,
+        ...current,
         currentConfig: config,
         updated_at: new Date().toISOString(),
       };
 
       setSessions((prev) =>
-        prev.map((s) => (s.id === currentSession.id ? updatedSession : s))
+        prev.map((s) => (s.id === current.id ? updatedSession : s))
       );
-      setCurrentSession(updatedSession);
-    },
-    [currentSession]
-  );
 
-  const updateSessionImages = useCallback(
-    (images: ParsedImages) => {
-      if (!currentSession) return;
+      return updatedSession;
+    });
+  }, []);
+
+  const updateSessionImages = useCallback((images: ParsedImages) => {
+    setCurrentSession((current) => {
+      if (!current) return null;
 
       const updatedSession = {
-        ...currentSession,
+        ...current,
         images,
         updated_at: new Date().toISOString(),
       };
 
       setSessions((prev) =>
-        prev.map((s) => (s.id === currentSession.id ? updatedSession : s))
+        prev.map((s) => (s.id === current.id ? updatedSession : s))
       );
-      setCurrentSession(updatedSession);
-    },
-    [currentSession]
-  );
 
-  const resetSessionConfig = useCallback(() => {
-    if (!currentSession) return;
-
-    const updatedSession: Session = {
-      ...currentSession,
-      currentConfig: { ...DEFAULT_OPTICAL_CONFIG },
-      updated_at: new Date().toISOString(),
-    };
-
-    setSessions((prev) =>
-      prev.map((s) => (s.id === currentSession.id ? updatedSession : s))
-    );
-    setCurrentSession(updatedSession);
-  }, [currentSession]);
+      return updatedSession;
+    });
+  }, []);
 
   const runAnalysis = useCallback(
     async (flags: SearchFlags, parentRunId?: string): Promise<AnalysisRun> => {
-      if (!currentSession) {
-        throw new Error("No current session");
-      }
-      if (!currentSession.images || !currentSession.images.images) {
-        throw new Error("Images not loaded in the current session");
-      }
+      return new Promise((resolve, reject) => {
+        setCurrentSession((current) => {
+          if (!current) {
+            reject(new Error("No current session"));
+            return null;
+          }
+          if (!current.images || !current.images.images) {
+            reject(new Error("Images not loaded in the current session"));
+            return current;
+          }
 
-      setIsLoading(true);
+          setIsLoading(true);
 
-      try {
-        const response = await searchPhase({
-          images: currentSession.images.images,
-          config: currentSession.currentConfig,
-          ...flags,
+          searchPhase({
+            images: current.images.images,
+            config: current.currentConfig,
+            ...flags,
+          })
+            .then((response) => {
+              const run: AnalysisRun = {
+                id: generateUUID(),
+                timestamp: new Date().toISOString(),
+                parent_run_id: parentRunId,
+                config: { ...current.currentConfig },
+                flags: { ...flags },
+                response,
+              };
+
+              const updatedSession: Session = {
+                ...current,
+                runs: [...current.runs, run],
+                updated_at: new Date().toISOString(),
+              };
+
+              setSessions((prev) =>
+                prev.map((s) => (s.id === current.id ? updatedSession : s))
+              );
+              setCurrentSession(updatedSession);
+
+              resolve(run);
+            })
+            .catch(reject)
+            .finally(() => setIsLoading(false));
+
+          return current;
         });
-
-        const run: AnalysisRun = {
-          id: generateUUID(),
-          timestamp: new Date().toISOString(),
-          parent_run_id: parentRunId,
-          config: { ...currentSession.currentConfig },
-          flags: { ...flags },
-          response,
-        };
-
-        const updatedSession: Session = {
-          ...currentSession,
-          runs: [...currentSession.runs, run],
-          updated_at: new Date().toISOString(),
-        };
-
-        setSessions((prev) =>
-          prev.map((s) => (s.id === currentSession.id ? updatedSession : s))
-        );
-        setCurrentSession(updatedSession);
-
-        return run;
-      } finally {
-        setIsLoading(false);
-      }
+      });
     },
-    [currentSession]
+    []
   );
 
-  const continueFromRun = useCallback(
-    (runId: string) => {
-      if (!currentSession) return;
+  const continueFromRun = useCallback((runId: string) => {
+    setCurrentSession((current) => {
+      if (!current) return null;
 
-      const run = currentSession.runs.find((r) => r.id === runId);
-      if (!run) return;
+      const run = current.runs.find((r) => r.id === runId);
+      if (!run) return current;
 
       const newConfig: OpticalConfig = {
-        ...currentSession.currentConfig,
+        ...current.currentConfig,
         initial_phase: run.response.results.phase,
         initial_illum: run.response.results.illum,
         initial_defoc_z: run.response.results.defoc_z,
@@ -306,47 +311,68 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         initial_background: run.response.results.background,
       };
 
-      updateSessionConfig(newConfig);
-    },
-    [currentSession, updateSessionConfig]
-  );
-
-  const resetToInitialConfig = useCallback(() => {
-    if (!currentSession) return;
-
-    const cleanConfig: OpticalConfig = {
-      ...currentSession.currentConfig,
-      initial_phase: undefined,
-      initial_illum: undefined,
-      initial_defoc_z: undefined,
-      initial_optax_x: undefined,
-      initial_optax_y: undefined,
-      initial_focscale: undefined,
-      initial_object_fwhm_pix: undefined,
-      initial_amplitude: undefined,
-      initial_background: undefined,
-    };
-
-    updateSessionConfig(cleanConfig);
-  }, [currentSession, updateSessionConfig]);
-
-  const deleteRun = useCallback(
-    (runId: string) => {
-      if (!currentSession) return;
-
       const updatedSession = {
-        ...currentSession,
-        runs: currentSession.runs.filter((r) => r.id !== runId),
+        ...current,
+        currentConfig: newConfig,
         updated_at: new Date().toISOString(),
       };
 
       setSessions((prev) =>
-        prev.map((s) => (s.id === currentSession.id ? updatedSession : s))
+        prev.map((s) => (s.id === current.id ? updatedSession : s))
       );
-      setCurrentSession(updatedSession);
-    },
-    [currentSession]
-  );
+
+      return updatedSession;
+    });
+  }, []);
+
+  const resetToInitialConfig = useCallback(() => {
+    setCurrentSession((current) => {
+      if (!current) return null;
+
+      const cleanConfig: OpticalConfig = {
+        ...current.currentConfig,
+        initial_phase: undefined,
+        initial_illum: undefined,
+        initial_defoc_z: undefined,
+        initial_optax_x: undefined,
+        initial_optax_y: undefined,
+        initial_focscale: undefined,
+        initial_object_fwhm_pix: undefined,
+        initial_amplitude: undefined,
+        initial_background: undefined,
+      };
+
+      const updatedSession = {
+        ...current,
+        currentConfig: cleanConfig,
+        updated_at: new Date().toISOString(),
+      };
+
+      setSessions((prev) =>
+        prev.map((s) => (s.id === current.id ? updatedSession : s))
+      );
+
+      return updatedSession;
+    });
+  }, []);
+
+  const deleteRun = useCallback((runId: string) => {
+    setCurrentSession((current) => {
+      if (!current) return null;
+
+      const updatedSession = {
+        ...current,
+        runs: current.runs.filter((r) => r.id !== runId),
+        updated_at: new Date().toISOString(),
+      };
+
+      setSessions((prev) =>
+        prev.map((s) => (s.id === current.id ? updatedSession : s))
+      );
+
+      return updatedSession;
+    });
+  }, []);
 
   const saveFavoriteConfig = useCallback(
     (name: string, config: OpticalConfig, description?: string) => {
@@ -363,15 +389,29 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
 
-  const loadFavoriteConfig = useCallback(
-    (id: string) => {
-      const favorite = favoriteConfigs.find((f) => f.id === id);
-      if (favorite && currentSession) {
-        updateSessionConfig(favorite.config);
+  const loadFavoriteConfig = useCallback((id: string) => {
+    setFavoriteConfigs((configs) => {
+      const favorite = configs.find((f) => f.id === id);
+      if (favorite) {
+        setCurrentSession((current) => {
+          if (!current) return null;
+
+          const updatedSession = {
+            ...current,
+            currentConfig: favorite.config,
+            updated_at: new Date().toISOString(),
+          };
+
+          setSessions((prev) =>
+            prev.map((s) => (s.id === current.id ? updatedSession : s))
+          );
+
+          return updatedSession;
+        });
       }
-    },
-    [favoriteConfigs, currentSession, updateSessionConfig]
-  );
+      return configs;
+    });
+  }, []);
 
   const deleteFavoriteConfig = useCallback((id: string) => {
     setFavoriteConfigs((prev) => prev.filter((f) => f.id !== id));
@@ -437,24 +477,34 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   }, [sessions, favoriteConfigs]);
 
   const value: SessionContextType = {
+    // Read-only state
     sessions,
     currentSession,
-    setCurrentSession,
     favoriteConfigs,
     isLoading,
+
+    // Session management
     createSession,
     loadSession,
+    unsetCurrentSession,
     deleteSession,
+
+    // Session data updates
     updateSessionConfig,
     updateSessionImages,
-    resetSessionConfig,
+
+    // Analysis
     runAnalysis,
     continueFromRun,
     resetToInitialConfig,
     deleteRun,
+
+    // Favorites
     saveFavoriteConfig,
     loadFavoriteConfig,
     deleteFavoriteConfig,
+
+    // Import/Export
     exportSession,
     importSession,
     exportAllSessions,
