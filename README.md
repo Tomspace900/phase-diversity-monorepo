@@ -42,15 +42,21 @@ Phase retrieval from defocused focal plane images using Levenberg-Marquardt opti
 ### 1. Clone and Setup
 
 ```bash
-git clone <repository-url>
-cd phase-diversity
+# Clone with submodules
+git clone --recurse-submodules https://github.com/Tomspace900/phase-diversity-monorepo.git
+cd phase-diversity-monorepo
 
-# Run the setup script
+# Patch the core submodule (converts imports)
+./scripts/setup-core.sh
+
+# Install dependencies
 ./scripts/setup.sh
 ```
 
 This will:
 
+- Clone the repository with the core algorithm submodule
+- Apply necessary patches to the core submodule
 - Create a Python virtual environment
 - Install all Python dependencies
 - Install all Node.js dependencies
@@ -84,12 +90,11 @@ phase-diversity/
 ├── backend/                 # FastAPI backend
 │   ├── app/
 │   │   ├── main.py         # FastAPI application
-│   │   ├── core/           # Original phase diversity code (DO NOT MODIFY)
-│   │   │   ├── diversity.py
-│   │   │   ├── zernike.py
-│   │   │   ├── utilib.py
-│   │   │   └── ...
-│   │   └── storage/        # Session data (JSON files)
+│   │   └── core/           # Git submodule → https://github.com/ricogendron/phase-diversity.git
+│   │       ├── diversity.py    # Main algorithm (patched imports)
+│   │       ├── zernike.py
+│   │       ├── utilib.py
+│   │       └── ...
 │   ├── requirements.txt
 │   └── Dockerfile
 │
@@ -97,19 +102,21 @@ phase-diversity/
 │   ├── src/
 │   │   ├── pages/         # Main application pages
 │   │   ├── components/    # Reusable React components
-│   │   ├── api.js        # Backend API wrapper
-│   │   └── App.jsx       # Root component
+│   │   ├── api.ts         # Backend API wrapper
+│   │   └── App.tsx        # Root component
 │   ├── package.json
-│   ├── vite.config.js
+│   ├── vite.config.ts
 │   └── Dockerfile
 │
 ├── scripts/               # Development scripts
+│   ├── setup-core.sh     # Patch core submodule imports
 │   ├── setup.sh          # Install dependencies
-│   ├── dev.sh           # Start dev servers
-│   └── clean.sh         # Clean build artifacts
+│   ├── dev.sh            # Start dev servers
+│   └── clean.sh          # Clean build artifacts
 │
-├── docker-compose.yml     # Production Docker config
-├── docker-compose.dev.yml # Development Docker config
+├── .gitmodules           # Git submodules configuration
+├── docker-compose.yml    # Production Docker config
+├── CLAUDE.md             # AI assistant instructions
 └── README.md             # This file
 ```
 
@@ -252,11 +259,38 @@ The core phase diversity algorithm is based on:
 For detailed information about the algorithm and parameters, see:
 
 - [Core Algorithm Documentation](backend/app/core/README.md)
-- [Original Research](backend/app/core/README.md)
+- [Original Repository](https://github.com/ricogendron/phase-diversity)
+
+## 🔗 Git Submodule (Core Algorithm)
+
+The core algorithm lives in `backend/app/core/` as a **Git submodule** pointing to the original research repository by Eric Gendron.
+
+**Why a submodule?**
+- Stay synchronized with upstream research developments
+- Clear provenance and link to original implementation
+- Enable collaboration with the research community
+
+**Working with the submodule:**
+
+```bash
+# Update core to latest upstream version
+cd backend/app/core
+git pull origin main
+cd ../../..
+./scripts/setup-core.sh  # Re-apply import patch (takes 1 second)
+git add backend/app/core
+git commit -m "Update core submodule to latest upstream"
+```
+
+**Note:** The submodule requires a minimal patch (converting absolute imports to relative imports) applied by `scripts/setup-core.sh`. This patch is **not committed** to the submodule - it's applied locally after clone/update.
+
+For complete submodule documentation, see [CLAUDE.md](CLAUDE.md#core-algorithm-git-submodule).
 
 ## 🤝 Contributing
 
-The core phase diversity code in `backend/app/core/` is the original scientific implementation and should **NOT** be modified. All development should focus on:
+The core phase diversity code in `backend/app/core/` is managed as a Git submodule and should **NOT** be modified directly. To contribute to the core algorithm, work in the [original repository](https://github.com/ricogendron/phase-diversity).
+
+All development should focus on:
 
 - Backend API improvements (`backend/app/main.py`)
 - Frontend features and UI (`frontend/src/`)
