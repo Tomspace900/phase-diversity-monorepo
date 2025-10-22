@@ -20,7 +20,11 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   hasContinuation,
   parentRunId,
 }) => {
-  const { runAnalysis, resetToInitialConfig, isLoading } = useSession();
+  const {
+    runAnalysis,
+    resetToInitialConfig,
+    isAnalysisLoading: isLoading,
+  } = useSession();
   const [flags, setFlags] = useState<SearchFlags>(DEFAULT_SEARCH_FLAGS);
   const [error, setError] = useState<string | null>(null);
 
