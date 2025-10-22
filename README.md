@@ -1,6 +1,8 @@
 # Phase Diversity - Research Tool
 
-**Scientific research tool for optical wavefront retrieval using phase diversity analysis.**
+**Web interface for the [phase diversity algorithm by Eric Gendron](https://github.com/ricogendron/phase-diversity).**
+
+This project provides a modern React/TypeScript frontend and FastAPI backend wrapping the original phase diversity Python implementation as a Git submodule (`backend/app/core/`).
 
 ## 🔬 Overview
 
@@ -207,12 +209,10 @@ Once the backend is running, visit:
 
 ### Main Endpoints
 
-- `POST /api/upload` - Upload defocused images
-- `POST /api/setup` - Configure optical setup
-- `POST /api/search` - Launch phase search
-- `GET /api/results` - Retrieve results
-- `GET /api/sessions` - List saved sessions
-- `WS /ws/logs` - Real-time logging WebSocket
+- `POST /api/parse-images` - Parse FITS/NPY images and return as JSON arrays with thumbnails
+- `POST /api/preview-config` - Preview optical configuration (pupil, validation) without running search
+- `POST /api/search-phase` - Run complete phase diversity search and return results
+- `WS /ws/logs` - Real-time logging WebSocket for monitoring algorithm progress
 
 ## 🧪 Testing
 
@@ -351,8 +351,8 @@ All development should focus on:
 
 ## 👥 Credits
 
-- **Original Phase Diversity Implementation:** Eric Gendron
-- **Web Application:** [Your Name]
+- **Core Phase Diversity Algorithm:** [Eric Gendron](https://github.com/ricogendron/phase-diversity)
+- **Web Application (Monorepo/Frontend/Backend):** Thomas Gendron
 
 ## 📧 Support
 
