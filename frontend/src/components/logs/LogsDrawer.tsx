@@ -5,7 +5,7 @@ import { LogEntry } from "../../types/logs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { cn } from "../../lib/utils";
+import { cn } from "@/lib/utils";
 
 const LogEntryItem: React.FC<{ log: LogEntry }> = ({ log }) => {
   const time = new Date(log.timestamp).toLocaleTimeString("fr-FR", {
