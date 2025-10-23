@@ -9,6 +9,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useSession } from "../../contexts/SessionContext";
 import { PhaseMapPlot } from "./PhaseMapPlot";
 import { ImageComparisonGrid } from "./ImageComparisonGrid";
+import { IlluminationPlot } from "./IlluminationPlot";
 import type { AnalysisRun } from "../../types/session";
 
 interface VisualizationPanelProps {
@@ -64,8 +65,8 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
           <ScrollArea className="flex-1 mt-4">
             <TabsContent value="phase" className="space-y-4 pr-4">
               <PhaseMapPlot
-                phaseMap={run.response.results.phase_map}
-                title="Retrieved Phase Map"
+                results={run.response.results}
+                configInfo={run.response.config_info}
               />
 
               <div>
@@ -121,6 +122,11 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
                   />
                 </div>
               </div>
+
+              <IlluminationPlot
+                results={run.response.results}
+                configInfo={run.response.config_info}
+              />
 
               <StatsGrid
                 stats={[

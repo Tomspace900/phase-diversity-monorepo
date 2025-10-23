@@ -96,16 +96,35 @@ export interface PreviewConfigResponse {
 
 export interface PhaseResults {
   phase: number[]; // modal coefficients
-  phase_map: number[][]; // 2D phase map
+  phase_map: number[][]; // 2D phase map (full, with tip-tilt-defocus)
+  phase_map_notilt: number[][]; // 2D phase map without tip-tilt
+  phase_map_notiltdef: number[][]; // 2D phase map without tip-tilt-defocus
   pupilmap: number[][]; // 2D pupil function
+  pupillum: number[][]; // 2D pupil illumination map
   defoc_z: number[];
   focscale: number;
   optax_x: number[];
   optax_y: number[];
+  optax_pixels: { x: number[]; y: number[] }; // optical axis position in pixels
   amplitude: number[];
   background: number[];
   illum: number[];
   object_fwhm_pix: number;
+  model_images: number[][][]; // fitted/retrieved PSF images
+  image_differences: number[][][]; // input - retrieved differences
+  rms_stats: {
+    raw: number; // RMS of full phase (nm)
+    weighted: number; // weighted RMS of full phase (nm)
+    raw_notilt: number; // RMS without tip-tilt (nm)
+    weighted_notilt: number; // weighted RMS without tip-tilt (nm)
+    raw_notiltdef: number; // RMS without tip-tilt-defocus (nm)
+    weighted_notiltdef: number; // weighted RMS without tip-tilt-defocus (nm)
+  };
+  tiptilt_defocus_stats: {
+    tip: { nm_rms: number; lambda_D: number; pixels: number; mm: number };
+    tilt: { nm_rms: number; lambda_D: number; pixels: number; mm: number };
+    defocus: { nm_rms: number; pixels: number; mm: number };
+  };
 }
 
 export interface SearchPhaseResponse {
