@@ -647,18 +647,87 @@ async def search_phase(request: SearchPhaseRequest):
         # Extract all results
         phase_map = opticsetup.mappy(opticsetup.phase_generator(opticsetup.phase))
 
+        # Phase statistics calculations (matching diversity.py lines 1164-1184)
+        phi_pupil_nm = opticsetup.phase_generator(opticsetup.phase) * opticsetup.wvl / (2*np.pi) * 1e9
+        phi_pupil_nm_notilt = opticsetup.phase_generator(opticsetup.phase, tiptilt=False) * opticsetup.wvl / (2*np.pi) * 1e9
+        phi_pupil_nm_notiltdef = opticsetup.phase_generator(opticsetup.phase, tiptilt=False, defoc=False) * opticsetup.wvl / (2*np.pi) * 1e9
+
+        # RMS statistics
+        rms_value = float(np.std(phi_pupil_nm))
+        wrms_value = float(np.sqrt(np.sum(phi_pupil_nm**2 * opticsetup.pupillum) / np.sum(opticsetup.pupillum)))
+        rms_value_notilt = float(np.std(phi_pupil_nm_notilt))
+        wrms_value_notilt = float(np.sqrt(np.sum(phi_pupil_nm_notilt**2 * opticsetup.pupillum) / np.sum(opticsetup.pupillum)))
+        rms_value_notiltdef = float(np.std(phi_pupil_nm_notiltdef))
+        wrms_value_notiltdef = float(np.sqrt(np.sum(phi_pupil_nm_notiltdef**2 * opticsetup.pupillum) / np.sum(opticsetup.pupillum)))
+
+        # Phase maps (matching diversity.py lines 1212, 1221)
+        phase_map_notilt = opticsetup.mappy(phi_pupil_nm_notilt)
+        phase_map_notiltdef = opticsetup.mappy(phi_pupil_nm_notiltdef)
+
+        # Pupil illumination (matching diversity.py line 1230)
+        pupillum_map = opticsetup.mappy(opticsetup.pupillum)
+
+        # Tip/Tilt/Defocus statistics (matching diversity.py lines 1186-1203)
+        ttf = opticsetup.convert * opticsetup.phase[0:3]
+        a2_nmrms = float(ttf[0] * opticsetup.wvl / (2*np.pi) * 1e9)
+        a2_lD = float(ttf[0] * 4 / (2*np.pi))
+        a2_pix = float(ttf[0] * opticsetup.rad2pix)
+        a2_m = float(ttf[0] * opticsetup.rad2dist)
+        a3_nmrms = float(ttf[1] * opticsetup.wvl / (2*np.pi) * 1e9)
+        a3_lD = float(ttf[1] * 4 / (2*np.pi))
+        a3_pix = float(ttf[1] * opticsetup.rad2pix)
+        a3_m = float(ttf[1] * opticsetup.rad2dist)
+        a4_nmrms = float(ttf[2] * opticsetup.wvl / (2*np.pi) * 1e9)
+        a4_pix = float(ttf[2] * opticsetup.rad2z / opticsetup.fratio / opticsetup.pixelSize)
+        a4_m = float(ttf[2] * opticsetup.rad2z)
+
+        # Compute model images and differences (matching visualize_images lines 1310-1316)
+        coeffs = opticsetup.encode_coefficients(
+            opticsetup.defoc_z, opticsetup.focscale, opticsetup.optax_x, opticsetup.optax_y,
+            opticsetup.amplitude, opticsetup.background, opticsetup.phase, opticsetup.illum,
+            opticsetup.object_fwhm_pix
+        )
+        psfs = div.compute_psfs(opticsetup, coeffs)
+        model_images = np.reshape(psfs, opticsetup.img.shape)
+        image_differences = opticsetup.img - model_images
+
+        # Optical axis position in pixels (matching visualize_images lines 1318-1320)
+        cc = opticsetup.img.shape[1] / 2
+        k = 4 * opticsetup.fratio * (1 * opticsetup.wvl / 2 / np.pi) / opticsetup.pixelSize
+        optax_x_pix = [float(cc - k * x) for x in opticsetup.optax_x]
+        optax_y_pix = [float(cc - k * y) for y in opticsetup.optax_y]
+
         results = {
             "phase": opticsetup.phase.tolist(),
             "phase_map": phase_map.tolist(),
+            "phase_map_notilt": phase_map_notilt.tolist(),
+            "phase_map_notiltdef": phase_map_notiltdef.tolist(),
             "pupilmap": opticsetup.pupilmap.tolist(),
+            "pupillum": pupillum_map.tolist(),
             "defoc_z": opticsetup.defoc_z.tolist(),
             "focscale": float(opticsetup.focscale),
             "optax_x": opticsetup.optax_x.tolist(),
             "optax_y": opticsetup.optax_y.tolist(),
+            "optax_pixels": {"x": optax_x_pix, "y": optax_y_pix},
             "amplitude": opticsetup.amplitude.tolist(),
             "background": opticsetup.background.tolist(),
             "illum": opticsetup.illum,
             "object_fwhm_pix": float(opticsetup.object_fwhm_pix),
+            "model_images": model_images.tolist(),
+            "image_differences": image_differences.tolist(),
+            "rms_stats": {
+                "raw": rms_value,
+                "weighted": wrms_value,
+                "raw_notilt": rms_value_notilt,
+                "weighted_notilt": wrms_value_notilt,
+                "raw_notiltdef": rms_value_notiltdef,
+                "weighted_notiltdef": wrms_value_notiltdef,
+            },
+            "tiptilt_defocus_stats": {
+                "tip": {"nm_rms": a2_nmrms, "lambda_D": a2_lD, "pixels": a2_pix, "mm": a2_m * 1e3},
+                "tilt": {"nm_rms": a3_nmrms, "lambda_D": a3_lD, "pixels": a3_pix, "mm": a3_m * 1e3},
+                "defocus": {"nm_rms": a4_nmrms, "pixels": a4_pix, "mm": a4_m * 1e3},
+            },
         }
 
         duration_ms = int((time.time() - start_time) * 1000)
