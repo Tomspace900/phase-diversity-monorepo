@@ -9,7 +9,10 @@ interface PhaseMapPlotProps {
   configInfo: ConfigInfo;
 }
 
-export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({ results, configInfo }) => {
+export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
+  results,
+  configInfo,
+}) => {
   if (!results.phase_map_notilt || results.phase_map_notilt.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 text-muted-foreground">
@@ -59,7 +62,9 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({ results, configInfo 
           layout={createPhaseMapLayout(
             N,
             pdiam,
-            `Phase without Tip-Tilt<br>${results.rms_stats.weighted_notilt.toFixed(1)} nm rms`
+            `Phase without Tip-Tilt<br>${results.rms_stats.weighted_notilt.toFixed(
+              1
+            )} nm rms`
           )}
           config={commonPlotConfig}
           className="w-full"
@@ -72,7 +77,9 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({ results, configInfo 
           layout={createPhaseMapLayout(
             N,
             pdiam,
-            `Phase without Tip-Tilt-Defocus<br>${results.rms_stats.weighted_notiltdef.toFixed(1)} nm rms`
+            `Phase without Tip-Tilt-Defocus<br>${results.rms_stats.weighted_notiltdef.toFixed(
+              1
+            )} nm rms`
           )}
           config={commonPlotConfig}
           className="w-full"
@@ -84,12 +91,42 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({ results, configInfo 
       <StatsGrid
         title="Phase Statistics"
         stats={[
-          { label: "RMS (raw)", value: results.rms_stats.raw, unit: "nm", precision: 1 },
-          { label: "RMS (weighted)", value: results.rms_stats.weighted, unit: "nm", precision: 1 },
-          { label: "RMS without TT (raw)", value: results.rms_stats.raw_notilt, unit: "nm", precision: 1 },
-          { label: "RMS without TT (weighted)", value: results.rms_stats.weighted_notilt, unit: "nm", precision: 1 },
-          { label: "RMS w/o TT+Def (raw)", value: results.rms_stats.raw_notiltdef, unit: "nm", precision: 1 },
-          { label: "RMS w/o TT+Def (weighted)", value: results.rms_stats.weighted_notiltdef, unit: "nm", precision: 1 },
+          {
+            label: "RMS (raw)",
+            value: results.rms_stats.raw,
+            unit: "nm",
+            precision: 1,
+          },
+          {
+            label: "RMS (weighted)",
+            value: results.rms_stats.weighted,
+            unit: "nm",
+            precision: 1,
+          },
+          {
+            label: "RMS without TT (raw)",
+            value: results.rms_stats.raw_notilt,
+            unit: "nm",
+            precision: 1,
+          },
+          {
+            label: "RMS without TT (weighted)",
+            value: results.rms_stats.weighted_notilt,
+            unit: "nm",
+            precision: 1,
+          },
+          {
+            label: "RMS w/o TT+Def (raw)",
+            value: results.rms_stats.raw_notiltdef,
+            unit: "nm",
+            precision: 1,
+          },
+          {
+            label: "RMS w/o TT+Def (weighted)",
+            value: results.rms_stats.weighted_notiltdef,
+            unit: "nm",
+            precision: 1,
+          },
         ]}
         columns={2}
       />
