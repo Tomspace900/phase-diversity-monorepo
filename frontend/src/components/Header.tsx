@@ -1,23 +1,18 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import {
-  ChevronRight,
-  History,
-  Settings,
-  Search,
-  Upload,
-  type LucideIcon,
-  SquareTerminal,
-} from "lucide-react";
+import { ChevronRight, SquareTerminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/contexts/SessionContext";
 import { useLogs } from "@/contexts/LogsContext";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { getCurrentSessionStatus } from "@/components/common";
-
-type AccentColor = "green" | "cyan" | "purple" | "pink" | "orange";
+import {
+  WORKFLOW_STEPS,
+  WORKFLOW_ORDER,
+  type AccentColor,
+} from "@/constants/workflow";
 
 const colorStyles: Record<
   AccentColor,
@@ -76,45 +71,6 @@ const colorStyles: Record<
   },
 };
 
-interface Step {
-  path: string;
-  title: string;
-  shortTitle: string;
-  icon: LucideIcon;
-  color: AccentColor;
-}
-
-const workflowSteps: Step[] = [
-  {
-    path: "/",
-    title: "Sessions",
-    shortTitle: "Sessions",
-    icon: History,
-    color: "green",
-  },
-  {
-    path: "/upload",
-    title: "Upload Images",
-    shortTitle: "Upload",
-    icon: Upload,
-    color: "cyan",
-  },
-  {
-    path: "/setup",
-    title: "Configure Optical Setup",
-    shortTitle: "Configure",
-    icon: Settings,
-    color: "purple",
-  },
-  {
-    path: "/search",
-    title: "Search Phase Diversity",
-    shortTitle: "Search",
-    icon: Search,
-    color: "pink",
-  },
-];
-
 export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -122,20 +78,23 @@ export function Header() {
   const { toggleDrawer, unreadCount } = useLogs();
 
   const currentPath = location.pathname;
-  const currentStepIndex = workflowSteps.findIndex(
-    (s) => s.path === currentPath
+  const currentStep = WORKFLOW_STEPS[currentPath];
+
+  const isWorkflowPath = (WORKFLOW_ORDER as readonly string[]).includes(
+    currentPath
   );
-  const currentStep = workflowSteps[currentStepIndex];
+  const isOtherStepPath =
+    (currentPath === "/" || currentPath === "/about") && currentStep;
 
   const styles = currentStep ? colorStyles[currentStep.color] : null;
 
-  const canAccessStep = (step: Step): boolean => {
+  const canAccessStep = (path: string): boolean => {
     const status = getCurrentSessionStatus(currentSession);
-    if (!currentSession && step.path !== "/") return false;
-    if (step.path === "/") return true;
-    if (step.path === "/upload") return true;
-    if (step.path === "/setup") return status !== "needs-images";
-    if (step.path === "/search")
+    if (!currentSession && path !== "/" && path !== "/about") return false;
+    if (path === "/" || path === "/about") return true;
+    if (path === "/upload") return true;
+    if (path === "/setup") return status !== "needs-images";
+    if (path === "/search")
       return status !== "needs-images" && status !== "error";
     return false;
   };
@@ -149,7 +108,6 @@ export function Header() {
     >
       <div className="px-4 py-3">
         <nav className="flex items-center justify-between gap-4">
-          {/* Logo + Breadcrumb */}
           <div className="flex flex-1 items-center gap-2 min-w-0">
             <Link
               to="/"
@@ -165,52 +123,59 @@ export function Header() {
 
             <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
 
-            {currentSession ? (
-              <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
-                {workflowSteps.slice(1).map((step, index) => {
-                  const isCurrentStep = step.path === currentPath;
-                  const isAccessible = canAccessStep(step);
+            <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
+              {isWorkflowPath ? (
+                <>
+                  {WORKFLOW_ORDER.map((path, index) => {
+                    const step = WORKFLOW_STEPS[path];
+                    if (!step) return null;
 
-                  return (
-                    <React.Fragment key={step.path}>
-                      {index > 0 && (
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
-                      )}
-                      <Button
-                        variant={isCurrentStep ? "default" : "ghost"}
-                        color={isCurrentStep ? step.color : "muted"}
-                        size="sm"
-                        icon={step.icon}
-                        disabled={!isAccessible}
-                        onClick={() => isAccessible && navigate(step.path)}
-                      >
-                        {step.shortTitle}
-                      </Button>
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-            ) : (
-              (() => {
-                const step = workflowSteps[0];
-                const isCurrentStep = step.path === currentPath;
-                return (
-                  <Button
-                    variant={isCurrentStep ? "default" : "ghost"}
-                    color={isCurrentStep ? step.color : "muted"}
-                    size="sm"
-                    icon={step.icon}
-                    onClick={() => navigate(step.path)}
-                  >
-                    {step.shortTitle}
-                  </Button>
-                );
-              })()
-            )}
+                    const isCurrentStep = path === currentPath;
+                    const isAccessible = canAccessStep(path);
+
+                    return (
+                      <React.Fragment key={path}>
+                        {index > 0 && (
+                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+                        )}
+                        <Button
+                          variant={isCurrentStep ? "default" : "ghost"}
+                          color={isCurrentStep ? step.color : "muted"}
+                          size="sm"
+                          icon={step.icon}
+                          disabled={!isAccessible}
+                          onClick={() => isAccessible && navigate(path)}
+                        >
+                          {step.shortTitle}
+                        </Button>
+                      </React.Fragment>
+                    );
+                  })}
+                </>
+              ) : isOtherStepPath ? (
+                <Button
+                  variant="default"
+                  color={currentStep.color}
+                  size="sm"
+                  icon={currentStep.icon}
+                >
+                  {currentStep.shortTitle}
+                </Button>
+              ) : null}
+            </div>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {WORKFLOW_STEPS["/about"] && (
+              <Button
+                variant="icon"
+                size="md"
+                color="secondary"
+                onClick={() => navigate("/about")}
+                title={WORKFLOW_STEPS["/about"].title}
+                icon={WORKFLOW_STEPS["/about"].icon}
+              />
+            )}
             <Button
               variant="icon"
               size="md"
