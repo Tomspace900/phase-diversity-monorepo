@@ -180,28 +180,88 @@ export const validateComputationSize = (
 
 /**
  * Validate defocus array
+ * Ensures defocus values match the number of uploaded images and are physically reasonable
  */
-export const validateDefocusArray = (values: number[]): ValidationResult => {
-  if (values.length < 2) {
-    return {
-      isValid: false,
-      error: "At least 2 defocus values required",
-      helperText: "Phase diversity needs ≥2 images",
-    };
-  }
-
-  const hasZero = values.some((v) => v === 0);
-  if (!hasZero) {
+export const validateDefocusArray = (
+  values: number[],
+  expectedImagesCount: number
+): ValidationResult => {
+  // 1. Special case: No images uploaded yet
+  if (expectedImagesCount === 0) {
     return {
       isValid: true,
-      warning: "No in-focus image (defoc=0)",
-      helperText: "Typical: [0, -0.001, 0.001]",
+      warning: "Upload images first",
+      helperText: "Defocus values will be validated after image upload",
     };
   }
 
+  // 2. Minimum 2 images required for phase diversity
+  if (expectedImagesCount < 2) {
+    return {
+      isValid: false,
+      error: "Phase diversity requires at least 2 images",
+      helperText: "Upload at least 2 images to proceed",
+    };
+  }
+
+  // 3. CRITICAL: Number of defocus values must match number of images
+  if (values.length !== expectedImagesCount) {
+    return {
+      isValid: false,
+      error: `Expected ${expectedImagesCount} defocus values (one per image), got ${values.length}`,
+      helperText: `You have ${expectedImagesCount} images uploaded`,
+    };
+  }
+
+  // 4. Check for duplicate defocus values
+  const uniqueValues = new Set(values);
+  if (uniqueValues.size !== values.length) {
+    return {
+      isValid: false,
+      error: "Duplicate defocus values detected",
+      helperText: "Each image should have a unique defocus position",
+    };
+  }
+
+  // 5. Check for extreme defocus values (>10cm is suspicious)
+  const maxAbsDefoc = Math.max(...values.map(Math.abs));
+  if (maxAbsDefoc > 0.1) {
+    return {
+      isValid: false,
+      error: `Defocus value too large: ${maxAbsDefoc.toExponential(2)} m (>10cm)`,
+      helperText: "Typical defocus range: ±0.01 to ±0.05 meters",
+    };
+  }
+
+  // 6. Check for in-focus image (warning only, not critical)
+  const hasZero = values.some((v) => Math.abs(v) < 1e-5);
+  if (!hasZero) {
+    const minAbsDefoc = Math.min(...values.map(Math.abs));
+    return {
+      isValid: true,
+      warning: "No in-focus image (defoc ≈ 0)",
+      helperText: `Closest to focus: ${minAbsDefoc.toExponential(2)} m`,
+    };
+  }
+
+  // 7. Check for diversity (all same sign = poor diversity)
+  const allPositive = values.every((v) => v > 1e-6);
+  const allNegative = values.every((v) => v < -1e-6);
+  if (allPositive || allNegative) {
+    return {
+      isValid: true,
+      warning: allPositive
+        ? "All defocus values positive"
+        : "All defocus values negative",
+      helperText: "Consider symmetric defocus (both + and -) for better retrieval",
+    };
+  }
+
+  // 8. All checks passed
+  const range = maxAbsDefoc > 0 ? `±${maxAbsDefoc.toExponential(2)} m` : "0 m";
   return {
     isValid: true,
-    helperText: `${values.length} defocus positions`,
+    helperText: `${values.length} defocus positions, range: ${range}`,
   };
 };
 

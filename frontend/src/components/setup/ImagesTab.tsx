@@ -3,6 +3,7 @@ import ParamInput from "../common/ParamInput";
 import { Alert } from "../../components/ui/alert";
 import type { OpticalConfig } from "../../types/session";
 import type { ValidationResult } from "../../utils/validation";
+import { useSession } from "@/contexts/SessionContext";
 
 interface ImagesTabProps {
   config: OpticalConfig;
@@ -23,6 +24,9 @@ const ImagesTab: React.FC<ImagesTabProps> = ({
   updateConfig,
   updateDefocZ,
 }) => {
+  const { currentSession } = useSession();
+  const parsedImages = currentSession?.images;
+
   return (
     <div className="space-y-4">
       {/* Info box */}
@@ -75,40 +79,24 @@ const ImagesTab: React.FC<ImagesTabProps> = ({
           Defocus Values
         </h4>
 
-        <ParamInput
-          label="Defocus Image 1"
-          value={config.defoc_z[0]}
-          onChange={(val) => updateDefocZ(0, val as number)}
-          unit="m"
-          type="number"
-          step={0.0001}
-          placeholder="0"
-          tooltip="Defocus distance in meters (positive = downstream of focal plane)"
-          required
-        />
-
-        <ParamInput
-          label="Defocus Image 2"
-          value={config.defoc_z[1]}
-          onChange={(val) => updateDefocZ(1, val as number)}
-          unit="m"
-          type="number"
-          step={0.0001}
-          placeholder="-0.001"
-          tooltip="Defocus distance in meters (negative = upstream of focal plane)"
-          required
-        />
-
-        <ParamInput
-          label="Defocus Image 3"
-          value={config.defoc_z[2]}
-          onChange={(val) => updateDefocZ(2, val as number)}
-          unit="m"
-          type="number"
-          step={0.0001}
-          placeholder="0.001"
-          tooltip="Defocus distance in meters (optional if only 2 images)"
-        />
+        {Array.from({ length: parsedImages?.images.length || 0 }).map(
+          (_, index) => (
+            <ParamInput
+              key={index}
+              label={`Defocus Image ${index + 1}`}
+              tooltip={`Defocus for image ${index + 1} (${
+                parsedImages?.image_info[index].source_file
+              }). Positive = downstream, negative = upstream of focal plane.`}
+              value={config.defoc_z[index]}
+              onChange={(val) => updateDefocZ(index, val as number)}
+              unit="m"
+              type="number"
+              step={0.0001}
+              placeholder="0.0"
+              required
+            />
+          )
+        )}
 
         {/* Display defocus array validation */}
         {validations.defoc_z.error && (

@@ -13,7 +13,6 @@ import {
   SearchFlags,
   ParsedImages,
   FavoriteConfig,
-  DEFAULT_OPTICAL_CONFIG,
 } from "../types/session";
 import { searchPhase } from "../api";
 
@@ -173,7 +172,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       images: null,
-      currentConfig: { ...DEFAULT_OPTICAL_CONFIG },
+      currentConfig: null,
       runs: [],
     };
 
@@ -253,6 +252,12 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
             reject(new Error("Images not loaded in the current session"));
             return current;
           }
+          if (!current.currentConfig) {
+            reject(
+              new Error("Optical config not setted up in the current session")
+            );
+            return current;
+          }
 
           searchPhase({
             images: current.images.images,
@@ -264,7 +269,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
                 id: generateUUID(),
                 timestamp: new Date().toISOString(),
                 parent_run_id: parentRunId,
-                config: { ...current.currentConfig },
+                config: { ...(current.currentConfig as OpticalConfig) },
                 flags: { ...flags },
                 response,
               };
@@ -300,7 +305,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       if (!run) return current;
 
       const newConfig: OpticalConfig = {
-        ...current.currentConfig,
+        ...(current.currentConfig as OpticalConfig),
         initial_phase: run.response.results.phase,
         initial_illum: run.response.results.illum,
         initial_defoc_z: run.response.results.defoc_z,
@@ -331,7 +336,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       if (!current) return null;
 
       const cleanConfig: OpticalConfig = {
-        ...current.currentConfig,
+        ...(current.currentConfig as OpticalConfig),
         initial_phase: undefined,
         initial_illum: undefined,
         initial_defoc_z: undefined,

@@ -49,7 +49,7 @@ const PhaseSearchPage: React.FC = () => {
     : latestRun;
 
   const hasContinuation =
-    currentSession.currentConfig.initial_phase !== undefined;
+    currentSession.currentConfig?.initial_phase !== undefined;
 
   return (
     <div className="h-[calc(100vh-8rem)]">

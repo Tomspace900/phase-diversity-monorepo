@@ -7,7 +7,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
-import { type OpticalConfig, DEFAULT_OPTICAL_CONFIG } from "../types/session";
+import { type OpticalConfig, generateDefaultConfig } from "../types/session";
 import { Alert } from "@/components/ui/alert";
 import { LoadingState } from "@/components/common";
 import SetupConfig from "@/components/setup/SetupConfig";
@@ -21,10 +21,8 @@ const SetupPage: React.FC = () => {
     updateSessionConfig,
   } = useSession();
 
-  // Configuration state with defaults
-  const [config, setConfig] = useState<OpticalConfig>({
-    ...DEFAULT_OPTICAL_CONFIG,
-  });
+  // Configuration state (will be initialized from session or generated from images)
+  const [config, setConfig] = useState<OpticalConfig | null>(null);
 
   const [configChanged, setConfigChanged] = useState(true);
 
@@ -32,25 +30,40 @@ const SetupPage: React.FC = () => {
     if (!isSessionLoading && !currentSession) navigate("/");
   }, [currentSession, isSessionLoading]);
 
+  // Initialize config when images are loaded but config is null
+  useEffect(() => {
+    if (
+      currentSession?.images &&
+      !currentSession.currentConfig &&
+      !isSessionLoading
+    ) {
+      const numImages = currentSession.images.images.length;
+      const defaultConfig = generateDefaultConfig(numImages);
+      updateSessionConfig(defaultConfig);
+      setConfig(defaultConfig);
+    }
+  }, [currentSession?.images, currentSession?.currentConfig, isSessionLoading]);
+
+  // Sync config with session when it updates
   useEffect(() => {
     if (currentSession?.currentConfig) {
       setConfig(currentSession.currentConfig);
     }
-  }, [currentSession]);
+  }, [currentSession?.currentConfig]);
 
   if (isSessionLoading || !currentSession) {
     return <LoadingState message="Loading session..." />;
   }
 
   // Check if we have images
-  const hasImages = currentSession?.images !== undefined;
+  const hasImages = currentSession?.images !== null;
 
   // Update a single config value
   const updateConfig = <K extends keyof OpticalConfig>(
     key: K,
     value: OpticalConfig[K]
   ): void => {
-    setConfig((prev) => ({ ...prev, [key]: value }));
+    setConfig((prev) => (prev ? { ...prev, [key]: value } : null));
     setConfigChanged(true);
   };
 
@@ -75,28 +88,32 @@ const SetupPage: React.FC = () => {
         </Alert>
       )}
 
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="flex-1 rounded-lg border"
-      >
-        {/* Configuration Panel - Left (67%) */}
-        <ResizablePanel defaultSize={67} minSize={50} maxSize={80}>
-          <SetupConfig config={config} updateConfig={updateConfig} />
-        </ResizablePanel>
+      {config ? (
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="flex-1 rounded-lg border"
+        >
+          {/* Configuration Panel - Left (67%) */}
+          <ResizablePanel defaultSize={67} minSize={50} maxSize={80}>
+            <SetupConfig config={config} updateConfig={updateConfig} />
+          </ResizablePanel>
 
-        <ResizableHandle withHandle />
+          <ResizableHandle withHandle />
 
-        {/* Preview Panel - Right (33%) */}
-        <ResizablePanel defaultSize={33} minSize={20} maxSize={50}>
-          <SetupPreview
-            images={currentSession?.images?.images ?? null}
-            config={config}
-            configChanged={configChanged}
-            onConfigUpdate={updateSessionConfig}
-            onPreviewGenerated={handlePreviewGenerated}
-          />
-        </ResizablePanel>
-      </ResizablePanelGroup>
+          {/* Preview Panel - Right (33%) */}
+          <ResizablePanel defaultSize={33} minSize={20} maxSize={50}>
+            <SetupPreview
+              images={currentSession?.images?.images ?? null}
+              config={config}
+              configChanged={configChanged}
+              onConfigUpdate={updateSessionConfig}
+              onPreviewGenerated={handlePreviewGenerated}
+            />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      ) : (
+        <LoadingState message="Generating configuration..." />
+      )}
     </div>
   );
 };
