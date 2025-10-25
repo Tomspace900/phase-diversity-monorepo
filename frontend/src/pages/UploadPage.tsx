@@ -10,6 +10,7 @@ import {
 } from "../components/ui/card";
 import { LoadingState, StatsGrid, type Stat } from "../components/common";
 import { type ParsedImages } from "../types/session";
+import { FloatingNavigation } from "../components/FloatingNavigation";
 
 const UploadPage: React.FC = () => {
   const navigate = useNavigate();
@@ -81,59 +82,59 @@ const UploadPage: React.FC = () => {
     : [];
 
   return (
-    <div className="h-[calc(100vh-8rem)] max-w-5xl mx-auto">
-      {/* Upload or Preview */}
-      {!uploadData ? (
-        <ImageUploader onUploadComplete={handleUploadComplete} />
-      ) : (
-        <div className="space-y-6">
-          {uploadData && (
-            <>
-              {/* Thumbnails */}
-              <Card className="border-accent-green/20">
-                <CardHeader className="bg-accent-green/5">
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-accent-green">
-                      Uploaded Images
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    {uploadData.image_info.map(({ thumbnail }, index) => (
-                      <div
-                        key={index}
-                        className="flex flex-col items-center group"
-                      >
-                        <div className="relative w-full aspect-square">
-                          <img
-                            src={thumbnail}
-                            alt={`Image ${index + 1}`}
-                            className="w-full h-full object-cover rounded-lg border-2 border-border group-hover:border-accent-cyan transition-all duration-300"
-                            style={{ imageRendering: "pixelated" }}
-                          />
-                          <div className="absolute inset-0 bg-accent-cyan/0 group-hover:bg-accent-cyan/10 rounded-lg transition-all duration-300" />
+    <>
+      <div className="h-[calc(100vh-8rem)] max-w-5xl mx-auto">
+        {!uploadData ? (
+          <ImageUploader onUploadComplete={handleUploadComplete} />
+        ) : (
+          <div className="space-y-6">
+            {uploadData && (
+              <>
+                <Card className="border-accent-green/20">
+                  <CardHeader className="bg-accent-green/5">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-accent-green">
+                        Uploaded Images
+                      </CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      {uploadData.image_info.map(({ thumbnail }, index) => (
+                        <div
+                          key={index}
+                          className="flex flex-col items-center group"
+                        >
+                          <div className="relative w-full aspect-square">
+                            <img
+                              src={thumbnail}
+                              alt={`Image ${index + 1}`}
+                              className="w-full h-full object-cover rounded-lg border-2 border-border group-hover:border-accent-cyan transition-all duration-300"
+                              style={{ imageRendering: "pixelated" }}
+                            />
+                            <div className="absolute inset-0 bg-accent-cyan/0 group-hover:bg-accent-cyan/10 rounded-lg transition-all duration-300" />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2 font-mono">
+                            Image {index + 1}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2 font-mono">
-                          Image {index + 1}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Dataset Stats */}
-              <StatsGrid
-                title="Dataset Information"
-                stats={stats}
-                columns={3}
-              />
-            </>
-          )}
-        </div>
-      )}
-    </div>
+                <StatsGrid
+                  title="Dataset Information"
+                  stats={stats}
+                  columns={3}
+                />
+              </>
+            )}
+          </div>
+        )}
+      </div>
+      <FloatingNavigation currentPath="/upload" />
+    </>
   );
 };
 
