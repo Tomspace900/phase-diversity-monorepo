@@ -56,15 +56,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         formData.append("files", file);
       });
 
-      const response = await parseImages(formData);
-
-      // Convert response to ParsedImages format
-      const parsedData: ParsedImages = {
-        images: response.images,
-        thumbnails: response.thumbnails,
-        stats: response.stats,
-        original_dtype: response.original_dtype,
-      };
+      const parsedData = await parseImages(formData);
 
       setUploadData(parsedData);
       setUploading(false);
@@ -144,7 +136,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             <li>
               <strong>Accepted formats:</strong>
             </li>
-            <li>• Single FITS file with 2+ image extensions</li>
+            <li>• Single FITS file with 2-10 images extensions</li>
             <li>• Multiple separate FITS files</li>
             <li>• NumPy array (.npy) with shape (N, H, W)</li>
           </ul>
@@ -152,84 +144,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         {/* Show existing images if present */}
         {uploadData && !uploading && (
-          <Card className="border-success/30 bg-success/5">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2 text-success">
-                <CheckCircle2 className="h-4 w-4" />
-                Images Loaded ({uploadData.stats.shape[0]} images)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Image stats */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-card rounded-md p-2 border border-border">
-                  <span className="text-muted-foreground">Shape:</span>{" "}
-                  <span className="font-mono text-foreground">
-                    {uploadData.stats.shape.join(" × ")}
-                  </span>
-                </div>
-                <div className="bg-card rounded-md p-2 border border-border">
-                  <span className="text-muted-foreground">Type:</span>{" "}
-                  <span className="font-mono text-foreground">
-                    {uploadData.stats.dtype}
-                  </span>
-                </div>
-                <div className="bg-card rounded-md p-2 border border-border">
-                  <span className="text-muted-foreground">Range:</span>{" "}
-                  <span className="font-mono text-foreground">
-                    [{uploadData.stats.min.toExponential(2)},{" "}
-                    {uploadData.stats.max.toExponential(2)}]
-                  </span>
-                </div>
-                <div className="bg-card rounded-md p-2 border border-border">
-                  <span className="text-muted-foreground">Mean ± Std:</span>{" "}
-                  <span className="font-mono text-foreground">
-                    {uploadData.stats.mean.toExponential(2)} ±{" "}
-                    {uploadData.stats.std.toExponential(2)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Thumbnails */}
-              {uploadData.thumbnails && uploadData.thumbnails.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2 font-semibold">
-                    Image Previews:
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {uploadData.thumbnails.map((thumb, idx) => (
-                      <div key={idx} className="relative group">
-                        <img
-                          src={thumb}
-                          alt={`Image ${idx + 1}`}
-                          className="w-full rounded border border-border bg-muted"
-                          style={{ imageRendering: "pixelated" }}
-                        />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-semibold">
-                            Image {idx + 1}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={handleSelectNew}
-                  color="secondary"
-                  size="sm"
-                  className="flex-1"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Different Images
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <Thumbnails
+            uploadData={uploadData}
+            handleSelectNew={handleSelectNew}
+          />
         )}
 
         {/* Drag & Drop Zone */}
@@ -294,10 +212,97 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           <Alert variant="default" size="xs">
             <p className="font-mono text-xs">
               {uploadData.stats.shape[0]} images loaded (
-              {uploadData.original_dtype})
+              {uploadData.stats.original_dtype})
             </p>
           </Alert>
         )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const Thumbnails = ({
+  uploadData,
+  handleSelectNew,
+}: {
+  uploadData: ParsedImages;
+  handleSelectNew: () => void;
+}) => {
+  const { shape, original_dtype, min, max, mean, std } = uploadData.stats;
+
+  return (
+    <Card className="border-success/30 bg-success/5">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2 text-success">
+          <CheckCircle2 className="h-4 w-4" />
+          Images Loaded ({shape[0]} images)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Image stats */}
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-card rounded-md p-2 border border-border">
+            <span className="text-muted-foreground">Shape:</span>{" "}
+            <span className="font-mono text-foreground">
+              {shape.join(" × ")}
+            </span>
+          </div>
+          <div className="bg-card rounded-md p-2 border border-border">
+            <span className="text-muted-foreground">Type:</span>{" "}
+            <span className="font-mono text-foreground">{original_dtype}</span>
+          </div>
+          <div className="bg-card rounded-md p-2 border border-border">
+            <span className="text-muted-foreground">Range:</span>{" "}
+            <span className="font-mono text-foreground">
+              [{min.toExponential(2)}, {max.toExponential(2)}]
+            </span>
+          </div>
+          <div className="bg-card rounded-md p-2 border border-border">
+            <span className="text-muted-foreground">Mean ± Std:</span>{" "}
+            <span className="font-mono text-foreground">
+              {mean.toExponential(2)} ± {std.toExponential(2)}
+            </span>
+          </div>
+        </div>
+
+        {/* Thumbnails */}
+        {uploadData.image_info.length > 0 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-2 font-semibold">
+              Image Previews:
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {uploadData.image_info.map(({ thumbnail }, idx) => (
+                <div key={idx} className="relative group">
+                  <img
+                    src={thumbnail}
+                    alt={`Image ${idx + 1}`}
+                    className="w-full rounded border border-border bg-muted"
+                    style={{ imageRendering: "pixelated" }}
+                  />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-semibold">
+                      Image {idx + 1}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex gap-2 pt-2">
+          <Button
+            onClick={handleSelectNew}
+            color="secondary"
+            size="sm"
+            className="flex-1"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Different Images
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

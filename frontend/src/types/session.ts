@@ -1,17 +1,28 @@
-export interface ImageStats {
+// Interface pour les stats GLOBALES de la collection
+export interface DatasetStats {
   shape: [number, number, number]; // [N, H, W]
-  dtype: string;
   min: number;
   max: number;
   mean: number;
   std: number;
+  original_dtype: string;
+  shape_consistent: boolean; // Confirme que toutes les images avaient la même taille
 }
 
+// Interface pour les infos SPECIFIQUES à chaque image
+export interface ImageInfo {
+  source_file: string; // Nom du fichier d'origine
+  source_hdu_index: number; // Index du HDU dans ce fichier
+  thumbnail: string; // vignette base64 PNG
+  header: Record<string, any>; // Le header FITS sérialisé
+}
+
+// L'objet de réponse final
 export interface ParsedImages {
-  images: number[][][]; // 3D array [N, H, W]
-  thumbnails: string[]; // base64 PNG data URIs
-  stats: ImageStats;
-  original_dtype: string;
+  images: number[][][]; // Le gros tableau 3D [N, H, W]
+  stats: DatasetStats; // Stats globales
+  image_info: ImageInfo[]; // Liste d'infos [N], indexée comme le tableau 'images'
+  warning: string | null; // Pour le "max 10 images" etc.
 }
 
 export interface OpticalConfig {
@@ -91,7 +102,6 @@ export interface PreviewConfigResponse {
   config_info: ConfigInfo;
   pupil_image: string; // base64 PNG
   illumination_image: string; // base64 PNG
-  warnings: string[];
 }
 
 export interface PhaseResults {
@@ -157,7 +167,7 @@ export interface Session {
   images: ParsedImages | null;
 
   // Current/default configuration
-  currentConfig: OpticalConfig;
+  currentConfig: OpticalConfig | null;
 
   // History of all analysis runs
   runs: AnalysisRun[];
@@ -172,11 +182,13 @@ export interface FavoriteConfig {
   created_at: string; // ISO timestamp
 }
 
+// Default optical configuration used as a base for generating configs
+// Note: defoc_z will be dynamically generated based on number of images
 export const DEFAULT_OPTICAL_CONFIG: OpticalConfig = {
   xc: null,
   yc: null,
   N: null,
-  defoc_z: [-0.01, 0.0, 0.01],
+  defoc_z: [], // Will be populated by generateDefaultConfig()
   pupilType: 0,
   flattening: 1.0,
   obscuration: 0.28,
@@ -194,6 +206,34 @@ export const DEFAULT_OPTICAL_CONFIG: OpticalConfig = {
   object_shape: "gaussian",
   basis: "eigen",
   Jmax: 55,
+};
+
+/**
+ * Generate default optical configuration based on number of images
+ * Returns a config with predefined defocus values for 2-10 images
+ */
+export const generateDefaultConfig = (numImages: number): OpticalConfig => {
+  // Predefined defocus values for each image count
+  const defocusPresets: Record<number, number[]> = {
+    2: [-0.01, 0.01],
+    3: [-0.01, 0.0, 0.01],
+    4: [-0.015, -0.005, 0.005, 0.015],
+    5: [-0.02, -0.01, 0.0, 0.01, 0.02],
+    6: [-0.025, -0.015, -0.005, 0.005, 0.015, 0.025],
+    7: [-0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03],
+    8: [-0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035],
+    9: [-0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04],
+    10: [-0.045, -0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035, 0.045],
+  };
+
+  // Clamp to valid range and get preset
+  const clampedNum = Math.max(2, Math.min(10, numImages));
+  const defoc_z = defocusPresets[clampedNum];
+
+  return {
+    ...DEFAULT_OPTICAL_CONFIG,
+    defoc_z,
+  };
 };
 
 export const DEFAULT_SEARCH_FLAGS: SearchFlags = {

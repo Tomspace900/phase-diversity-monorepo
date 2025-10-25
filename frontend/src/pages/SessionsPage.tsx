@@ -157,19 +157,22 @@ const SessionsPage: React.FC = () => {
                 ? session.runs[session.runs.length - 1]
                 : null;
 
-            // Pupil type label
+            // Pupil type label (only if config exists)
             const pupilTypeLabels = ["Disk", "Polygon", "ELT"];
-            const pupilTypeLabel =
-              pupilTypeLabels[config.pupilType] || "Unknown";
+            const pupilTypeLabel = config
+              ? pupilTypeLabels[config.pupilType] || "Unknown"
+              : "Not configured";
 
-            // Basis label
+            // Basis label (only if config exists)
             const basisLabels = {
               eigen: "Eigen",
               eigenfull: "Eigen (full)",
               zernike: "Zernike",
               zonal: "Zonal",
             };
-            const basisLabel = basisLabels[config.basis] || config.basis;
+            const basisLabel = config
+              ? basisLabels[config.basis] || config.basis
+              : "Not configured";
 
             return (
               <Card
@@ -229,42 +232,48 @@ const SessionsPage: React.FC = () => {
                     </div>
 
                     {/* Configuration overview */}
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Configuration
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          <Aperture className="h-3 w-3 mr-1" />
-                          {pupilTypeLabel}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          <Waves className="h-3 w-3 mr-1" />λ ={" "}
-                          {(config.wvl * 1e9).toFixed(0)} nm
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          <Target className="h-3 w-3 mr-1" />
-                          f/{config.fratio}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          <Layers className="h-3 w-3 mr-1" />
-                          {basisLabel} ({config.Jmax} modes)
-                        </Badge>
-                        {config.defoc_z && config.defoc_z.length > 0 && (
+                    {config ? (
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          Configuration
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
                           <Badge variant="outline" className="text-xs">
-                            Defocus:{" "}
-                            {config.defoc_z
-                              .map((d) => `${(d * 1000).toFixed(2)}mm`)
-                              .join(", ")}
+                            <Aperture className="h-3 w-3 mr-1" />
+                            {pupilTypeLabel}
                           </Badge>
-                        )}
-                        {config.obscuration > 0 && (
                           <Badge variant="outline" className="text-xs">
-                            Obscur: {(config.obscuration * 100).toFixed(0)}%
+                            <Waves className="h-3 w-3 mr-1" />λ ={" "}
+                            {(config.wvl * 1e9).toFixed(0)} nm
                           </Badge>
-                        )}
+                          <Badge variant="outline" className="text-xs">
+                            <Target className="h-3 w-3 mr-1" />
+                            f/{config.fratio}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            <Layers className="h-3 w-3 mr-1" />
+                            {basisLabel} ({config.Jmax} modes)
+                          </Badge>
+                          {config.defoc_z && config.defoc_z.length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              Defocus:{" "}
+                              {config.defoc_z
+                                .map((d) => `${(d * 1000).toFixed(2)}mm`)
+                                .join(", ")}
+                            </Badge>
+                          )}
+                          {config.obscuration > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              Obscur: {(config.obscuration * 100).toFixed(0)}%
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground italic">
+                        Configuration not set up yet
+                      </div>
+                    )}
 
                     {/* Runs summary */}
                     {lastRun && (

@@ -2,27 +2,13 @@ import {
   PreviewConfigResponse,
   SearchPhaseResponse,
   OpticalConfig,
+  ParsedImages,
 } from "./types/session";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface ErrorResponse {
   detail: string;
-}
-
-export interface ParseImagesResponse {
-  images: number[][][];
-  thumbnails: string[];
-  stats: {
-    shape: [number, number, number];
-    dtype: string;
-    min: number;
-    max: number;
-    mean: number;
-    std: number;
-  };
-  original_dtype: string;
-  message: string;
 }
 
 export interface PreviewConfigRequest {
@@ -48,7 +34,7 @@ export interface SearchPhaseRequest {
 
 export const parseImages = async (
   formData: FormData
-): Promise<ParseImagesResponse> => {
+): Promise<ParsedImages> => {
   const response = await fetch(`${API_URL}/api/parse-images`, {
     method: "POST",
     body: formData,
@@ -100,7 +86,9 @@ export const searchPhase = async (
   return response.json();
 };
 
-export const connectLogsWebSocket = (onMessage: (message: string) => void): WebSocket => {
+export const connectLogsWebSocket = (
+  onMessage: (message: string) => void
+): WebSocket => {
   const wsUrl = API_URL.replace("http", "ws");
   const ws = new WebSocket(`${wsUrl}/ws/logs`);
 

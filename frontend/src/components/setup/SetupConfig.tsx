@@ -6,6 +6,7 @@ import {
   TabsTrigger,
 } from "../../components/ui/tabs";
 import { type OpticalConfig } from "../../types/session";
+import { useSession } from "../../contexts/SessionContext";
 import {
   validateWavelength,
   validatePixelSize,
@@ -32,6 +33,9 @@ const SetupConfig = ({
     value: OpticalConfig[K]
   ) => void;
 }) => {
+  const { currentSession } = useSession();
+  const expectedImagesCount = currentSession?.images?.images.length ?? 0;
+
   // Compute all validations (memoized for performance)
   const validations = useMemo(() => {
     return {
@@ -40,7 +44,7 @@ const SetupConfig = ({
       fratio: validateFratio(config.fratio),
       obscuration: validateObscuration(config.obscuration),
       N: validateComputationSize(config.N),
-      defoc_z: validateDefocusArray(config.defoc_z),
+      defoc_z: validateDefocusArray(config.defoc_z, expectedImagesCount),
       nedges: validateEdges(config.nedges),
       edgeblur: validateEdgeBlur(config.edgeblur_percent),
       Jmax: validateJmax(config.Jmax, config.basis),
@@ -65,6 +69,7 @@ const SetupConfig = ({
     config.basis,
     config.object_fwhm_pix,
     config.flattening,
+    expectedImagesCount,
   ]);
 
   // Update defoc_z array element

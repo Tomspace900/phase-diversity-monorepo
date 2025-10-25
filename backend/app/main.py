@@ -9,10 +9,11 @@ import sys
 import base64
 import logging
 import time
-from typing import List, Optional
+from typing import List, Optional, Dict, Any, Tuple
 from contextlib import asynccontextmanager, redirect_stdout
 
 import numpy as np
+from astropy.io import fits
 from PIL import Image
 from fastapi import FastAPI, File, UploadFile, WebSocket, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,12 +49,16 @@ class StdoutToLogger:
             self.logger.log(self.log_level, f"[{self.source}] {line.rstrip()}")
 
     def flush(self):
-        pass
+        sys.stdout.flush()
 
 
 class OpticalConfigRequest(BaseModel):
-    xc: Optional[int] = Field(None, description="Center x coordinate (auto-detect if None)")
-    yc: Optional[int] = Field(None, description="Center y coordinate (auto-detect if None)")
+    xc: Optional[int] = Field(
+        None, description="Center x coordinate (auto-detect if None)"
+    )
+    yc: Optional[int] = Field(
+        None, description="Center y coordinate (auto-detect if None)"
+    )
     N: Optional[int] = Field(None, description="Computation size (auto-detect if None)")
     defoc_z: List[float] = Field(..., description="Defocus values in meters")
     pupilType: int = Field(0, description="0: disk, 1: polygon, 2: ELT")
@@ -62,28 +67,56 @@ class OpticalConfigRequest(BaseModel):
     angle: float = Field(0.0, description="Pupil rotation angle in degrees")
     nedges: int = Field(0, description="Number of polygon edges (if pupilType=1)")
     spiderAngle: float = Field(0.0, description="Spider rotation angle in degrees")
-    spiderArms: List[float] = Field(default_factory=list, description="Spider arm widths")
-    spiderOffset: List[float] = Field(default_factory=list, description="Spider arm offsets")
-    illum: List[float] = Field(default_factory=lambda: [1.0], description="Illumination per image")
+    spiderArms: List[float] = Field(
+        default_factory=list, description="Spider arm widths"
+    )
+    spiderOffset: List[float] = Field(
+        default_factory=list, description="Spider arm offsets"
+    )
+    illum: List[float] = Field(
+        default_factory=lambda: [1.0], description="Illumination per image"
+    )
     wvl: float = Field(550e-9, description="Wavelength in meters")
     fratio: float = Field(18.0, description="Focal ratio (f-number)")
     pixelSize: float = Field(7.4e-6, description="Pixel size in meters")
     edgeblur_percent: float = Field(3.0, description="Edge blur percentage")
-    object_fwhm_pix: float = Field(0.0, description="Object FWHM in pixels (0 = point source)")
-    object_shape: str = Field("gaussian", description="Object shape: gaussian, airy, etc.")
-    basis: str = Field("eigen", description="Phase basis: eigen, eigenfull, zernike, or zonal")
+    object_fwhm_pix: float = Field(
+        0.0, description="Object FWHM in pixels (0 = point source)"
+    )
+    object_shape: str = Field(
+        "gaussian", description="Object shape: gaussian, airy, etc."
+    )
+    basis: str = Field(
+        "eigen", description="Phase basis: eigen, eigenfull, zernike, or zonal"
+    )
     Jmax: int = Field(55, description="Maximum number of phase modes")
 
     # Initial values for continuation from previous run
-    initial_phase: Optional[List[float]] = Field(None, description="Initial phase coefficients (from previous run)")
-    initial_illum: Optional[List[float]] = Field(None, description="Initial illumination coefficients")
-    initial_defoc_z: Optional[List[float]] = Field(None, description="Initial defocus values")
-    initial_optax_x: Optional[List[float]] = Field(None, description="Initial optical axis X shifts")
-    initial_optax_y: Optional[List[float]] = Field(None, description="Initial optical axis Y shifts")
+    initial_phase: Optional[List[float]] = Field(
+        None, description="Initial phase coefficients (from previous run)"
+    )
+    initial_illum: Optional[List[float]] = Field(
+        None, description="Initial illumination coefficients"
+    )
+    initial_defoc_z: Optional[List[float]] = Field(
+        None, description="Initial defocus values"
+    )
+    initial_optax_x: Optional[List[float]] = Field(
+        None, description="Initial optical axis X shifts"
+    )
+    initial_optax_y: Optional[List[float]] = Field(
+        None, description="Initial optical axis Y shifts"
+    )
     initial_focscale: Optional[float] = Field(None, description="Initial focal scale")
-    initial_object_fwhm_pix: Optional[float] = Field(None, description="Initial object FWHM")
-    initial_amplitude: Optional[List[float]] = Field(None, description="Initial amplitude values")
-    initial_background: Optional[List[float]] = Field(None, description="Initial background values")
+    initial_object_fwhm_pix: Optional[float] = Field(
+        None, description="Initial object FWHM"
+    )
+    initial_amplitude: Optional[List[float]] = Field(
+        None, description="Initial amplitude values"
+    )
+    initial_background: Optional[List[float]] = Field(
+        None, description="Initial background values"
+    )
 
 
 class PreviewConfigRequest(BaseModel):
@@ -154,6 +187,7 @@ class WebSocketHandler(logging.Handler):
         formatted_msg = f"{timestamp}|{clean_msg}"
 
         import asyncio
+
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
@@ -184,6 +218,122 @@ root_logger = logging.getLogger()
 root_logger.addHandler(ws_handler)
 
 
+def serialize_header(header: fits.Header) -> Dict[str, Any]:
+    """Convertit un Header Astropy en un dict sérialisable en JSON."""
+    header_dict = {}
+    for key, value in header.items():
+        if key in ("COMMENT", "HISTORY"):
+            # Gérer les listes de commentaires/historique
+            header_dict[key] = list(value)
+        else:
+            # str() gère les types non-JSON comme 'Undefined'
+            header_dict[key] = str(value)
+    return header_dict
+
+
+async def load_flexible_image_collection(
+    files: List[UploadFile],
+) -> Tuple[List[np.ndarray], List[Dict[str, Any]], Optional[str]]:
+    """
+    Charge les images FITS de manière flexible.
+
+    Tente de charger entre 2 et 10 images 2D à partir de n'importe quelle
+    combinaison de fichiers, HDUs, ou cubes 3D.
+
+    Retourne : (liste_images, liste_infos, message_warning)
+    """
+
+    images_list = []
+    info_list = []  # Pour stocker le header et la source
+    warning = None
+
+    # Limites
+    MIN_IMAGES = 2
+    MAX_IMAGES = 10
+
+    # 1. Boucler sur chaque fichier envoyé
+    for file in files:
+        if not file.filename.endswith((".fits", ".fit")):
+            logger.warning(f"Fichier ignoré (non-FITS): {file.filename}")
+            continue
+
+        content = await file.read()
+
+        try:
+            with fits.open(io.BytesIO(content)) as hdul:
+                # 2. Boucler sur chaque HDU dans ce fichier
+                for hdu_index, hdu in enumerate(hdul):
+
+                    if not hdu.is_image or hdu.data is None:
+                        continue  # Ignorer les HDUs non-image ou vides
+
+                    data = hdu.data
+                    header = hdu.header
+
+                    # 3. Gérer les données (Cube 3D ou Image 2D)
+
+                    # Cas A: C'est un cube 3D (N, H, W)
+                    if data.ndim == 3:
+                        logger.info(
+                            f"Fichier {file.filename} [HDU {hdu_index}]: Détection d'un cube 3D {data.shape}"
+                        )
+                        for i in range(data.shape[0]):
+                            if len(images_list) >= MAX_IMAGES:
+                                warning = f"Limite de {MAX_IMAGES} images atteinte. Les images suivantes ont été ignorées."
+                                break
+
+                            images_list.append(data[i])
+                            info_list.append(
+                                {
+                                    "source_file": file.filename,
+                                    "source_hdu_index": hdu_index,
+                                    "header": serialize_header(
+                                        header
+                                    ),  # Utilise le header principal du cube
+                                }
+                            )
+
+                    # Cas B: C'est une image 2D (H, W)
+                    elif data.ndim == 2:
+                        logger.info(
+                            f"Fichier {file.filename} [HDU {hdu_index}]: Détection d'une image 2D {data.shape}"
+                        )
+                        if len(images_list) >= MAX_IMAGES:
+                            warning = f"Limite de {MAX_IMAGES} images atteinte. Les images suivantes ont été ignorées."
+                            break
+
+                        images_list.append(data)
+                        info_list.append(
+                            {
+                                "source_file": file.filename,
+                                "source_hdu_index": hdu_index,
+                                "header": serialize_header(
+                                    header
+                                ),  # Header spécifique à cette image
+                            }
+                        )
+
+                    if warning:
+                        break  # Sortir de la boucle des HDUs
+            if warning:
+                break  # Sortir de la boucle des Fichiers
+
+        except Exception as e:
+            logger.error(f"Erreur à la lecture de {file.filename}: {e}")
+            # On continue avec les autres fichiers
+            pass
+
+    # 4. Validation finale des contraintes
+    if len(images_list) < MIN_IMAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Au moins {MIN_IMAGES} images sont requises. {len(images_list)} seulement ont été trouvées.",
+        )
+
+    logger.info(f"Chargement terminé. {len(images_list)} images collectées.")
+    return images_list, info_list, warning
+
+
 def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
     """Generate base64 PNG thumbnail from 2D numpy array"""
     if image_2d.size == 0:
@@ -191,7 +341,9 @@ def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
 
     img_min, img_max = image_2d.min(), image_2d.max()
     if img_max > img_min:
-        img_normalized = ((image_2d - img_min) / (img_max - img_min) * 255).astype(np.uint8)
+        img_normalized = ((image_2d - img_min) / (img_max - img_min) * 255).astype(
+            np.uint8
+        )
     else:
         img_normalized = np.full_like(image_2d, 128, dtype=np.uint8)
 
@@ -210,175 +362,94 @@ async def root():
     return {"message": "Phase Diversity API", "version": "1.0.0", "docs": "/docs"}
 
 
-@app.post("/api/parse-images")
+@app.post(
+    "/api/parse-images", response_model=None
+)  # response_model=None pour flexibilité
 async def parse_images(files: List[UploadFile] = File(...)):
-    """Parse FITS/NPY images and return as JSON arrays with thumbnails and stats"""
+    """
+    Charge une collection d'images FITS (min 2, max 10) pour la diversité de phase.
+    Retourne la pile d'images 3D, les statistiques globales, et les métadonnées
+    (header + vignette) pour chaque image.
+    """
     try:
-        from astropy.io import fits
+        # 1. Charger la collection
+        images_list, info_list, warning = await load_flexible_image_collection(files)
 
-        logger.info(f"📤 Parsing images from {len(files)} file(s)...")
-
-        images = []
-        original_dtype = None
-
-        if len(files) == 1 and files[0].filename.endswith(".npy"):
-            content = await files[0].read()
-            img_collection = np.load(io.BytesIO(content))
-
-            if img_collection.ndim != 3:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"NumPy array must be 3D with shape (N, H, W), got shape {img_collection.shape}",
+        # 2. Valider la cohérence des dimensions (H, W)
+        # C'est crucial pour la diversité de phase
+        first_shape = images_list[0].shape
+        shape_consistent = True
+        for img in images_list[1:]:
+            if img.shape != first_shape:
+                shape_consistent = False
+                logger.warning(
+                    f"Incohérence de dimensions: {first_shape} vs {img.shape}"
                 )
+                # Selon vos besoins, vous pourriez vouloir lever une erreur ici
+                # raise HTTPException(400, "Toutes les images doivent avoir les mêmes dimensions (H, W)")
 
-            if img_collection.shape[0] < 2:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"At least 2 images required for phase diversity analysis, got {img_collection.shape[0]}",
-                )
-
-            original_dtype = str(img_collection.dtype)
-            logger.info(
-                f"Loaded NPY array: shape {img_collection.shape}, dtype {original_dtype}"
-            )
-
-        # Case 2: Single FITS file (3D cube or multiple extensions)
-        elif len(files) == 1 and files[0].filename.endswith((".fits", ".fit")):
-            content = await files[0].read()
-
-            with fits.open(io.BytesIO(content)) as hdul:
-                # Case 2a: PRIMARY HDU contains a 3D cube (N, H, W)
-                if hdul[0].data is not None and hdul[0].data.ndim == 3:
-                    img_collection = hdul[0].data
-                    original_dtype = str(img_collection.dtype)
-                    logger.info(
-                        f"Loaded 3D cube from PRIMARY HDU: shape {img_collection.shape}, dtype {original_dtype}"
-                    )
-
-                # Case 2b: Multiple HDUs each with 2D images
-                else:
-                    # Extract all 2D images from HDUs
-                    for i, hdu in enumerate(hdul):
-                        if hdu.data is not None and hdu.data.ndim == 2:
-                            images.append(hdu.data)
-                            if original_dtype is None:
-                                original_dtype = str(hdu.data.dtype)
-                            logger.info(
-                                f"  HDU[{i}] ({hdu.name}): shape {hdu.data.shape}, dtype {hdu.data.dtype}"
-                            )
-
-                    if len(images) < 2:
-                        raise HTTPException(
-                            status_code=400,
-                            detail=f"FITS file must contain at least 2 image extensions (found {len(images)})",
-                        )
-
-                    # Stack images into collection
-                    img_collection = np.array(images)
-                    logger.info(
-                        f"Loaded {len(images)} images from multi-extension FITS"
-                    )
-
-        # Case 3: Multiple FITS files (3 separate files)
-        elif all(f.filename.endswith((".fits", ".fit")) for f in files):
-            for idx, file in enumerate(files):
-                content = await file.read()
-
-                with fits.open(io.BytesIO(content)) as hdul:
-                    # Find first valid 2D image in HDU
-                    img_data = None
-                    for hdu in hdul:
-                        if hdu.data is not None and hdu.data.ndim == 2:
-                            img_data = hdu.data
-                            if original_dtype is None:
-                                original_dtype = str(hdu.data.dtype)
-                            break
-
-                    if img_data is None:
-                        raise HTTPException(
-                            status_code=400,
-                            detail=f"No valid 2D image found in {file.filename}",
-                        )
-
-                    images.append(img_data)
-                    logger.info(
-                        f"  File {idx+1}/{len(files)}: {file.filename}, shape {img_data.shape}"
-                    )
-
-            if len(images) < 2:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"At least 2 images required, got {len(images)} files",
-                )
-
-            # Stack images
-            img_collection = np.array(images)
-            logger.info(f"Loaded {len(images)} images from separate FITS files")
-
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail="Upload either: (1) Single FITS file with 2+ image extensions, (2) Three separate FITS files, or (3) NumPy array (.npy) with shape (N, H, W)",
-            )
-
-        # Validate all images have same dimensions
-        if img_collection.ndim != 3:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Image collection must be 3D (N, H, W), got shape {img_collection.shape}",
-            )
-
-        # Check for dimension consistency (already guaranteed by np.array, but explicit check)
-        h, w = img_collection.shape[1], img_collection.shape[2]
-        logger.info(
-            f"All images validated: {img_collection.shape[0]} images of {h}×{w} pixels"
-        )
-
-        # Convert to float64 for processing
-        if original_dtype is None:
-            original_dtype = str(img_collection.dtype)
-        img_collection = img_collection.astype(np.float64)
-
-        logger.info(
-            f"Converted to float64 for processing (original dtype: {original_dtype})"
-        )
-
-        # Generate thumbnails for preview (always 3D at this point)
-        thumbnails = []
+        # 3. Empiler (Stack) en un seul tableau 3D
         try:
-            for i in range(img_collection.shape[0]):
-                thumbnails.append(generate_thumbnail(img_collection[i]))
-            logger.info(f"📊 Generated {len(thumbnails)} thumbnails")
-        except Exception as thumb_error:
-            logger.error(f"⚠️  Thumbnail generation failed: {thumb_error}")
-            thumbnails = []
+            img_collection = np.array(images_list)
+        except ValueError as e:
+            # Cette erreur se produit si les formes ne sont vraiment pas compatibles
+            raise HTTPException(
+                status_code=400,
+                detail=f"Impossible d'empiler les images (dimensions incohérentes) : {e}",
+            )
 
-        # Calculate statistics
-        stats = {
-            "shape": list(img_collection.shape),
-            "dtype": original_dtype,
-            "min": float(img_collection.min()),
-            "max": float(img_collection.max()),
-            "mean": float(img_collection.mean()),
-            "std": float(img_collection.std()),
-        }
+        original_dtype = str(img_collection.dtype)
 
+        # 4. Conversion et Traitement
+        img_collection_float = img_collection.astype(np.float64)
         logger.info(
-            f"✅ Parsed {img_collection.shape[0]} images, shape {img_collection.shape}, dtype {img_collection.dtype}"
+            f"Collection créée: {img_collection_float.shape}, convertie de {original_dtype} à float64"
         )
 
-        # Return images as nested lists (JSON-serializable)
-        # Frontend will store this in localStorage
-        return {
-            "images": img_collection.tolist(),  # Convert numpy array to nested lists
-            "thumbnails": thumbnails,
-            "stats": stats,
+        # 5. Préparer la réponse
+
+        # 5a. Statistiques Globales
+        stats = {
+            "shape": list(img_collection_float.shape),
+            "global_min": float(img_collection_float.min()),
+            "global_max": float(img_collection_float.max()),
+            "global_mean": float(img_collection_float.mean()),
+            "global_std": float(img_collection_float.std()),
             "original_dtype": original_dtype,
-            "message": "Images parsed successfully",
+            "shape_consistent": shape_consistent,
         }
 
+        # 5b. Informations par image (Vignettes)
+        # Nous allons mettre à jour la 'info_list' avec les vignettes
+        processed_image_info = []
+        for i, info in enumerate(info_list):
+            try:
+                thumbnail = generate_thumbnail(img_collection_float[i])
+            except Exception as thumb_error:
+                logger.error(
+                    f"Échec de la génération de la vignette pour l'image {i}: {thumb_error}"
+                )
+                thumbnail = "data:image/png;base64,..."  # Une vignette d'erreur
+
+            info["thumbnail"] = thumbnail
+            processed_image_info.append(info)
+
+        logger.info(
+            f"Vignettes et headers préparés pour {len(processed_image_info)} images."
+        )
+
+        # 6. Retourner la réponse finale
+        return {
+            "images": img_collection_float.tolist(),  # Le gros tableau de données
+            "stats": stats,
+            "image_info": processed_image_info,
+            "warning": warning,
+        }
+
+    except HTTPException:
+        raise  # Renvoyer les erreurs 4xx gérées
     except Exception as e:
-        logger.error(f"❌ Parse error: {str(e)}")
+        logger.error(f"❌ Erreur inattendue lors du parsing: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -402,6 +473,7 @@ async def preview_config(request: PreviewConfigRequest):
         # Create Opticsetup instance with stdin mocked to auto-accept warnings
         # Also redirect stdout to logger to capture print() statements
         from io import StringIO
+
         old_stdin = sys.stdin
         old_stdout = sys.stdout
 
@@ -457,20 +529,9 @@ async def preview_config(request: PreviewConfigRequest):
         else:  # zonal
             phase_modes = nphi
 
-        # Generate warnings
-        warnings = []
-        if sampling_factor < 2.0:
-            warnings.append(f"⚠️ Shannon sampling violated: {sampling_factor:.2f} < 2.0")
-        else:
-            warnings.append(f"✓ Shannon sampling OK: {sampling_factor:.2f}")
-
-        if nphi > 4000:
-            warnings.append(f"⚠️ High DoF count: {nphi} phase points (may be slow)")
-
-        if nphi < 100:
-            warnings.append(f"⚠️ Low DoF count: {nphi} phase points (limited accuracy)")
-
-        logger.info(f"✅ Preview complete: pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}")
+        logger.info(
+            f"✅ Preview complete: pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}"
+        )
 
         return {
             "success": True,
@@ -485,7 +546,6 @@ async def preview_config(request: PreviewConfigRequest):
             },
             "pupil_image": pupil_image,
             "illumination_image": illumination_image,
-            "warnings": warnings,
         }
 
     except Exception as e:
@@ -510,11 +570,14 @@ async def search_phase(request: SearchPhaseRequest):
 
         # Convert images from nested lists to numpy array
         img_array = np.array(request.images, dtype=np.float64)
-        logger.info(f"📊 Image array shape: {img_array.shape}, dtype: {img_array.dtype}")
+        logger.info(
+            f"📊 Image array shape: {img_array.shape}, dtype: {img_array.dtype}"
+        )
 
         # Create Opticsetup instance with stdin mocked to auto-accept warnings
         # Also redirect stdout to logger to capture print() statements
         from io import StringIO
+
         old_stdin = sys.stdin
         old_stdout = sys.stdout
 
@@ -556,7 +619,9 @@ async def search_phase(request: SearchPhaseRequest):
         # Inject initial values if provided (for continuation from previous run)
         if config.initial_phase is not None:
             opticsetup.phase = np.array(config.initial_phase)
-            logger.info(f"   ↻ Continuing with initial phase ({len(config.initial_phase)} coefficients)")
+            logger.info(
+                f"   ↻ Continuing with initial phase ({len(config.initial_phase)} coefficients)"
+            )
 
         if config.initial_illum is not None:
             opticsetup.illum = config.initial_illum
@@ -576,11 +641,15 @@ async def search_phase(request: SearchPhaseRequest):
 
         if config.initial_focscale is not None:
             opticsetup.focscale = config.initial_focscale
-            logger.info(f"   ↻ Continuing with initial focscale={config.initial_focscale}")
+            logger.info(
+                f"   ↻ Continuing with initial focscale={config.initial_focscale}"
+            )
 
         if config.initial_object_fwhm_pix is not None:
             opticsetup.object_fwhm_pix = config.initial_object_fwhm_pix
-            logger.info(f"   ↻ Continuing with initial object_fwhm_pix={config.initial_object_fwhm_pix}")
+            logger.info(
+                f"   ↻ Continuing with initial object_fwhm_pix={config.initial_object_fwhm_pix}"
+            )
 
         if config.initial_amplitude is not None:
             opticsetup.amplitude = np.array(config.initial_amplitude)
@@ -607,20 +676,9 @@ async def search_phase(request: SearchPhaseRequest):
         else:  # zonal
             phase_modes = nphi
 
-        # Generate warnings
-        warnings = []
-        if sampling_factor < 2.0:
-            warnings.append(f"⚠️ Shannon sampling violated: {sampling_factor:.2f} < 2.0")
-        else:
-            warnings.append(f"✓ Shannon sampling OK: {sampling_factor:.2f}")
-
-        if nphi > 4000:
-            warnings.append(f"⚠️ High DoF count: {nphi} phase points (may be slow)")
-
-        if nphi < 100:
-            warnings.append(f"⚠️ Low DoF count: {nphi} phase points (limited accuracy)")
-
-        logger.info(f"   pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}")
+        logger.info(
+            f"   pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}"
+        )
 
         # Run phase search with stdout redirected to capture print() statements
         logger.info(f"🔍 Starting phase search...")
@@ -648,17 +706,47 @@ async def search_phase(request: SearchPhaseRequest):
         phase_map = opticsetup.mappy(opticsetup.phase_generator(opticsetup.phase))
 
         # Phase statistics calculations (matching diversity.py lines 1164-1184)
-        phi_pupil_nm = opticsetup.phase_generator(opticsetup.phase) * opticsetup.wvl / (2*np.pi) * 1e9
-        phi_pupil_nm_notilt = opticsetup.phase_generator(opticsetup.phase, tiptilt=False) * opticsetup.wvl / (2*np.pi) * 1e9
-        phi_pupil_nm_notiltdef = opticsetup.phase_generator(opticsetup.phase, tiptilt=False, defoc=False) * opticsetup.wvl / (2*np.pi) * 1e9
+        phi_pupil_nm = (
+            opticsetup.phase_generator(opticsetup.phase)
+            * opticsetup.wvl
+            / (2 * np.pi)
+            * 1e9
+        )
+        phi_pupil_nm_notilt = (
+            opticsetup.phase_generator(opticsetup.phase, tiptilt=False)
+            * opticsetup.wvl
+            / (2 * np.pi)
+            * 1e9
+        )
+        phi_pupil_nm_notiltdef = (
+            opticsetup.phase_generator(opticsetup.phase, tiptilt=False, defoc=False)
+            * opticsetup.wvl
+            / (2 * np.pi)
+            * 1e9
+        )
 
         # RMS statistics
         rms_value = float(np.std(phi_pupil_nm))
-        wrms_value = float(np.sqrt(np.sum(phi_pupil_nm**2 * opticsetup.pupillum) / np.sum(opticsetup.pupillum)))
+        wrms_value = float(
+            np.sqrt(
+                np.sum(phi_pupil_nm**2 * opticsetup.pupillum)
+                / np.sum(opticsetup.pupillum)
+            )
+        )
         rms_value_notilt = float(np.std(phi_pupil_nm_notilt))
-        wrms_value_notilt = float(np.sqrt(np.sum(phi_pupil_nm_notilt**2 * opticsetup.pupillum) / np.sum(opticsetup.pupillum)))
+        wrms_value_notilt = float(
+            np.sqrt(
+                np.sum(phi_pupil_nm_notilt**2 * opticsetup.pupillum)
+                / np.sum(opticsetup.pupillum)
+            )
+        )
         rms_value_notiltdef = float(np.std(phi_pupil_nm_notiltdef))
-        wrms_value_notiltdef = float(np.sqrt(np.sum(phi_pupil_nm_notiltdef**2 * opticsetup.pupillum) / np.sum(opticsetup.pupillum)))
+        wrms_value_notiltdef = float(
+            np.sqrt(
+                np.sum(phi_pupil_nm_notiltdef**2 * opticsetup.pupillum)
+                / np.sum(opticsetup.pupillum)
+            )
+        )
 
         # Phase maps (matching diversity.py lines 1212, 1221)
         phase_map_notilt = opticsetup.mappy(phi_pupil_nm_notilt)
@@ -669,23 +757,31 @@ async def search_phase(request: SearchPhaseRequest):
 
         # Tip/Tilt/Defocus statistics (matching diversity.py lines 1186-1203)
         ttf = opticsetup.convert * opticsetup.phase[0:3]
-        a2_nmrms = float(ttf[0] * opticsetup.wvl / (2*np.pi) * 1e9)
-        a2_lD = float(ttf[0] * 4 / (2*np.pi))
+        a2_nmrms = float(ttf[0] * opticsetup.wvl / (2 * np.pi) * 1e9)
+        a2_lD = float(ttf[0] * 4 / (2 * np.pi))
         a2_pix = float(ttf[0] * opticsetup.rad2pix)
         a2_m = float(ttf[0] * opticsetup.rad2dist)
-        a3_nmrms = float(ttf[1] * opticsetup.wvl / (2*np.pi) * 1e9)
-        a3_lD = float(ttf[1] * 4 / (2*np.pi))
+        a3_nmrms = float(ttf[1] * opticsetup.wvl / (2 * np.pi) * 1e9)
+        a3_lD = float(ttf[1] * 4 / (2 * np.pi))
         a3_pix = float(ttf[1] * opticsetup.rad2pix)
         a3_m = float(ttf[1] * opticsetup.rad2dist)
-        a4_nmrms = float(ttf[2] * opticsetup.wvl / (2*np.pi) * 1e9)
-        a4_pix = float(ttf[2] * opticsetup.rad2z / opticsetup.fratio / opticsetup.pixelSize)
+        a4_nmrms = float(ttf[2] * opticsetup.wvl / (2 * np.pi) * 1e9)
+        a4_pix = float(
+            ttf[2] * opticsetup.rad2z / opticsetup.fratio / opticsetup.pixelSize
+        )
         a4_m = float(ttf[2] * opticsetup.rad2z)
 
         # Compute model images and differences (matching visualize_images lines 1310-1316)
         coeffs = opticsetup.encode_coefficients(
-            opticsetup.defoc_z, opticsetup.focscale, opticsetup.optax_x, opticsetup.optax_y,
-            opticsetup.amplitude, opticsetup.background, opticsetup.phase, opticsetup.illum,
-            opticsetup.object_fwhm_pix
+            opticsetup.defoc_z,
+            opticsetup.focscale,
+            opticsetup.optax_x,
+            opticsetup.optax_y,
+            opticsetup.amplitude,
+            opticsetup.background,
+            opticsetup.phase,
+            opticsetup.illum,
+            opticsetup.object_fwhm_pix,
         )
         psfs = div.compute_psfs(opticsetup, coeffs)
         model_images = np.reshape(psfs, opticsetup.img.shape)
@@ -693,7 +789,12 @@ async def search_phase(request: SearchPhaseRequest):
 
         # Optical axis position in pixels (matching visualize_images lines 1318-1320)
         cc = opticsetup.img.shape[1] / 2
-        k = 4 * opticsetup.fratio * (1 * opticsetup.wvl / 2 / np.pi) / opticsetup.pixelSize
+        k = (
+            4
+            * opticsetup.fratio
+            * (1 * opticsetup.wvl / 2 / np.pi)
+            / opticsetup.pixelSize
+        )
         optax_x_pix = [float(cc - k * x) for x in opticsetup.optax_x]
         optax_y_pix = [float(cc - k * y) for y in opticsetup.optax_y]
 
@@ -724,8 +825,18 @@ async def search_phase(request: SearchPhaseRequest):
                 "weighted_notiltdef": wrms_value_notiltdef,
             },
             "tiptilt_defocus_stats": {
-                "tip": {"nm_rms": a2_nmrms, "lambda_D": a2_lD, "pixels": a2_pix, "mm": a2_m * 1e3},
-                "tilt": {"nm_rms": a3_nmrms, "lambda_D": a3_lD, "pixels": a3_pix, "mm": a3_m * 1e3},
+                "tip": {
+                    "nm_rms": a2_nmrms,
+                    "lambda_D": a2_lD,
+                    "pixels": a2_pix,
+                    "mm": a2_m * 1e3,
+                },
+                "tilt": {
+                    "nm_rms": a3_nmrms,
+                    "lambda_D": a3_lD,
+                    "pixels": a3_pix,
+                    "mm": a3_m * 1e3,
+                },
                 "defocus": {"nm_rms": a4_nmrms, "pixels": a4_pix, "mm": a4_m * 1e3},
             },
         }
@@ -748,7 +859,6 @@ async def search_phase(request: SearchPhaseRequest):
             "illumination_image": illumination_image,
             "results": results,
             "duration_ms": duration_ms,
-            "warnings": warnings,
         }
 
     except Exception as e:
@@ -771,8 +881,11 @@ async def websocket_logs(websocket: WebSocket):
 
     # Send a welcome message - this is a SYSTEM message, not CORE
     import datetime
+
     welcome_timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
-    await websocket.send_text(f"{welcome_timestamp}|✅ Connected to Phase Diversity Backend")
+    await websocket.send_text(
+        f"{welcome_timestamp}|✅ Connected to Phase Diversity Backend"
+    )
 
     try:
         while True:

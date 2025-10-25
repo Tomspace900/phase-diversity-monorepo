@@ -54,7 +54,7 @@ const UploadPage: React.FC = () => {
         },
         {
           label: "Data Type",
-          value: uploadData.original_dtype,
+          value: uploadData.stats.original_dtype,
         },
         {
           label: "Dynamic Range",
@@ -100,7 +100,7 @@ const UploadPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4 mt-4">
-                    {uploadData.thumbnails.map((thumbnail, index) => (
+                    {uploadData.image_info.map(({ thumbnail }, index) => (
                       <div
                         key={index}
                         className="flex flex-col items-center group"

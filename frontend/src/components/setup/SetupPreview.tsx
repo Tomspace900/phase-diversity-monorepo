@@ -11,6 +11,7 @@ import { Alert } from "../../components/ui/alert";
 import { LoadingState, StatsGrid, type Stat } from "../common";
 import type { PreviewConfigResponse, OpticalConfig } from "../../types/session";
 import { previewConfig } from "../../api";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface SetupPreviewProps {
   images: number[][][] | null;
@@ -100,22 +101,77 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
       ]
     : [];
 
-  const showLoading = isLoading || !previewData;
-
-  const showGenerateButton = !previewData || configChanged;
+  const hidePreview = !error && previewData && !configChanged;
 
   return (
-    <div className="h-full overflow-auto p-6 flex flex-col gap-6">
-      {/* Error Alert */}
-      {error && (
-        <Alert variant="error" icon="❌" title="No preview available">
-          <strong>Error:</strong> {error}
-        </Alert>
-      )}
+    <div className="h-full flex flex-col">
+      <ScrollArea className="flex-1">
+        {isLoading ? (
+          <LoadingState
+            message="Loading pupil preview..."
+            className="w-full aspect-square"
+          />
+        ) : (
+          hidePreview && (
+            <div className="space-y-4 p-6">
+              {/* Generate Preview Button */}
+              <Card className="border-accent-cyan/20">
+                <CardHeader className="bg-accent-cyan/5">
+                  <CardTitle className="text-accent-cyan flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-accent-cyan animate-pulse" />
+                    Pupil Preview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <img
+                    src={previewData.pupil_image}
+                    alt="Pupil"
+                    className="w-full rounded-lg border border-border"
+                    style={{ imageRendering: "pixelated" }}
+                  />
+                </CardContent>
+              </Card>
+              {/* Illumination Visualization */}
+              <Card className="border-accent-green/20">
+                <CardHeader className="bg-accent-green/5">
+                  <CardTitle className="text-accent-green text-sm">
+                    Illumination
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <img
+                    src={previewData.illumination_image}
+                    alt="Illumination"
+                    className="w-full rounded-lg border border-border"
+                    style={{ imageRendering: "pixelated" }}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )
+        )}
+      </ScrollArea>
 
-      {/* Generate Preview Button */}
-      {showGenerateButton ? (
-        <div className="flex justify-center">
+      <div className="p-4 border-t space-y-4">
+        <>
+          {/* Technical Info */}
+          {hidePreview && (
+            <StatsGrid
+              title="Configuration Info"
+              stats={previewStats}
+              columns={2}
+            />
+          )}
+
+          {/* Errors */}
+          {error && (
+            <Alert variant="error" icon="❌" title="No preview available">
+              <strong>Error:</strong> {error}
+            </Alert>
+          )}
+        </>
+
+        {configChanged && (
           <Button
             icon={Eye}
             color="primary"
@@ -126,75 +182,8 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
           >
             Generate Preview
           </Button>
-        </div>
-      ) : (
-        <>
-          <Card className="border-accent-cyan/20">
-            <CardHeader className="bg-accent-cyan/5">
-              <CardTitle className="text-accent-cyan flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-accent-cyan animate-pulse" />
-                Pupil Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              {showLoading ? (
-                <LoadingState
-                  message="Loading pupil preview..."
-                  className="w-full aspect-square"
-                />
-              ) : (
-                <img
-                  src={previewData.pupil_image}
-                  alt="Pupil"
-                  className="w-full rounded-lg border border-border"
-                  style={{ imageRendering: "pixelated" }}
-                />
-              )}
-            </CardContent>
-          </Card>
-          {/* Illumination Visualization */}
-          <Card className="border-accent-green/20">
-            <CardHeader className="bg-accent-green/5">
-              <CardTitle className="text-accent-green text-sm">
-                Illumination
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              {showLoading ? (
-                <LoadingState
-                  message="Loading illumination preview..."
-                  className="w-full aspect-square"
-                />
-              ) : (
-                <img
-                  src={previewData.illumination_image}
-                  alt="Illumination"
-                  className="w-full rounded-lg border border-border"
-                  style={{ imageRendering: "pixelated" }}
-                />
-              )}
-            </CardContent>
-          </Card>
-          {/* Technical Info */}
-          {previewData && (
-            <StatsGrid
-              title="Configuration Info"
-              stats={previewStats}
-              columns={2}
-            />
-          )}
-          {/* Warnings */}
-          {previewData && previewData.warnings.length > 0 && (
-            <Alert variant="warning" title="Warnings" size="sm">
-              <ul className="space-y-1">
-                {previewData.warnings.map((warning, idx) => (
-                  <li key={idx}>{warning}</li>
-                ))}
-              </ul>
-            </Alert>
-          )}
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };
