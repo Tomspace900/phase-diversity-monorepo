@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Telescope,
   Sparkles,
@@ -165,12 +160,29 @@ const AboutPage: React.FC = () => {
               Thomas Gendron (Monorepo, Frontend, Backend)
             </p>
           </div>
-          <div className="pt-2 border-t">
-            <p className="text-xs text-muted-foreground text-center">
-              © {new Date().getFullYear()} • Research tool for astronomers and
-              astrophysicists
-            </p>
-          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-accent-orange/20">
+        <CardHeader className="bg-accent-orange/5">
+          <CardTitle className="flex items-center gap-2 text-accent-orange">
+            <Lightbulb className="h-5 w-5" />
+            Philosophy
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            This is a{" "}
+            <span className="font-semibold text-accent-orange">
+              research tool
+            </span>
+            , not a production application. It prioritizes{" "}
+            <span className="font-semibold text-accent-orange">
+              simplicity and flexibility
+            </span>{" "}
+            for trusted expert users working in local or controlled research
+            environments.
+          </p>
         </CardContent>
       </Card>
 
@@ -209,23 +221,12 @@ const AboutPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="border-accent-orange/20">
-        <CardHeader className="bg-accent-orange/5">
-          <CardTitle className="flex items-center gap-2 text-accent-orange">
-            <Lightbulb className="h-5 w-5" />
-            Philosophy
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            This is a <span className="font-semibold text-accent-orange">research tool</span>, not
-            a production application. It prioritizes{" "}
-            <span className="font-semibold text-accent-orange">simplicity and flexibility</span>{" "}
-            for trusted expert users working in local or controlled research
-            environments.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="pt-2 border-t">
+        <p className="text-xs text-muted-foreground text-center">
+          © {new Date().getFullYear()} • Research tool for astronomers and
+          astrophysicists
+        </p>
+      </div>
     </div>
   );
 };
