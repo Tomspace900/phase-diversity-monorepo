@@ -98,10 +98,3 @@ export const connectLogsWebSocket = (
 
   return ws;
 };
-
-export default {
-  parseImages,
-  previewConfig,
-  searchPhase,
-  connectLogsWebSocket,
-};

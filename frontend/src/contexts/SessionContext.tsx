@@ -13,6 +13,7 @@ import {
   SearchFlags,
   ParsedImages,
   FavoriteConfig,
+  CachedPreview,
 } from "../types/session";
 import { searchPhase } from "../api";
 
@@ -33,6 +34,7 @@ interface SessionContextType {
   // Session data updates
   updateSessionConfig: (config: OpticalConfig) => void;
   updateSessionImages: (images: ParsedImages) => void;
+  updateSessionPreview: (preview: CachedPreview | null) => void;
 
   // Analysis
   runAnalysis: (
@@ -73,6 +75,9 @@ const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
     return item ? JSON.parse(item) : defaultValue;
   } catch (error) {
     console.error(`Error loading ${key} from localStorage:`, error);
+    alert(
+      `Failed to load ${key} from storage. Your data may be corrupted. Using default values instead.`
+    );
     return defaultValue;
   }
 };
@@ -85,6 +90,10 @@ const saveToLocalStorage = <T,>(key: string, value: T): void => {
     if (error instanceof DOMException && error.name === "QuotaExceededError") {
       alert(
         "Storage quota exceeded! Please delete some old sessions or export them as backups."
+      );
+    } else {
+      alert(
+        `Failed to save ${key} to storage. Your changes may not be persisted.`
       );
     }
   }
@@ -176,6 +185,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       updated_at: new Date().toISOString(),
       images: null,
       currentConfig: null,
+      lastPreview: null,
       runs: [],
     };
 
@@ -231,6 +241,24 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       const updatedSession = {
         ...current,
         images,
+        updated_at: new Date().toISOString(),
+      };
+
+      setSessions((prev) =>
+        prev.map((s) => (s.id === current.id ? updatedSession : s))
+      );
+
+      return updatedSession;
+    });
+  }, []);
+
+  const updateSessionPreview = useCallback((preview: CachedPreview | null) => {
+    setCurrentSession((current) => {
+      if (!current) return null;
+
+      const updatedSession = {
+        ...current,
+        lastPreview: preview,
         updated_at: new Date().toISOString(),
       };
 
@@ -533,6 +561,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     // Session data updates
     updateSessionConfig,
     updateSessionImages,
+    updateSessionPreview,
 
     // Analysis
     runAnalysis,
