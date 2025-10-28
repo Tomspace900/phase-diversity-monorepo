@@ -1,16 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Upload,
-  Image as ImageIcon,
-  CheckCircle2,
-  XCircle,
-} from "lucide-react";
+import { Upload, CheckCircle2, FileUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
 import { parseImages } from "../../api";
 import { type ParsedImages } from "../../types/session";
-import { LoadingState } from "../common";
+import { LoadingState, EmptyState } from "../common";
 
 interface ImageUploaderProps {
   onUploadComplete: (data: ParsedImages) => void;
@@ -122,9 +117,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   return (
-    <Card className="shadow-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-primary">
+    <Card className="shadow-lg border-accent-cyan/20">
+      <CardHeader className="bg-accent-cyan/5">
+        <CardTitle className="flex items-center gap-2 text-accent-cyan">
           <Upload className="h-5 w-5" />
           Upload Images
         </CardTitle>
@@ -132,14 +127,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       <CardContent className="space-y-4">
         {/* Instructions */}
         <Alert variant="info" icon="💡" size="sm">
-          <ul className="space-y-1">
-            <li>
-              <strong>Accepted formats:</strong>
-            </li>
-            <li>• Single FITS file with 2-10 images extensions</li>
-            <li>• Multiple separate FITS files</li>
-            <li>• NumPy array (.npy) with shape (N, H, W)</li>
-          </ul>
+          <p className="text-sm">
+            <strong>Accepted formats:</strong> Single FITS file with 2-10 image
+            extensions, multiple FITS files, or NumPy array (.npy) with shape
+            (N, H, W)
+          </p>
         </Alert>
 
         {/* Show existing images if present */}
@@ -158,24 +150,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={handleBrowseClick}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
+            className={`border-2 border-dashed rounded-lg py-12 cursor-pointer transition-all ${
               isDragging
                 ? "border-accent-cyan bg-accent-cyan/10 scale-[1.02]"
-                : "border-border hover:border-primary hover:bg-muted/50"
+                : "border-border hover:border-accent-cyan/50 hover:bg-accent-cyan/5"
             }`}
           >
-            <div className="flex flex-col items-center">
-              <ImageIcon className="h-12 w-12 mb-3 text-muted-foreground" />
-              <p className="text-sm text-foreground">
-                <span className="text-primary font-semibold">
-                  Click to browse
-                </span>{" "}
-                or drag and drop
-              </p>
-              <p className="text-xs mt-2 text-muted-foreground">
-                FITS (.fits, .fit) or NumPy (.npy)
-              </p>
-            </div>
+            <EmptyState
+              icon={
+                <FileUp
+                  className={`h-16 w-16 ${
+                    isDragging ? "text-accent-cyan" : "text-muted-foreground/50"
+                  }`}
+                />
+              }
+              title={isDragging ? "Drop files here" : "Upload images"}
+              description={
+                isDragging
+                  ? "Release to upload"
+                  : "Click to browse or drag and drop FITS (.fits, .fit) or NumPy (.npy) files"
+              }
+              accentColor="cyan"
+            />
           </div>
         )}
 
@@ -194,15 +190,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         {/* Error Display */}
         {error && !uploading && (
-          <Alert
-            variant="error"
-            icon={<XCircle className="h-4 w-4" />}
-            title="Upload Failed"
-            size="sm"
-          >
+          <Alert variant="error" icon="❌" title="Upload Failed" size="sm">
             <p className="mb-3">{error}</p>
-            <Button onClick={handleSelectNew} color="secondary" size="sm">
-              Select New Files
+            <Button
+              onClick={handleSelectNew}
+              color="error"
+              size="md"
+              icon={Upload}
+            >
+              Try Again
             </Button>
           </Alert>
         )}
@@ -291,18 +287,16 @@ const Thumbnails = ({
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="flex gap-2 pt-2">
-          <Button
-            onClick={handleSelectNew}
-            color="secondary"
-            size="sm"
-            className="flex-1"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Different Images
-          </Button>
-        </div>
+        {/* Action button */}
+        <Button
+          onClick={handleSelectNew}
+          color="secondary"
+          size="md"
+          icon={Upload}
+          className="w-full"
+        >
+          Upload Different Images
+        </Button>
       </CardContent>
     </Card>
   );
