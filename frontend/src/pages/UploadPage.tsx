@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Image as ImageIcon } from "lucide-react";
 import { useSession } from "../contexts/SessionContext";
 import ImageUploader from "../components/upload/ImageUploader";
 import {
@@ -10,8 +11,6 @@ import {
 } from "../components/ui/card";
 import { LoadingState, StatsGrid, type Stat } from "../components/common";
 import { type ParsedImages } from "../types/session";
-import { FloatingNavigation } from "../components/FloatingNavigation";
-
 const UploadPage: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -82,59 +81,45 @@ const UploadPage: React.FC = () => {
     : [];
 
   return (
-    <>
-      <div className="h-[calc(100vh-8rem)] max-w-5xl mx-auto">
-        {!uploadData ? (
-          <ImageUploader onUploadComplete={handleUploadComplete} />
-        ) : (
-          <div className="space-y-6">
-            {uploadData && (
-              <>
-                <Card className="border-accent-green/20">
-                  <CardHeader className="bg-accent-green/5">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-accent-green">
-                        Uploaded Images
-                      </CardTitle>
+    <div className="h-[calc(100vh-8rem)] max-w-5xl mx-auto">
+      {!uploadData ? (
+        <ImageUploader onUploadComplete={handleUploadComplete} />
+      ) : (
+        <div className="space-y-6">
+          <Card className="border-accent-cyan/20">
+            <CardHeader className="bg-accent-cyan/5">
+              <CardTitle className="text-accent-cyan flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Uploaded Images
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {uploadData.image_info.map(({ thumbnail }, index) => (
+                  <div key={index} className="group">
+                    <div className="relative w-full aspect-square overflow-hidden rounded-lg border-2 border-border group-hover:border-accent-cyan/50 transition-all duration-300">
+                      <img
+                        src={thumbnail}
+                        alt={`Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        style={{ imageRendering: "pixelated" }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3">
+                        <span className="text-white text-sm font-semibold">
+                          Image {index + 1}
+                        </span>
+                      </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-4 mt-4">
-                      {uploadData.image_info.map(({ thumbnail }, index) => (
-                        <div
-                          key={index}
-                          className="flex flex-col items-center group"
-                        >
-                          <div className="relative w-full aspect-square">
-                            <img
-                              src={thumbnail}
-                              alt={`Image ${index + 1}`}
-                              className="w-full h-full object-cover rounded-lg border-2 border-border group-hover:border-accent-cyan transition-all duration-300"
-                              style={{ imageRendering: "pixelated" }}
-                            />
-                            <div className="absolute inset-0 bg-accent-cyan/0 group-hover:bg-accent-cyan/10 rounded-lg transition-all duration-300" />
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2 font-mono">
-                            Image {index + 1}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-                <StatsGrid
-                  title="Dataset Information"
-                  stats={stats}
-                  columns={3}
-                />
-              </>
-            )}
-          </div>
-        )}
-      </div>
-      <FloatingNavigation currentPath="/upload" />
-    </>
+          <StatsGrid title="Dataset Information" stats={stats} columns={3} />
+        </div>
+      )}
+    </div>
   );
 };
 
