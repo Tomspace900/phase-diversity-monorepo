@@ -13,6 +13,7 @@ import {
   WORKFLOW_ORDER,
   type AccentColor,
 } from "@/constants/workflow";
+import { FavoritesManager } from "@/components/setup";
 
 const colorStyles: Record<
   AccentColor,
@@ -166,6 +167,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
+            <FavoritesManager iconOnly />
             {WORKFLOW_STEPS["/about"] && (
               <Button
                 variant="icon"

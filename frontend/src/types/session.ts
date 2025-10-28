@@ -178,13 +178,14 @@ export interface FavoriteConfig {
   name: string;
   description?: string;
   config: OpticalConfig;
+  imageCount: number; // Number of images this config was created for
   tags?: string[];
   created_at: string; // ISO timestamp
 }
 
 // Default optical configuration used as a base for generating configs
 // Note: defoc_z will be dynamically generated based on number of images
-export const DEFAULT_OPTICAL_CONFIG: OpticalConfig = {
+const DEFAULT_OPTICAL_CONFIG: OpticalConfig = {
   xc: null,
   yc: null,
   N: null,
@@ -223,7 +224,9 @@ export const generateDefaultConfig = (numImages: number): OpticalConfig => {
     7: [-0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03],
     8: [-0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035],
     9: [-0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04],
-    10: [-0.045, -0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035, 0.045],
+    10: [
+      -0.045, -0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035, 0.045,
+    ],
   };
 
   // Clamp to valid range and get preset
