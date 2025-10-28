@@ -120,6 +120,7 @@ export interface PhaseResults {
   background: number[];
   illum: number[];
   object_fwhm_pix: number;
+  origin_images: number[][][]; // processed input images used by diversity
   model_images: number[][][]; // fitted/retrieved PSF images
   image_differences: number[][][]; // input - retrieved differences
   rms_stats: {
@@ -147,6 +148,11 @@ export interface SearchPhaseResponse {
   warnings: string[];
 }
 
+export interface CachedPreview {
+  preview: PreviewConfigResponse;
+  config: OpticalConfig; // Config used to generate this preview
+}
+
 export interface AnalysisRun {
   id: string; // UUID
   timestamp: string; // ISO timestamp
@@ -168,6 +174,9 @@ export interface Session {
 
   // Current/default configuration
   currentConfig: OpticalConfig | null;
+
+  // Last generated preview (cached for performance)
+  lastPreview: CachedPreview | null;
 
   // History of all analysis runs
   runs: AnalysisRun[];
