@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../contexts/SessionContext";
 import { Button } from "../components/ui/button";
@@ -19,12 +19,8 @@ const SetupPage: React.FC = () => {
     currentSession,
     isLoading: isSessionLoading,
     updateSessionConfig,
+    updateSessionPreview,
   } = useSession();
-
-  // Configuration state (will be initialized from session or generated from images)
-  const [config, setConfig] = useState<OpticalConfig | null>(null);
-
-  const [configChanged, setConfigChanged] = useState(true);
 
   useEffect(() => {
     if (!isSessionLoading && !currentSession) navigate("/");
@@ -40,16 +36,8 @@ const SetupPage: React.FC = () => {
       const numImages = currentSession.images.images.length;
       const defaultConfig = generateDefaultConfig(numImages);
       updateSessionConfig(defaultConfig);
-      setConfig(defaultConfig);
     }
   }, [currentSession?.images, currentSession?.currentConfig, isSessionLoading]);
-
-  // Sync config with session when it updates
-  useEffect(() => {
-    if (currentSession?.currentConfig) {
-      setConfig(currentSession.currentConfig);
-    }
-  }, [currentSession?.currentConfig]);
 
   if (isSessionLoading || !currentSession) {
     return <LoadingState message="Loading session..." />;
@@ -57,19 +45,16 @@ const SetupPage: React.FC = () => {
 
   // Check if we have images
   const hasImages = currentSession?.images !== null;
+  const config = currentSession?.currentConfig;
 
-  // Update a single config value
+  // Update a single config value - saves immediately to session
   const updateConfig = <K extends keyof OpticalConfig>(
     key: K,
     value: OpticalConfig[K]
   ): void => {
-    setConfig((prev) => (prev ? { ...prev, [key]: value } : null));
-    setConfigChanged(true);
-  };
-
-  // Reset configChanged after preview is generated
-  const handlePreviewGenerated = () => {
-    setConfigChanged(false);
+    if (config) {
+      updateSessionConfig({ ...config, [key]: value });
+    }
   };
 
   return (
@@ -103,11 +88,9 @@ const SetupPage: React.FC = () => {
           {/* Preview Panel - Right (33%) */}
           <ResizablePanel defaultSize={33} minSize={20} maxSize={50}>
             <SetupPreview
-              images={currentSession?.images?.images ?? null}
-              config={config}
-              configChanged={configChanged}
-              onConfigUpdate={updateSessionConfig}
-              onPreviewGenerated={handlePreviewGenerated}
+              images={currentSession.images?.images ?? null}
+              currentSession={currentSession}
+              onPreviewUpdate={updateSessionPreview}
             />
           </ResizablePanel>
         </ResizablePanelGroup>

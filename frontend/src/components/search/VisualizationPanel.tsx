@@ -19,7 +19,7 @@ interface VisualizationPanelProps {
 export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
   run,
 }) => {
-  const { currentSession, isAnalysisLoading } = useSession();
+  const { isAnalysisLoading } = useSession();
 
   if (isAnalysisLoading)
     return (
@@ -156,12 +156,7 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
             </TabsContent>
 
             <TabsContent value="images" className="space-y-4 pr-4">
-              {currentSession?.images && (
-                <ImageComparisonGrid
-                  run={run}
-                  observedImages={currentSession.images.images}
-                />
-              )}
+              <ImageComparisonGrid run={run} />
             </TabsContent>
 
             <TabsContent value="params" className="space-y-4 pr-4">

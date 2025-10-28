@@ -9,37 +9,42 @@ import {
 import { Button } from "../../components/ui/button";
 import { Alert } from "../../components/ui/alert";
 import { LoadingState, StatsGrid, EmptyState, type Stat } from "../common";
-import type { PreviewConfigResponse, OpticalConfig } from "../../types/session";
+import type { Session, CachedPreview } from "../../types/session";
 import { previewConfig } from "../../api";
 import { ScrollArea } from "../ui/scroll-area";
 
 interface SetupPreviewProps {
   images: number[][][] | null;
-  config: OpticalConfig;
-  configChanged: boolean;
-  onConfigUpdate: (config: OpticalConfig) => void;
-  onPreviewGenerated: () => void;
+  currentSession: Session;
+  onPreviewUpdate: (preview: CachedPreview | null) => void;
 }
 
 const SetupPreview: React.FC<SetupPreviewProps> = ({
   images,
-  config,
-  configChanged,
-  onConfigUpdate,
-  onPreviewGenerated,
+  currentSession,
+  onPreviewUpdate,
 }) => {
-  const [previewData, setPreviewData] = useState<PreviewConfigResponse | null>(
-    null
-  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const hasImages = images !== null;
+  const config = currentSession.currentConfig;
+  const cachedPreview = currentSession.lastPreview;
+  const previewData = cachedPreview?.preview ?? null;
+
+  // Deep comparison to detect config changes
+  const hasConfigChanged = (): boolean => {
+    if (!cachedPreview || !config) return true;
+    // Compare current session config with the config used for the cached preview
+    return JSON.stringify(config) !== JSON.stringify(cachedPreview.config);
+  };
+
+  const configChanged = hasConfigChanged();
 
   // Fetch preview from API
   const fetchPreview = async (): Promise<void> => {
-    if (!hasImages) {
-      setError("No images available. Please upload images first.");
+    if (!hasImages || !config) {
+      setError("No images or config available.");
       setIsLoading(false);
       return;
     }
@@ -52,14 +57,17 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
         config: config,
       });
 
-      setPreviewData(result);
-      onConfigUpdate(config);
-      onPreviewGenerated();
+      // Create cached preview with both the result and the config used
+      const cached: CachedPreview = {
+        preview: result,
+        config: config,
+      };
+      onPreviewUpdate(cached);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Preview failed";
       setError(errorMessage);
-      setPreviewData(null);
+      onPreviewUpdate(null);
     } finally {
       setIsLoading(false);
     }

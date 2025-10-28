@@ -665,7 +665,7 @@ async def search_phase(request: SearchPhaseRequest):
                 illum_flag=request.illum_flag,
                 objsize_flag=request.objsize_flag,
                 estimate_snr=request.estimate_snr,
-                verbose=request.verbose,
+                verbose=True,
                 tolerance=request.tolerance,
             )
         finally:

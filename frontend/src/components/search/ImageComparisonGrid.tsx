@@ -1,31 +1,75 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import Plot from "react-plotly.js";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Slider } from "../ui/slider";
 import { applyFFTShift } from "../../lib/plotUtils";
 import type { AnalysisRun } from "../../types/session";
 
 interface ImageComparisonGridProps {
   run: AnalysisRun;
-  observedImages: number[][][];
 }
 
 export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
   run,
-  observedImages,
 }) => {
-  const { model_images, image_differences, background, optax_pixels, defoc_z } =
-    run.response.results;
-  const alpha = 0.5;
+  const {
+    origin_images,
+    model_images,
+    image_differences,
+    background,
+    optax_pixels,
+    defoc_z,
+  } = run.response.results;
+
+  const [alpha, setAlpha] = useState(0.5);
+
+  const baseLayout = useMemo(
+    () => ({
+      xaxis: { visible: false, scaleanchor: "y" as any },
+      yaxis: {
+        visible: false,
+        scaleratio: 1,
+        autorange: "reversed" as const,
+      },
+      margin: { l: 0, r: 0, t: 0, b: 0 },
+      width: undefined,
+      height: 200,
+      paper_bgcolor: "rgba(0,0,0,0)",
+      plot_bgcolor: "rgba(0,0,0,0)",
+    }),
+    []
+  );
+
+  const plotConfig = useMemo(
+    () => ({ responsive: true, displayModeBar: false }),
+    []
+  );
 
   return (
     <div className="space-y-4">
-      <div className="bg-muted/30 p-4 rounded">
-        <p className="text-sm">
-          <strong>Image Comparison</strong> - Observed vs Model vs Difference
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          FFT-shifted with optical axis overlay (red cross)
-        </p>
+      <div className="bg-muted/30 p-4 rounded space-y-3">
+        <div>
+          <p className="text-sm">
+            <strong>Image Comparison</strong> - Observed vs Model vs Difference
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            FFT-shifted with optical axis overlay (red cross)
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium whitespace-nowrap">
+            Contrast (α = {alpha.toFixed(2)})
+          </label>
+          <Slider
+            value={[alpha]}
+            onValueChange={(value) => setAlpha(Math.max(0.01, value[0]))}
+            min={0.01}
+            max={1}
+            step={0.01}
+            className="flex-1"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -33,25 +77,23 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
         <div className="font-semibold text-center">Model</div>
         <div className="font-semibold text-center">Difference</div>
 
-        {observedImages.map((_, idx) => {
+        {origin_images.map((_, idx) => {
           const observedShifted = applyFFTShift(
-            observedImages[idx].map((row) => row.map((val) => val - background[idx])),
+            origin_images[idx].map((row) =>
+              row.map((val) => val - background[idx])
+            ),
             alpha
           );
           const modelShifted = applyFFTShift(
-            model_images[idx].map((row) => row.map((val) => val - background[idx])),
+            model_images[idx].map((row) =>
+              row.map((val) => val - background[idx])
+            ),
             alpha
           );
           const diffShifted = applyFFTShift(image_differences[idx], 1.0);
 
-          const commonLayout = {
-            xaxis: { visible: false, scaleanchor: "y" as any },
-            yaxis: { visible: false, scaleratio: 1, autorange: "reversed" as const },
-            margin: { l: 0, r: 0, t: 0, b: 0 },
-            width: undefined,
-            height: 200,
-            paper_bgcolor: "rgba(0,0,0,0)",
-            plot_bgcolor: "rgba(0,0,0,0)",
+          const layoutWithAnnotation = {
+            ...baseLayout,
             annotations: [
               {
                 x: optax_pixels.x[idx],
@@ -70,10 +112,9 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
             type: "heatmap" as const,
             colorscale: "Greys",
             showscale: false,
-            hovertemplate: "x: %{x}<br>y: %{y}<br>Value: %{z:.2f}<extra></extra>",
+            hovertemplate:
+              "x: %{x}<br>y: %{y}<br>Value: %{z:.2f}<extra></extra>",
           });
-
-          const plotConfig = { responsive: true, displayModeBar: false };
 
           return (
             <React.Fragment key={idx}>
@@ -84,7 +125,7 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
                 <CardContent>
                   <Plot
                     data={[heatmapData(observedShifted)]}
-                    layout={commonLayout}
+                    layout={layoutWithAnnotation}
                     config={plotConfig}
                     className="w-full"
                     useResizeHandler
@@ -98,12 +139,14 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
 
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Retrieved PSF {idx + 1}</CardTitle>
+                  <CardTitle className="text-sm">
+                    Retrieved PSF {idx + 1}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Plot
                     data={[heatmapData(modelShifted)]}
-                    layout={commonLayout}
+                    layout={layoutWithAnnotation}
                     config={plotConfig}
                     className="w-full"
                     useResizeHandler
@@ -119,7 +162,7 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
                 <CardContent>
                   <Plot
                     data={[heatmapData(diffShifted)]}
-                    layout={commonLayout}
+                    layout={layoutWithAnnotation}
                     config={plotConfig}
                     className="w-full"
                     useResizeHandler
