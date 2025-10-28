@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Play, Trash2, Clock, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
@@ -6,7 +6,7 @@ import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
 import { Separator } from "../ui/separator";
 import { useSession } from "../../contexts/SessionContext";
-import { EmptyState } from "../common";
+import { EmptyState, ConfirmDialog } from "../common";
 import type { AnalysisRun } from "../../types/session";
 
 interface RunsHistoryPanelProps {
@@ -22,7 +22,23 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
 }) => {
   const { continueFromRun, deleteRun } = useSession();
 
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [runToDelete, setRunToDelete] = useState<string | null>(null);
+
   const sortedRuns = [...runs].reverse(); // Show newest first
+
+  const handleDeleteRun = (e: React.MouseEvent, runId: string) => {
+    e.stopPropagation();
+    setRunToDelete(runId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (runToDelete) {
+      deleteRun(runToDelete);
+      setRunToDelete(null);
+    }
+  };
 
   if (runs.length === 0) {
     return (
@@ -136,12 +152,7 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
                           variant="icon"
                           color="error"
                           icon={Trash2}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm("Delete this run?")) {
-                              deleteRun(run.id);
-                            }
-                          }}
+                          onClick={(e) => handleDeleteRun(e, run.id)}
                         />
                       </div>
                     </>
@@ -152,6 +163,16 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
           })}
         </CardContent>
       </ScrollArea>
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete Run?"
+        description="Are you sure you want to delete this analysis run? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 };
