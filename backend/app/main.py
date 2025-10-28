@@ -357,6 +357,78 @@ def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
     return f"data:image/png;base64,{img_base64}"
 
 
+def generate_opticsetup_thumbnails(opticsetup):
+    """Generate both pupil and illumination thumbnails from an Opticsetup instance"""
+    pupil_image = generate_thumbnail(opticsetup.pupilmap, size=256)
+    illumination_map = opticsetup.mappy(opticsetup.pupillum)
+    illumination_image = generate_thumbnail(illumination_map, size=256)
+    return pupil_image, illumination_image
+
+
+def calculate_config_info(opticsetup, config):
+    """Calculate configuration information from an Opticsetup instance"""
+    sampling_factor = config.wvl * config.fratio / config.pixelSize
+    nphi = opticsetup.idx[0].size
+
+    if opticsetup.basis_type in ["eigen", "zernike"]:
+        phase_modes = opticsetup.phase_basis.shape[1]
+    elif opticsetup.basis_type == "eigenfull":
+        phase_modes = opticsetup.phase_basis.shape[1]
+    else:  # zonal
+        phase_modes = nphi
+
+    return {
+        "pdiam": float(opticsetup.pdiam),
+        "nphi": int(nphi),
+        "sampling_factor": float(sampling_factor),
+        "computation_format": f"{opticsetup.N}x{opticsetup.N}",
+        "data_format": f"{opticsetup.Ncrop}x{opticsetup.Ncrop}",
+        "basis_type": opticsetup.basis_type,
+        "phase_modes": int(phase_modes),
+    }
+
+
+def create_opticsetup_with_mocked_io(img_array: np.ndarray, config, logger):
+    """Create Opticsetup with stdin mocked and stdout redirected to logger"""
+    from io import StringIO
+
+    old_stdin = sys.stdin
+    old_stdout = sys.stdout
+
+    try:
+        sys.stdin = StringIO("y\n" * 100)
+        sys.stdout = StdoutToLogger(logger)
+
+        opticsetup = div.Opticsetup(
+            img_collection=img_array,
+            xc=config.xc,
+            yc=config.yc,
+            N=config.N,
+            defoc_z=config.defoc_z,
+            pupilType=config.pupilType,
+            flattening=config.flattening,
+            obscuration=config.obscuration,
+            angle=config.angle,
+            nedges=config.nedges,
+            spiderAngle=config.spiderAngle,
+            spiderArms=config.spiderArms,
+            spiderOffset=config.spiderOffset,
+            illum=config.illum,
+            wvl=config.wvl,
+            fratio=config.fratio,
+            pixelSize=config.pixelSize,
+            edgeblur_percent=config.edgeblur_percent,
+            object_fwhm_pix=config.object_fwhm_pix,
+            object_shape=config.object_shape,
+            basis=config.basis,
+            Jmax=config.Jmax,
+        )
+        return opticsetup
+    finally:
+        sys.stdin = old_stdin
+        sys.stdout = old_stdout
+
+
 @app.get("/")
 async def root():
     return {"message": "Phase Diversity API", "version": "1.0.0", "docs": "/docs"}
@@ -470,80 +542,25 @@ async def preview_config(request: PreviewConfigRequest):
         img_array = np.array(request.images, dtype=np.float64)
         logger.info(f"📊 Image array shape: {img_array.shape}")
 
-        # Create Opticsetup instance with stdin mocked to auto-accept warnings
-        # Also redirect stdout to logger to capture print() statements
-        from io import StringIO
+        # Create Opticsetup instance
+        logger.info(f"⚙️  Creating Opticsetup for preview...")
+        config = request.config
+        opticsetup = create_opticsetup_with_mocked_io(img_array, config, logger)
+        logger.info("✅ Opticsetup created for preview")
 
-        old_stdin = sys.stdin
-        old_stdout = sys.stdout
-
-        try:
-            sys.stdin = StringIO("y\n" * 100)
-            sys.stdout = StdoutToLogger(logger)
-
-            logger.info(f"⚙️  Creating Opticsetup for preview...")
-            config = request.config
-            opticsetup = div.Opticsetup(
-                img_collection=img_array,
-                xc=config.xc,
-                yc=config.yc,
-                N=config.N,
-                defoc_z=config.defoc_z,
-                pupilType=config.pupilType,
-                flattening=config.flattening,
-                obscuration=config.obscuration,
-                angle=config.angle,
-                nedges=config.nedges,
-                spiderAngle=config.spiderAngle,
-                spiderArms=config.spiderArms,
-                spiderOffset=config.spiderOffset,
-                illum=config.illum,
-                wvl=config.wvl,
-                fratio=config.fratio,
-                pixelSize=config.pixelSize,
-                edgeblur_percent=config.edgeblur_percent,
-                object_fwhm_pix=config.object_fwhm_pix,
-                object_shape=config.object_shape,
-                basis=config.basis,
-                Jmax=config.Jmax,
-            )
-        finally:
-            sys.stdin = old_stdin
-            sys.stdout = old_stdout
-            logger.info("✅ Opticsetup created for preview")
-
-        # Generate pupil preview images
-        pupil_image = generate_thumbnail(opticsetup.pupilmap, size=256)
-        illumination_map = opticsetup.mappy(opticsetup.pupillum)
-        illumination_image = generate_thumbnail(illumination_map, size=256)
+        # Generate thumbnails
+        pupil_image, illumination_image = generate_opticsetup_thumbnails(opticsetup)
 
         # Calculate configuration info
-        sampling_factor = config.wvl * config.fratio / config.pixelSize
-        nphi = opticsetup.idx[0].size
-
-        # Determine number of phase modes
-        if opticsetup.basis_type in ["eigen", "zernike"]:
-            phase_modes = opticsetup.phase_basis.shape[1]
-        elif opticsetup.basis_type == "eigenfull":
-            phase_modes = opticsetup.phase_basis.shape[1]
-        else:  # zonal
-            phase_modes = nphi
+        config_info = calculate_config_info(opticsetup, config)
 
         logger.info(
-            f"✅ Preview complete: pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}"
+            f"✅ Preview complete: pdiam={config_info['pdiam']:.1f}, nphi={config_info['nphi']}, sampling={config_info['sampling_factor']:.2f}"
         )
 
         return {
             "success": True,
-            "config_info": {
-                "pdiam": float(opticsetup.pdiam),
-                "nphi": int(nphi),
-                "sampling_factor": float(sampling_factor),
-                "computation_format": f"{opticsetup.N}x{opticsetup.N}",
-                "data_format": f"{opticsetup.Ncrop}x{opticsetup.Ncrop}",
-                "basis_type": opticsetup.basis_type,
-                "phase_modes": int(phase_modes),
-            },
+            "config_info": config_info,
             "pupil_image": pupil_image,
             "illumination_image": illumination_image,
         }
@@ -574,47 +591,11 @@ async def search_phase(request: SearchPhaseRequest):
             f"📊 Image array shape: {img_array.shape}, dtype: {img_array.dtype}"
         )
 
-        # Create Opticsetup instance with stdin mocked to auto-accept warnings
-        # Also redirect stdout to logger to capture print() statements
-        from io import StringIO
-
-        old_stdin = sys.stdin
-        old_stdout = sys.stdout
-
-        try:
-            sys.stdin = StringIO("y\n" * 100)
-            sys.stdout = StdoutToLogger(logger)
-
-            logger.info(f"⚙️  Creating Opticsetup instance...")
-            config = request.config
-            opticsetup = div.Opticsetup(
-                img_collection=img_array,
-                xc=config.xc,
-                yc=config.yc,
-                N=config.N,
-                defoc_z=config.defoc_z,
-                pupilType=config.pupilType,
-                flattening=config.flattening,
-                obscuration=config.obscuration,
-                angle=config.angle,
-                nedges=config.nedges,
-                spiderAngle=config.spiderAngle,
-                spiderArms=config.spiderArms,
-                spiderOffset=config.spiderOffset,
-                illum=config.illum,
-                wvl=config.wvl,
-                fratio=config.fratio,
-                pixelSize=config.pixelSize,
-                edgeblur_percent=config.edgeblur_percent,
-                object_fwhm_pix=config.object_fwhm_pix,
-                object_shape=config.object_shape,
-                basis=config.basis,
-                Jmax=config.Jmax,
-            )
-        finally:
-            sys.stdin = old_stdin
-            sys.stdout = old_stdout
-            logger.info("✅ Opticsetup created successfully")
+        # Create Opticsetup instance
+        logger.info(f"⚙️  Creating Opticsetup instance...")
+        config = request.config
+        opticsetup = create_opticsetup_with_mocked_io(img_array, config, logger)
+        logger.info("✅ Opticsetup created successfully")
 
         # Inject initial values if provided (for continuation from previous run)
         if config.initial_phase is not None:
@@ -659,25 +640,14 @@ async def search_phase(request: SearchPhaseRequest):
             opticsetup.background = np.array(config.initial_background)
             logger.info(f"   ↻ Continuing with initial background")
 
-        # Generate pupil preview images
-        pupil_image = generate_thumbnail(opticsetup.pupilmap, size=256)
-        illumination_map = opticsetup.mappy(opticsetup.pupillum)
-        illumination_image = generate_thumbnail(illumination_map, size=256)
+        # Generate thumbnails
+        pupil_image, illumination_image = generate_opticsetup_thumbnails(opticsetup)
 
         # Calculate configuration info
-        sampling_factor = config.wvl * config.fratio / config.pixelSize
-        nphi = opticsetup.idx[0].size
-
-        # Determine number of phase modes based on basis type
-        if opticsetup.basis_type in ["eigen", "zernike"]:
-            phase_modes = opticsetup.phase_basis.shape[1]
-        elif opticsetup.basis_type == "eigenfull":
-            phase_modes = opticsetup.phase_basis.shape[1]
-        else:  # zonal
-            phase_modes = nphi
+        config_info = calculate_config_info(opticsetup, config)
 
         logger.info(
-            f"   pdiam={opticsetup.pdiam:.1f}, nphi={nphi}, sampling={sampling_factor:.2f}"
+            f"   pdiam={config_info['pdiam']:.1f}, nphi={config_info['nphi']}, sampling={config_info['sampling_factor']:.2f}"
         )
 
         # Run phase search with stdout redirected to capture print() statements
@@ -814,6 +784,7 @@ async def search_phase(request: SearchPhaseRequest):
             "background": opticsetup.background.tolist(),
             "illum": opticsetup.illum,
             "object_fwhm_pix": float(opticsetup.object_fwhm_pix),
+            "origin_images": opticsetup.img.tolist(),
             "model_images": model_images.tolist(),
             "image_differences": image_differences.tolist(),
             "rms_stats": {
@@ -846,15 +817,7 @@ async def search_phase(request: SearchPhaseRequest):
 
         return {
             "success": True,
-            "config_info": {
-                "pdiam": float(opticsetup.pdiam),
-                "nphi": int(nphi),
-                "sampling_factor": float(sampling_factor),
-                "computation_format": f"{opticsetup.N}x{opticsetup.N}",
-                "data_format": f"{opticsetup.Ncrop}x{opticsetup.Ncrop}",
-                "basis_type": opticsetup.basis_type,
-                "phase_modes": int(phase_modes),
-            },
+            "config_info": config_info,
             "pupil_image": pupil_image,
             "illumination_image": illumination_image,
             "results": results,
@@ -898,7 +861,7 @@ async def websocket_logs(websocket: WebSocket):
             active_websockets.remove(websocket)
 
 
-# No helper functions needed - backend is stateless except for in-memory sessions dict
+# Helper functions defined above for Opticsetup creation and data processing
 
 
 if __name__ == "__main__":
