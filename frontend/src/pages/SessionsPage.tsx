@@ -17,13 +17,16 @@ import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
-import { StatusBadge, EmptyState, LoadingState } from "../components/common";
-import type { Session } from "../types/session";
 import {
+  StatusBadge,
+  EmptyState,
+  LoadingState,
+  ConfirmDialog,
   getCurrentSessionStatus,
-  SessionStatus,
-} from "@/components/common/StatusBadge";
-import { cn } from "@/lib/utils";
+} from "../components/common";
+import type { Session } from "../types/session";
+import type { SessionStatus } from "@/components/common/StatusBadge";
+import { cn, getPupilTypeLabel, getBasisLabel } from "@/lib/utils";
 
 const SessionsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +43,13 @@ const SessionsPage: React.FC = () => {
   useEffect(() => {
     unsetCurrentSession();
   }, [unsetCurrentSession]);
+
+  // State for delete confirmation
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [sessionToDelete, setSessionToDelete] = React.useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Sort sessions by last updated (newest first)
   const sortedSessions = React.useMemo(() => {
@@ -60,18 +70,21 @@ const SessionsPage: React.FC = () => {
     sessionName: string
   ): void => {
     e.stopPropagation();
-    if (
-      !confirm(`Delete session "${sessionName}"? This action cannot be undone.`)
-    ) {
-      return;
-    }
-    try {
-      deleteSession(sessionId);
-    } catch (err) {
-      alert(
-        "Failed to delete session: " +
-          (err instanceof Error ? err.message : "Unknown error")
-      );
+    setSessionToDelete({ id: sessionId, name: sessionName });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (sessionToDelete) {
+      try {
+        deleteSession(sessionToDelete.id);
+      } catch (err) {
+        alert(
+          "Failed to delete session: " +
+            (err instanceof Error ? err.message : "Unknown error")
+        );
+      }
+      setSessionToDelete(null);
     }
   };
 
@@ -157,21 +170,12 @@ const SessionsPage: React.FC = () => {
                 ? session.runs[session.runs.length - 1]
                 : null;
 
-            // Pupil type label (only if config exists)
-            const pupilTypeLabels = ["Disk", "Polygon", "ELT"];
+            // Config labels
             const pupilTypeLabel = config
-              ? pupilTypeLabels[config.pupilType] || "Unknown"
+              ? getPupilTypeLabel(config.pupilType)
               : "Not configured";
-
-            // Basis label (only if config exists)
-            const basisLabels = {
-              eigen: "Eigen",
-              eigenfull: "Eigen (full)",
-              zernike: "Zernike",
-              zonal: "Zonal",
-            };
             const basisLabel = config
-              ? basisLabels[config.basis] || config.basis
+              ? getBasisLabel(config.basis)
               : "Not configured";
 
             return (
@@ -359,6 +363,20 @@ const SessionsPage: React.FC = () => {
           })}
         </div>
       )}
+
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete Session?"
+        description={
+          sessionToDelete
+            ? `Are you sure you want to delete "${sessionToDelete.name}"? This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 };
