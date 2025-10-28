@@ -47,6 +47,7 @@ interface SessionContextType {
   saveFavoriteConfig: (
     name: string,
     config: OpticalConfig,
+    imageCount: number,
     description?: string
   ) => void;
   loadFavoriteConfig: (id: string) => void;
@@ -162,8 +163,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   }, [currentSession]);
 
   useEffect(() => {
-    saveToLocalStorage(STORAGE_KEYS.FAVORITE_CONFIGS, favoriteConfigs);
-  }, [favoriteConfigs]);
+    if (!isLoading) {
+      saveToLocalStorage(STORAGE_KEYS.FAVORITE_CONFIGS, favoriteConfigs);
+    }
+  }, [favoriteConfigs, isLoading]);
 
   const createSession = useCallback((): Session => {
     const newSession: Session = {
@@ -381,12 +384,18 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const saveFavoriteConfig = useCallback(
-    (name: string, config: OpticalConfig, description?: string) => {
+    (
+      name: string,
+      config: OpticalConfig,
+      imageCount: number,
+      description?: string
+    ) => {
       const favorite: FavoriteConfig = {
         id: generateUUID(),
         name,
         description,
         config: { ...config },
+        imageCount,
         created_at: new Date().toISOString(),
       };
 
@@ -402,9 +411,34 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         setCurrentSession((current) => {
           if (!current) return null;
 
+          const currentImageCount = current.images?.images.length ?? 0;
+          let configToApply = { ...favorite.config };
+
+          // Adjust defoc_z array if image count doesn't match
+          if (currentImageCount !== favorite.imageCount) {
+            const currentDefocZ = configToApply.defoc_z;
+
+            if (currentImageCount > favorite.imageCount) {
+              // More images now - pad with last value or 0
+              const lastValue =
+                currentDefocZ.length > 0
+                  ? currentDefocZ[currentDefocZ.length - 1]
+                  : 0;
+              configToApply.defoc_z = [
+                ...currentDefocZ,
+                ...Array(currentImageCount - favorite.imageCount).fill(
+                  lastValue
+                ),
+              ];
+            } else {
+              // Fewer images now - truncate
+              configToApply.defoc_z = currentDefocZ.slice(0, currentImageCount);
+            }
+          }
+
           const updatedSession = {
             ...current,
-            currentConfig: favorite.config,
+            currentConfig: configToApply,
             updated_at: new Date().toISOString(),
           };
 
