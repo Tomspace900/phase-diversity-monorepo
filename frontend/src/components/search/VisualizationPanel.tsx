@@ -1,6 +1,6 @@
 import React from "react";
 import { BarChart2 } from "lucide-react";
-import { CardContent, CardHeader, CardTitle } from "../ui/card";
+import { CardContent } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Alert } from "../ui/alert";
 import { Badge } from "../ui/badge";
@@ -44,16 +44,7 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Results</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            {new Date(run.timestamp).toLocaleString()}
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="flex-1 overflow-hidden">
+      <CardContent className="flex-1 overflow-hidden p-6">
         <Tabs defaultValue="phase" className="h-full flex flex-col">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="phase">Phase</TabsTrigger>
