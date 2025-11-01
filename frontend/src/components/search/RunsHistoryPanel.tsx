@@ -33,27 +33,22 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (runToDelete) {
-      deleteRun(runToDelete);
+      await deleteRun(runToDelete);
       setRunToDelete(null);
     }
   };
 
   if (runs.length === 0) {
     return (
-      <div className="h-full flex flex-col">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Runs History</CardTitle>
-        </CardHeader>
-        <div className="flex-1 flex items-center justify-center p-4">
-          <EmptyState
-            icon={<History className="h-16 w-16 text-muted-foreground/50" />}
-            title="No runs yet"
-            description="Run your first analysis to see history"
-            accentColor="pink"
-          />
-        </div>
+      <div className="h-full flex-1 flex items-center justify-center p-4">
+        <EmptyState
+          icon={<History className="h-16 w-16 text-muted-foreground/50" />}
+          title="No runs yet"
+          description="Run your first analysis to see history"
+          accentColor="pink"
+        />
       </div>
     );
   }
@@ -118,16 +113,11 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
 
                   {activeFlags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {activeFlags.slice(0, 3).map((flag) => (
+                      {activeFlags.map((flag) => (
                         <Badge key={flag} variant="outline" className="text-xs">
                           {flag.replace("_", " ")}
                         </Badge>
                       ))}
-                      {activeFlags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{activeFlags.length - 3}
-                        </Badge>
-                      )}
                     </div>
                   )}
 
@@ -139,9 +129,9 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
                           size="sm"
                           variant="outline"
                           className="flex-1"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            continueFromRun(run.id);
+                            await continueFromRun(run.id);
                           }}
                           icon={Play}
                         >

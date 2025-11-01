@@ -59,8 +59,8 @@ const SessionsPage: React.FC = () => {
     );
   }, [sessions]);
 
-  const handleCreateNewSession = () => {
-    createSession();
+  const handleCreateNewSession = async () => {
+    await createSession();
     navigate("/upload");
   };
 
@@ -74,10 +74,10 @@ const SessionsPage: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (sessionToDelete) {
       try {
-        deleteSession(sessionToDelete.id);
+        await deleteSession(sessionToDelete.id);
       } catch (err) {
         alert(
           "Failed to delete session: " +
@@ -95,9 +95,9 @@ const SessionsPage: React.FC = () => {
     return "/setup";
   };
 
-  const handleOpenSession = (session: Session): void => {
+  const handleOpenSession = async (session: Session): Promise<void> => {
     try {
-      loadSession(session.id);
+      await loadSession(session.id);
       navigate(getNextStep(session));
     } catch (err) {
       alert(

@@ -35,9 +35,11 @@ const SetupPage: React.FC = () => {
     ) {
       const numImages = currentSession.images.images.length;
       const defaultConfig = generateDefaultConfig(numImages);
-      updateSessionConfig(defaultConfig);
+      updateSessionConfig(defaultConfig).catch((err) => {
+        console.error("Failed to initialize config:", err);
+      });
     }
-  }, [currentSession?.images, currentSession?.currentConfig, isSessionLoading]);
+  }, [currentSession?.images, currentSession?.currentConfig, isSessionLoading, updateSessionConfig]);
 
   if (isSessionLoading || !currentSession) {
     return <LoadingState message="Loading session..." />;
@@ -48,12 +50,12 @@ const SetupPage: React.FC = () => {
   const config = currentSession?.currentConfig;
 
   // Update a single config value - saves immediately to session
-  const updateConfig = <K extends keyof OpticalConfig>(
+  const updateConfig = async <K extends keyof OpticalConfig>(
     key: K,
     value: OpticalConfig[K]
-  ): void => {
+  ): Promise<void> => {
     if (config) {
-      updateSessionConfig({ ...config, [key]: value });
+      await updateSessionConfig({ ...config, [key]: value });
     }
   };
 
