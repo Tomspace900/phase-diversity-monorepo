@@ -45,13 +45,13 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
 
   const currentImageCount = currentSession?.images?.images.length ?? 0;
 
-  const handleSave = (
+  const handleSave = async (
     name: string,
     config: OpticalConfig,
     description?: string
   ) => {
     if (!config) return;
-    saveFavoriteConfig(name, config, currentImageCount, description);
+    await saveFavoriteConfig(name, config, currentImageCount, description);
   };
 
   const handleFavoriteClick = (favorite: FavoriteConfig) => {
@@ -60,9 +60,9 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
     setIsPopoverOpen(false);
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (selectedFavorite) {
-      loadFavoriteConfig(selectedFavorite.id);
+      await loadFavoriteConfig(selectedFavorite.id);
     }
   };
 
@@ -72,9 +72,9 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (favoriteToDelete) {
-      deleteFavoriteConfig(favoriteToDelete.id);
+      await deleteFavoriteConfig(favoriteToDelete.id);
       setFavoriteToDelete(null);
     }
   };

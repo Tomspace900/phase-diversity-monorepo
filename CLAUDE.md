@@ -29,7 +29,7 @@ This is a **scientific research tool** for phase diversity analysis in optical s
 ### Architecture
 
 - **Backend**: Stateless FastAPI (Python 3.13) - pure compute gateway
-- **Frontend**: React with TypeScript - manages ALL state in localStorage
+- **Frontend**: React with TypeScript - manages ALL state in IndexedDB
 - **Core Algorithm**: Pure Python implementation in `backend/app/core/`
 
 **⚠️ CRITICAL: The core algorithm is the RESEARCH SUBJECT - scientists will modify it!**
@@ -47,9 +47,10 @@ The application performs phase retrieval from defocused focal plane images using
 
 **Frontend is STATE MANAGER:**
 
-- ALL state stored in browser localStorage
+- ALL state stored in browser IndexedDB
 - Sessions, images, configurations, analysis runs - everything client-side
-- Images are small (~100KB FITS files) so localStorage is feasible
+- Images are small (~100KB FITS files) but IndexedDB provides better scalability (~50MB+ quota)
+- Only `current_session_id` stored in localStorage for quick access
 - SessionContext provides React Context API for state management
 
 ## Project Structure
@@ -77,7 +78,9 @@ phase-diversity/
 │   │   ├── types/
 │   │   │   └── session.ts     # Complete type definitions
 │   │   ├── contexts/
-│   │   │   └── SessionContext.tsx  # State management + localStorage
+│   │   │   └── SessionContext.tsx  # State management + IndexedDB
+│   │   ├── lib/
+│   │   │   └── indexedDB.ts   # IndexedDB wrapper utilities
 │   │   ├── pages/             # TypeScript pages
 │   │   │   ├── UploadPage.tsx
 │   │   │   ├── SetupPage.tsx
@@ -205,7 +208,7 @@ WS   /ws/logs                 # Real-time logging broadcast
 
 - Accepts: FITS files (single with multiple HDUs or multiple files) or NPY arrays
 - Returns: Images as nested JSON arrays, thumbnails (base64 PNG), stats
-- Stateless: Does NOT store anything - frontend receives data and stores in localStorage
+- Stateless: Does NOT store anything - frontend receives data and stores in IndexedDB
 
 **POST /api/preview-config**
 
@@ -272,9 +275,10 @@ The files in `backend/app/core/` contain the phase diversity algorithm that rese
 **SessionContext** ([frontend/src/contexts/SessionContext.tsx](frontend/src/contexts/SessionContext.tsx)):
 
 - Central state manager using React Context API
-- Persists everything to localStorage (sessions, configs, runs)
+- Persists everything to IndexedDB (sessions, configs, runs, favorites)
+- Only `current_session_id` stored in localStorage for quick access
 - Provides hooks: `useSession()` for all pages
-- Auto-saves to localStorage on every state change
+- All state update methods are async (await pattern)
 - Handles quota exceeded errors gracefully
 
 **Session Structure** ([frontend/src/types/session.ts](frontend/src/types/session.ts)):
@@ -350,7 +354,7 @@ interface SearchPhaseResponse {
 
 1. **SessionsPage.tsx** (NEW - now homepage):
 
-   - Lists all sessions from localStorage
+   - Lists all sessions from IndexedDB
    - Create new session or continue existing
    - View results from completed analyses
    - Delete/export sessions
@@ -381,7 +385,7 @@ interface SearchPhaseResponse {
    - Displays latest AnalysisRun from session
    - Plotly.js interactive phase/pupil maps
    - Numerical coefficients and fitted parameters
-   - All data from localStorage - no backend calls
+   - All data from IndexedDB (via SessionContext) - no backend calls
 
 ### User Workflow
 
@@ -389,14 +393,14 @@ interface SearchPhaseResponse {
 SessionsPage (home)
     ↓ "New Session"
 UploadPage
-    ↓ Upload images → parseImages() → Create Session in localStorage
+    ↓ Upload images → parseImages() → Create Session in IndexedDB
 SetupPage
     ↓ Configure params → previewConfig() (debounced, real-time)
     ↓ Edit until satisfied
 SearchPage
     ↓ Set flags → searchPhase() → Store AnalysisRun in Session
 ResultsPage
-    ↓ View results from localStorage
+    ↓ View results from IndexedDB (via SessionContext)
 ```
 
 ### Styling
@@ -449,8 +453,9 @@ This provides up-to-date documentation, props, usage patterns, and implementatio
 
 1. Update types in `frontend/src/types/session.ts`
 2. Update SessionContext logic in `contexts/SessionContext.tsx`
-3. TypeScript will catch all places needing updates
-4. Consider migration for existing localStorage data
+3. Update IndexedDB schema in `lib/indexedDB.ts` if needed
+4. TypeScript will catch all places needing updates
+5. Note: Users will need to re-import sessions after schema changes
 
 ### Update Dependencies
 
@@ -487,10 +492,11 @@ npm run build
 
 ## Important Implementation Details
 
-### localStorage Limits
+### IndexedDB Storage
 
-- Typical browser limit: 5-10 MB
-- FITS images ~100 KB each → can store many sessions
+- Typical browser quota: 50MB+ (much larger than localStorage's 5-10 MB)
+- FITS images ~100 KB each → can store many sessions with analysis history
+- Only `current_session_id` stored in localStorage for quick access
 - Quota exceeded handled gracefully with user alert
 - Export/import functionality for backups
 
@@ -556,7 +562,8 @@ SetupPage uses 500ms debounce to avoid overwhelming backend with preview request
 - Browser DevTools (F12)
 - React DevTools extension
 - TypeScript errors in terminal during `npm run dev`
-- localStorage inspector in DevTools → Application → Local Storage
+- IndexedDB inspector in DevTools → Application → IndexedDB → phase-diversity-db
+- localStorage inspector in DevTools → Application → Local Storage (only for current_session_id)
 
 ### WebSocket
 
@@ -587,11 +594,16 @@ npm run type-check
 - Port 5173 free? `lsof -i :5173`
 - Try: `rm -rf node_modules && npm install`
 
-### localStorage Issues
+### Storage Issues
 
-- Check quota: DevTools → Application → Storage
-- Clear if corrupted: `localStorage.clear()`
+**IndexedDB:**
+- Check quota: DevTools → Application → Storage → IndexedDB
+- Clear if corrupted: DevTools → Application → IndexedDB → phase-diversity-db → Delete database
 - Export sessions before clearing
+
+**localStorage:**
+- Only stores `current_session_id` - safe to clear if needed
+- Clear: `localStorage.removeItem('current_session_id')`
 
 ## Resources
 

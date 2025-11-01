@@ -16,6 +16,15 @@ import {
   CachedPreview,
 } from "../types/session";
 import { searchPhase } from "../api";
+import {
+  getAllSessions,
+  saveSession,
+  deleteSession as deleteSessionFromDB,
+  getAllFavoriteConfigs,
+  saveFavoriteConfig as saveFavoriteConfigToDB,
+  deleteFavoriteConfig as deleteFavoriteConfigFromDB,
+  IndexedDBError,
+} from "../lib/indexedDB";
 
 interface SessionContextType {
   // Read-only state
@@ -26,24 +35,24 @@ interface SessionContextType {
   isAnalysisLoading: boolean;
 
   // Session management
-  createSession: () => Session;
-  loadSession: (id: string) => void;
+  createSession: () => Promise<Session>;
+  loadSession: (id: string) => Promise<void>;
   unsetCurrentSession: () => void;
-  deleteSession: (id: string) => void;
+  deleteSession: (id: string) => Promise<void>;
 
   // Session data updates
-  updateSessionConfig: (config: OpticalConfig) => void;
-  updateSessionImages: (images: ParsedImages) => void;
-  updateSessionPreview: (preview: CachedPreview | null) => void;
+  updateSessionConfig: (config: OpticalConfig) => Promise<void>;
+  updateSessionImages: (images: ParsedImages) => Promise<void>;
+  updateSessionPreview: (preview: CachedPreview | null) => Promise<void>;
 
   // Analysis
   runAnalysis: (
     flags: SearchFlags,
     parentRunId?: string
   ) => Promise<AnalysisRun>;
-  continueFromRun: (runId: string) => void;
-  resetToInitialConfig: () => void;
-  deleteRun: (runId: string) => void;
+  continueFromRun: (runId: string) => Promise<void>;
+  resetToInitialConfig: () => Promise<void>;
+  deleteRun: (runId: string) => Promise<void>;
 
   // Favorites
   saveFavoriteConfig: (
@@ -51,9 +60,9 @@ interface SessionContextType {
     config: OpticalConfig,
     imageCount: number,
     description?: string
-  ) => void;
-  loadFavoriteConfig: (id: string) => void;
-  deleteFavoriteConfig: (id: string) => void;
+  ) => Promise<void>;
+  loadFavoriteConfig: (id: string) => Promise<void>;
+  deleteFavoriteConfig: (id: string) => Promise<void>;
 
   // Import/Export
   exportSession: (id: string) => void;
@@ -63,41 +72,7 @@ interface SessionContextType {
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-const STORAGE_KEYS = {
-  SESSIONS: "sessions",
-  CURRENT_SESSION_ID: "current_session_id",
-  FAVORITE_CONFIGS: "favorite_configs",
-};
-
-const loadFromLocalStorage = <T,>(key: string, defaultValue: T): T => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (error) {
-    console.error(`Error loading ${key} from localStorage:`, error);
-    alert(
-      `Failed to load ${key} from storage. Your data may be corrupted. Using default values instead.`
-    );
-    return defaultValue;
-  }
-};
-
-const saveToLocalStorage = <T,>(key: string, value: T): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error(`Error saving ${key} to localStorage:`, error);
-    if (error instanceof DOMException && error.name === "QuotaExceededError") {
-      alert(
-        "Storage quota exceeded! Please delete some old sessions or export them as backups."
-      );
-    } else {
-      alert(
-        `Failed to save ${key} to storage. Your changes may not be persisted.`
-      );
-    }
-  }
-};
+const CURRENT_SESSION_ID_KEY = "current_session_id";
 
 const generateUUID = (): string => {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -117,67 +92,54 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   const [isAnalysisLoading, setIsAnalysisLoading] = useState(false);
 
   useEffect(() => {
-    let loadedSessions = loadFromLocalStorage<Session[]>(
-      STORAGE_KEYS.SESSIONS,
-      []
-    );
-    const currentSessionId = loadFromLocalStorage<string | null>(
-      STORAGE_KEYS.CURRENT_SESSION_ID,
-      null
-    );
-    const loadedFavorites = loadFromLocalStorage<FavoriteConfig[]>(
-      STORAGE_KEYS.FAVORITE_CONFIGS,
-      []
-    );
+    const loadData = async () => {
+      try {
+        const [loadedSessions, loadedFavorites] = await Promise.all([
+          getAllSessions(),
+          getAllFavoriteConfigs(),
+        ]);
 
-    const validSessions = loadedSessions.filter((session) => {
-      return session.images !== null || session.runs.length > 0;
-    });
+        const validSessions = loadedSessions.filter((session) => {
+          return session.images !== null || session.runs.length > 0;
+        });
 
-    if (validSessions.length !== loadedSessions.length) {
-      saveToLocalStorage(STORAGE_KEYS.SESSIONS, validSessions);
-      loadedSessions = validSessions;
-    }
+        setSessions(validSessions);
+        setFavoriteConfigs(loadedFavorites);
 
-    setSessions(loadedSessions);
-    setFavoriteConfigs(loadedFavorites);
-
-    let activeSessionFound = false;
-    if (currentSessionId) {
-      const session = loadedSessions.find((s) => s.id === currentSessionId);
-      if (session) {
-        setCurrentSession(session);
-        activeSessionFound = true;
+        const currentSessionId = localStorage.getItem(CURRENT_SESSION_ID_KEY);
+        if (currentSessionId) {
+          const session = validSessions.find((s) => s.id === currentSessionId);
+          if (session) {
+            setCurrentSession(session);
+          } else {
+            setCurrentSession(null);
+            localStorage.removeItem(CURRENT_SESSION_ID_KEY);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading data from IndexedDB:", error);
+        if (error instanceof IndexedDBError) {
+          alert(
+            `Failed to load data: ${error.message}. The app may not work correctly.`
+          );
+        } else {
+          alert("Failed to load data. Please refresh the page.");
+        }
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
 
-    if (!activeSessionFound) {
-      setCurrentSession(null);
-      localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION_ID);
-    }
-
-    setIsLoading(false);
+    loadData();
   }, []);
 
   useEffect(() => {
-    if (!isLoading) {
-      saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
-    }
-  }, [sessions, isLoading]);
-
-  useEffect(() => {
     if (currentSession) {
-      saveToLocalStorage(STORAGE_KEYS.CURRENT_SESSION_ID, currentSession.id);
+      localStorage.setItem(CURRENT_SESSION_ID_KEY, currentSession.id);
     }
   }, [currentSession]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      saveToLocalStorage(STORAGE_KEYS.FAVORITE_CONFIGS, favoriteConfigs);
-    }
-  }, [favoriteConfigs, isLoading]);
-
-  const createSession = useCallback((): Session => {
+  const createSession = useCallback(async (): Promise<Session> => {
     const newSession: Session = {
       id: generateUUID(),
       name: `Session ${new Date().toLocaleString("fr-FR")}`,
@@ -189,13 +151,14 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       runs: [],
     };
 
+    await saveSession(newSession);
     setSessions((prev) => [...prev, newSession]);
     setCurrentSession(newSession);
 
     return newSession;
   }, []);
 
-  const loadSession = useCallback((id: string) => {
+  const loadSession = useCallback(async (id: string): Promise<void> => {
     setSessions((prev) => {
       const session = prev.find((s) => s.id === id);
       if (session) {
@@ -207,16 +170,22 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
 
   const unsetCurrentSession = useCallback(() => {
     setCurrentSession(null);
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION_ID);
+    localStorage.removeItem(CURRENT_SESSION_ID_KEY);
   }, []);
 
-  const deleteSession = useCallback((id: string) => {
+  const deleteSession = useCallback(async (id: string): Promise<void> => {
+    await deleteSessionFromDB(id);
     setSessions((prev) => prev.filter((s) => s.id !== id));
-    setCurrentSession((current) => (current?.id === id ? null : current));
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_SESSION_ID);
+    setCurrentSession((current) => {
+      if (current?.id === id) {
+        localStorage.removeItem(CURRENT_SESSION_ID_KEY);
+        return null;
+      }
+      return current;
+    });
   }, []);
 
-  const updateSessionConfig = useCallback((config: OpticalConfig) => {
+  const updateSessionConfig = useCallback(async (config: OpticalConfig): Promise<void> => {
     setCurrentSession((current) => {
       if (!current) return null;
 
@@ -226,6 +195,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         updated_at: new Date().toISOString(),
       };
 
+      saveSession(updatedSession).catch((err) => {
+        console.error("Failed to save session config:", err);
+      });
+
       setSessions((prev) =>
         prev.map((s) => (s.id === current.id ? updatedSession : s))
       );
@@ -234,7 +207,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  const updateSessionImages = useCallback((images: ParsedImages) => {
+  const updateSessionImages = useCallback(async (images: ParsedImages): Promise<void> => {
     setCurrentSession((current) => {
       if (!current) return null;
 
@@ -244,6 +217,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         updated_at: new Date().toISOString(),
       };
 
+      saveSession(updatedSession).catch((err) => {
+        console.error("Failed to save session images:", err);
+      });
+
       setSessions((prev) =>
         prev.map((s) => (s.id === current.id ? updatedSession : s))
       );
@@ -252,7 +229,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  const updateSessionPreview = useCallback((preview: CachedPreview | null) => {
+  const updateSessionPreview = useCallback(async (preview: CachedPreview | null): Promise<void> => {
     setCurrentSession((current) => {
       if (!current) return null;
 
@@ -261,6 +238,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         lastPreview: preview,
         updated_at: new Date().toISOString(),
       };
+
+      saveSession(updatedSession).catch((err) => {
+        console.error("Failed to save session preview:", err);
+      });
 
       setSessions((prev) =>
         prev.map((s) => (s.id === current.id ? updatedSession : s))
@@ -311,6 +292,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
                 updated_at: new Date().toISOString(),
               };
 
+              saveSession(updatedSession).catch((err) => {
+                console.error("Failed to save analysis run:", err);
+              });
+
               setSessions((prev) =>
                 prev.map((s) => (s.id === current.id ? updatedSession : s))
               );
@@ -328,7 +313,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
 
-  const continueFromRun = useCallback((runId: string) => {
+  const continueFromRun = useCallback(async (runId: string): Promise<void> => {
     setCurrentSession((current) => {
       if (!current) return null;
 
@@ -354,6 +339,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         updated_at: new Date().toISOString(),
       };
 
+      saveSession(updatedSession).catch((err) => {
+        console.error("Failed to save continued run config:", err);
+      });
+
       setSessions((prev) =>
         prev.map((s) => (s.id === current.id ? updatedSession : s))
       );
@@ -362,7 +351,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  const resetToInitialConfig = useCallback(() => {
+  const resetToInitialConfig = useCallback(async (): Promise<void> => {
     setCurrentSession((current) => {
       if (!current) return null;
 
@@ -385,6 +374,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         updated_at: new Date().toISOString(),
       };
 
+      saveSession(updatedSession).catch((err) => {
+        console.error("Failed to save reset config:", err);
+      });
+
       setSessions((prev) =>
         prev.map((s) => (s.id === current.id ? updatedSession : s))
       );
@@ -393,7 +386,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  const deleteRun = useCallback((runId: string) => {
+  const deleteRun = useCallback(async (runId: string): Promise<void> => {
     setCurrentSession((current) => {
       if (!current) return null;
 
@@ -402,6 +395,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         runs: current.runs.filter((r) => r.id !== runId),
         updated_at: new Date().toISOString(),
       };
+
+      saveSession(updatedSession).catch((err) => {
+        console.error("Failed to save after deleting run:", err);
+      });
 
       setSessions((prev) =>
         prev.map((s) => (s.id === current.id ? updatedSession : s))
@@ -412,12 +409,12 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const saveFavoriteConfig = useCallback(
-    (
+    async (
       name: string,
       config: OpticalConfig,
       imageCount: number,
       description?: string
-    ) => {
+    ): Promise<void> => {
       const favorite: FavoriteConfig = {
         id: generateUUID(),
         name,
@@ -427,12 +424,13 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         created_at: new Date().toISOString(),
       };
 
+      await saveFavoriteConfigToDB(favorite);
       setFavoriteConfigs((prev) => [...prev, favorite]);
     },
     []
   );
 
-  const loadFavoriteConfig = useCallback((id: string) => {
+  const loadFavoriteConfig = useCallback(async (id: string): Promise<void> => {
     setFavoriteConfigs((configs) => {
       const favorite = configs.find((f) => f.id === id);
       if (favorite) {
@@ -470,6 +468,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
             updated_at: new Date().toISOString(),
           };
 
+          saveSession(updatedSession).catch((err) => {
+            console.error("Failed to save loaded favorite config:", err);
+          });
+
           setSessions((prev) =>
             prev.map((s) => (s.id === current.id ? updatedSession : s))
           );
@@ -481,7 +483,8 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  const deleteFavoriteConfig = useCallback((id: string) => {
+  const deleteFavoriteConfig = useCallback(async (id: string): Promise<void> => {
+    await deleteFavoriteConfigFromDB(id);
     setFavoriteConfigs((prev) => prev.filter((f) => f.id !== id));
   }, []);
 
@@ -523,6 +526,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         updated_at: new Date().toISOString(),
       };
 
+      await saveSession(imported);
       setSessions((prev) => [...prev, imported]);
       setCurrentSession(imported);
     } catch (error) {

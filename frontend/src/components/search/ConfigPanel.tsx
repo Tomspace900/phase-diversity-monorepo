@@ -6,7 +6,6 @@ import { CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
 import { ScrollArea } from "../ui/scroll-area";
 import { Alert } from "../ui/alert";
 import { DEFAULT_SEARCH_FLAGS, type SearchFlags } from "../../types/session";
@@ -37,13 +36,22 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
     }
   };
 
+  const handleReset = async () => {
+    setError(null);
+    try {
+      await resetToInitialConfig();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Reset failed");
+    }
+  };
+
   const toggleFlag = (key: keyof SearchFlags) => {
     setFlags((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const activeFlags = Object.entries(flags)
-    .filter(([, value]) => typeof value === "boolean" && value)
-    .map(([key]) => key.replace("_flag", ""));
+  // const activeFlags = Object.entries(flags)
+  //   .filter(([, value]) => typeof value === "boolean" && value)
+  //   .map(([key]) => key.replace("_flag", ""));
 
   return (
     <div className="h-full flex flex-col">
@@ -182,10 +190,10 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
             </div>
           </div>
 
-          <Separator />
+          {/* <Separator /> */}
 
           {/* Active Flags Summary */}
-          {activeFlags.length > 0 && (
+          {/* {activeFlags.length > 0 && (
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground uppercase tracking-wide">
                 Active Search Flags ({activeFlags.length})
@@ -198,7 +206,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
                 ))}
               </div>
             </div>
-          )}
+          )} */}
 
           {error && (
             <Alert variant="error">
@@ -224,7 +232,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
         {hasContinuation && (
           <Button
-            onClick={resetToInitialConfig}
+            onClick={handleReset}
             variant="outline"
             disabled={isLoading}
             className="w-full"

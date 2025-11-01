@@ -35,8 +35,8 @@ const UploadPage: React.FC = () => {
     return <LoadingState message="Loading session..." />;
   }
 
-  const handleUploadComplete = (images: ParsedImages) => {
-    updateSessionImages(images);
+  const handleUploadComplete = async (images: ParsedImages) => {
+    await updateSessionImages(images);
     setUploadData(images);
   };
 
