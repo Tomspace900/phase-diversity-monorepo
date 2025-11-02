@@ -441,7 +441,7 @@ async def parse_images(files: List[UploadFile] = File(...)):
     """
     Charge une collection d'images FITS (min 2, max 10) pour la diversité de phase.
     Retourne la pile d'images 3D, les statistiques globales, et les métadonnées
-    (header + vignette) pour chaque image.
+    (source_file, source_hdu_index, header) pour chaque image.
     """
     try:
         # 1. Charger la collection
@@ -491,23 +491,12 @@ async def parse_images(files: List[UploadFile] = File(...)):
             "shape_consistent": shape_consistent,
         }
 
-        # 5b. Informations par image (Vignettes)
-        # Nous allons mettre à jour la 'info_list' avec les vignettes
-        processed_image_info = []
-        for i, info in enumerate(info_list):
-            try:
-                thumbnail = generate_thumbnail(img_collection_float[i])
-            except Exception as thumb_error:
-                logger.error(
-                    f"Échec de la génération de la vignette pour l'image {i}: {thumb_error}"
-                )
-                thumbnail = "data:image/png;base64,..."  # Une vignette d'erreur
-
-            info["thumbnail"] = thumbnail
-            processed_image_info.append(info)
+        # 5b. Informations par image (Métadonnées seulement)
+        # Pas de génération de thumbnails - le frontend utilisera Plotly
+        processed_image_info = info_list
 
         logger.info(
-            f"Vignettes et headers préparés pour {len(processed_image_info)} images."
+            f"Métadonnées préparées pour {len(processed_image_info)} images."
         )
 
         # 6. Retourner la réponse finale

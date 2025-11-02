@@ -196,7 +196,7 @@ git submodule status
 **All endpoints are STATELESS - they receive all data, compute, and return results:**
 
 ```
-POST /api/parse-images        # Parse FITS/NPY → JSON arrays + thumbnails
+POST /api/parse-images        # Parse FITS → JSON arrays (NumPy support coming soon)
 POST /api/preview-config      # Preview pupil WITHOUT search_phase
 POST /api/search-phase        # Full analysis WITH search_phase
 WS   /ws/logs                 # Real-time logging broadcast
@@ -206,8 +206,9 @@ WS   /ws/logs                 # Real-time logging broadcast
 
 **POST /api/parse-images**
 
-- Accepts: FITS files (single with multiple HDUs or multiple files) or NPY arrays
-- Returns: Images as nested JSON arrays, thumbnails (base64 PNG), stats
+- Accepts: FITS files (single with multiple HDUs or multiple files)
+- NumPy arrays (.npy): Coming soon
+- Returns: Images as nested JSON arrays, metadata (source file, HDU index, header)
 - Stateless: Does NOT store anything - frontend receives data and stores in IndexedDB
 
 **POST /api/preview-config**
@@ -361,10 +362,11 @@ interface SearchPhaseResponse {
 
 2. **UploadPage.tsx**:
 
-   - Upload FITS/NPY images
+   - Upload FITS images (.fits, .fit)
+   - NumPy import: Planned feature
    - Calls parseImages() API
    - Creates new session in SessionContext
-   - Displays thumbnails and stats
+   - Displays interactive Plotly heatmaps and stats
 
 3. **SetupPage.tsx**:
 
