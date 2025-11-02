@@ -13,7 +13,6 @@ export interface DatasetStats {
 export interface ImageInfo {
   source_file: string; // Nom du fichier d'origine
   source_hdu_index: number; // Index du HDU dans ce fichier
-  thumbnail: string; // vignette base64 PNG
   header: Record<string, any>; // Le header FITS sérialisé
 }
 

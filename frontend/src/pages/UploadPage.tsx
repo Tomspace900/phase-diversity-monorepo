@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Image as ImageIcon } from "lucide-react";
 import { useSession } from "../contexts/SessionContext";
 import ImageUploader from "../components/upload/ImageUploader";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
 import { LoadingState, StatsGrid, type Stat } from "../components/common";
 import { type ParsedImages } from "../types/session";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "../components/ui/resizable";
+import { Button } from "../components/ui/button";
+import { ImagePlotGrid } from "../components/upload/ImagePlotGrid";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { CardHeader, CardTitle } from "@/components/ui/card";
 const UploadPage: React.FC = () => {
   const navigate = useNavigate();
   const {
@@ -81,43 +83,54 @@ const UploadPage: React.FC = () => {
     : [];
 
   return (
-    <div className="h-[calc(100vh-8rem)] max-w-5xl mx-auto">
+    <div className="h-[calc(100vh-8rem)]">
       {!uploadData ? (
         <ImageUploader onUploadComplete={handleUploadComplete} />
       ) : (
-        <div className="space-y-6">
-          <Card className="border-accent-cyan/20">
-            <CardHeader className="bg-accent-cyan/5">
-              <CardTitle className="text-accent-cyan flex items-center gap-2">
-                <ImageIcon className="h-5 w-5" />
-                Uploaded Images
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {uploadData.image_info.map(({ thumbnail }, index) => (
-                  <div key={index} className="group">
-                    <div className="relative w-full aspect-square overflow-hidden rounded-lg border-2 border-border group-hover:border-accent-cyan/50 transition-all duration-300">
-                      <img
-                        src={thumbnail}
-                        alt={`Image ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        style={{ imageRendering: "pixelated" }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3">
-                        <span className="text-white text-sm font-semibold">
-                          Image {index + 1}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="h-full rounded-lg border"
+        >
+          <ResizablePanel defaultSize={70} minSize={50} maxSize={85}>
+            <div className="h-full flex flex-col">
+              <CardHeader className="pb-0 flex-shrink-0">
+                <CardTitle className="text-lg">Uploaded Images</CardTitle>
+              </CardHeader>
+              <div className="flex-1 p-6 min-h-0">
+                <ImagePlotGrid
+                  images={uploadData.images}
+                  imageInfo={uploadData.image_info}
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </ResizablePanel>
 
-          <StatsGrid title="Dataset Information" stats={stats} columns={3} />
-        </div>
+          <ResizableHandle withHandle />
+
+          <ResizablePanel defaultSize={30} minSize={15} maxSize={50}>
+            <div className="h-full flex flex-col">
+              <div className="p-4 flex-1 overflow-auto">
+                <StatsGrid
+                  title="Dataset Information"
+                  stats={stats}
+                  columns={1}
+                />
+              </div>
+
+              <div className="p-4 border-t">
+                <Button
+                  icon={ArrowRight01Icon}
+                  color="primary"
+                  size="lg"
+                  onClick={() => navigate("/setup")}
+                  className="w-full"
+                >
+                  Continue to Setup
+                </Button>
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
     </div>
   );
