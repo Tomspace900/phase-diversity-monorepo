@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { useSession } from "../contexts/SessionContext";
 import { Button } from "../components/ui/button";
 import { Alert } from "@/components/ui/alert";
@@ -13,6 +12,7 @@ import {
 import { ConfigPanel } from "../components/search/ConfigPanel";
 import { VisualizationPanel } from "../components/search/VisualizationPanel";
 import { RunsHistoryPanel } from "../components/search/RunsHistoryPanel";
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 
 const PhaseSearchPage: React.FC = () => {
   const navigate = useNavigate();
@@ -31,8 +31,11 @@ const PhaseSearchPage: React.FC = () => {
     return (
       <div className="max-w-2xl mx-auto">
         <Alert>No images loaded. Please upload images first.</Alert>
-        <Button onClick={() => navigate("/upload")} className="mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+        <Button
+          onClick={() => navigate("/upload")}
+          className="mt-4"
+          icon={ArrowLeft02Icon}
+        >
           Back to Upload
         </Button>
       </div>

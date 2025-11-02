@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Play, RotateCcw } from "lucide-react";
 import { useSession } from "../../contexts/SessionContext";
 import { Button } from "../ui/button";
 import { CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -9,6 +8,7 @@ import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
 import { Alert } from "../ui/alert";
 import { DEFAULT_SEARCH_FLAGS, type SearchFlags } from "../../types/session";
+import { PlayIcon, RotateClockwiseIcon } from "@hugeicons/core-free-icons";
 
 interface ConfigPanelProps {
   hasContinuation: boolean;
@@ -219,7 +219,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       {/* Action Buttons */}
       <div className="p-4 border-t space-y-2">
         <Button
-          icon={Play}
+          icon={PlayIcon}
           color="primary"
           size="lg"
           onClick={handleRunAnalysis}
@@ -232,13 +232,13 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
         {hasContinuation && (
           <Button
+            icon={RotateClockwiseIcon}
             onClick={handleReset}
             variant="outline"
             disabled={isLoading}
             className="w-full"
             size="sm"
           >
-            <RotateCcw className="mr-2 h-4 w-4" />
             Reset to Initial Setup
           </Button>
         )}

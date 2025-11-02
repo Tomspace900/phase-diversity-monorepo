@@ -1,21 +1,22 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Telescope,
-  Sparkles,
-  Code2,
-  FlaskConical,
-  Users,
-  BookOpen,
-  Lightbulb,
-  Upload,
-  Settings,
-  Search,
-  BarChart3,
-  Database,
-  Zap,
-  ExternalLink,
-} from "lucide-react";
+  Atom02Icon,
+  BookOpen01Icon,
+  Chart03Icon,
+  DatabaseIcon,
+  IdeaIcon,
+  LinkSquare01Icon,
+  Search02Icon,
+  Settings03Icon,
+  SourceCodeIcon,
+  SparklesIcon,
+  Telescope01Icon,
+  Upload01Icon,
+  UserMultipleIcon,
+  ZapIcon,
+} from "@hugeicons/core-free-icons";
 
 const AboutPage: React.FC = () => {
   return (
@@ -30,7 +31,10 @@ const AboutPage: React.FC = () => {
           Phase Diversity
         </h1>
         <p className="text-muted-foreground flex items-center justify-center gap-2">
-          <Telescope className="h-4 w-4 text-accent-cyan" />
+          <HugeiconsIcon
+            icon={Telescope01Icon}
+            className="h-4 w-4 text-accent-cyan"
+          />
           Research Tool for Optical Wavefront Retrieval
         </p>
       </div>
@@ -38,7 +42,7 @@ const AboutPage: React.FC = () => {
       <Card className="border-accent-green/20">
         <CardHeader className="bg-accent-green/5">
           <CardTitle className="flex items-center gap-2 text-accent-green">
-            <Sparkles className="h-5 w-5" />
+            <HugeiconsIcon icon={SparklesIcon} className="h-5 w-5" />
             Overview
           </CardTitle>
         </CardHeader>
@@ -52,39 +56,63 @@ const AboutPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <h4 className="font-semibold text-sm flex items-center gap-2">
-                <Zap className="h-4 w-4 text-accent-cyan" />
+                <HugeiconsIcon
+                  icon={ZapIcon}
+                  className="h-4 w-4 text-accent-cyan"
+                />
                 Features
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li className="flex items-center gap-2">
-                  <Upload className="h-3 w-3 text-accent-cyan" />
+                  <HugeiconsIcon
+                    icon={Upload01Icon}
+                    className="h-3 w-3 text-accent-cyan"
+                  />
                   Upload and analyze FITS/NPY images
                 </li>
                 <li className="flex items-center gap-2">
-                  <Settings className="h-3 w-3 text-accent-purple" />
+                  <HugeiconsIcon
+                    icon={Settings03Icon}
+                    className="h-3 w-3 text-accent-purple"
+                  />
                   Configure optical parameters
                 </li>
                 <li className="flex items-center gap-2">
-                  <Search className="h-3 w-3 text-accent-pink" />
+                  <HugeiconsIcon
+                    icon={Search02Icon}
+                    className="h-3 w-3 text-accent-pink"
+                  />
                   Run phase diversity analysis
                 </li>
                 <li className="flex items-center gap-2">
-                  <BarChart3 className="h-3 w-3 text-accent-orange" />
+                  <HugeiconsIcon
+                    icon={Chart03Icon}
+                    className="h-3 w-3 text-accent-orange"
+                  />
                   Interactive visualization
                 </li>
                 <li className="flex items-center gap-2">
-                  <Database className="h-3 w-3 text-accent-green" />
+                  <HugeiconsIcon
+                    icon={DatabaseIcon}
+                    className="h-3 w-3 text-accent-green"
+                  />
                   Session persistence
                 </li>
                 <li className="flex items-center gap-2">
-                  <Zap className="h-3 w-3 text-primary" />
+                  <HugeiconsIcon
+                    icon={ZapIcon}
+                    className="h-3 w-3 text-primary"
+                  />
                   Real-time logging
                 </li>
               </ul>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-sm flex items-center gap-2">
-                <Code2 className="h-4 w-4 text-accent-purple" />
+                <HugeiconsIcon
+                  icon={SourceCodeIcon}
+                  className="h-4 w-4 text-accent-purple"
+                />
                 Technology
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1">
@@ -102,7 +130,7 @@ const AboutPage: React.FC = () => {
       <Card className="border-accent-cyan/20">
         <CardHeader className="bg-accent-cyan/5">
           <CardTitle className="flex items-center gap-2 text-accent-cyan">
-            <FlaskConical className="h-5 w-5" />
+            <HugeiconsIcon icon={Atom02Icon} className="h-5 w-5" />
             Scientific Background
           </CardTitle>
         </CardHeader>
@@ -131,7 +159,7 @@ const AboutPage: React.FC = () => {
                 className="text-accent-cyan hover:underline flex items-center gap-1"
               >
                 github.com/ricogendron/phase-diversity
-                <ExternalLink className="h-3 w-3" />
+                <HugeiconsIcon icon={LinkSquare01Icon} className="h-3 w-3" />
               </a>
             </p>
           </div>
@@ -141,7 +169,7 @@ const AboutPage: React.FC = () => {
       <Card className="border-accent-purple/20">
         <CardHeader className="bg-accent-purple/5">
           <CardTitle className="flex items-center gap-2 text-accent-purple">
-            <Users className="h-5 w-5" />
+            <HugeiconsIcon icon={UserMultipleIcon} className="h-5 w-5" />
             Credits
           </CardTitle>
         </CardHeader>
@@ -166,7 +194,7 @@ const AboutPage: React.FC = () => {
       <Card className="border-accent-orange/20">
         <CardHeader className="bg-accent-orange/5">
           <CardTitle className="flex items-center gap-2 text-accent-orange">
-            <Lightbulb className="h-5 w-5" />
+            <HugeiconsIcon icon={IdeaIcon} className="h-5 w-5" />
             Philosophy
           </CardTitle>
         </CardHeader>
@@ -189,7 +217,7 @@ const AboutPage: React.FC = () => {
       <Card className="border-accent-pink/20">
         <CardHeader className="bg-accent-pink/5">
           <CardTitle className="flex items-center gap-2 text-accent-pink">
-            <BookOpen className="h-5 w-5" />
+            <HugeiconsIcon icon={BookOpen01Icon} className="h-5 w-5" />
             API Documentation
           </CardTitle>
         </CardHeader>
@@ -205,7 +233,7 @@ const AboutPage: React.FC = () => {
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-xs text-accent-pink hover:underline bg-accent-pink/10 border border-accent-pink/20 p-2 rounded-lg"
             >
-              <ExternalLink className="h-3 w-3" />
+              <HugeiconsIcon icon={LinkSquare01Icon} className="h-3 w-3" />
               Interactive API docs (Swagger UI)
             </a>
             <a
@@ -214,7 +242,7 @@ const AboutPage: React.FC = () => {
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-xs text-accent-pink hover:underline bg-accent-pink/10 border border-accent-pink/20 p-2 rounded-lg"
             >
-              <ExternalLink className="h-3 w-3" />
+              <HugeiconsIcon icon={LinkSquare01Icon} className="h-3 w-3" />
               Alternative API docs (ReDoc)
             </a>
           </div>

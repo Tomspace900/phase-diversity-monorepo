@@ -1,6 +1,6 @@
 import * as React from "react";
-import { type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
 
 type CTAColor =
   | "primary"
@@ -95,7 +95,7 @@ const colorStyles: Record<
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  icon?: LucideIcon;
+  icon?: IconSvgElement;
   iconPosition?: "left" | "right";
   color?: CTAColor;
   variant?: CTAVariant;
@@ -107,7 +107,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      icon: Icon,
+      icon,
       iconPosition = "left",
       color = "primary",
       variant = "default",
@@ -175,16 +175,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           variantClasses[variant],
           sizeClasses[size],
-          Icon && !isIconOnly && "flex-nowrap",
+          icon && !isIconOnly && "flex-nowrap",
           (disabled || loading) && "opacity-50 cursor-not-allowed",
           className
         )}
         {...props}
       >
         {isIconOnly ? (
-          Icon ? (
+          icon ? (
             <>
-              <Icon
+              <HugeiconsIcon
+                icon={icon}
                 className={cn(
                   iconSizeClasses[size],
                   iconClasses[variant],
@@ -199,8 +200,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           )
         ) : (
           <>
-            {Icon && iconPosition === "left" && (
-              <Icon
+            {icon && iconPosition === "left" && (
+              <HugeiconsIcon
+                icon={icon}
                 className={cn(
                   iconSizeClasses[size],
                   iconClasses[variant],
@@ -219,8 +221,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 {children}
               </span>
             )}
-            {Icon && iconPosition === "right" && (
-              <Icon
+            {icon && iconPosition === "right" && (
+              <HugeiconsIcon
+                icon={icon}
                 className={cn(
                   iconSizeClasses[size],
                   iconClasses[variant],

@@ -1,5 +1,4 @@
 import React from "react";
-import { BarChart2 } from "lucide-react";
 import { CardContent } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Alert } from "../ui/alert";
@@ -11,6 +10,8 @@ import { PhaseMapPlot } from "./PhaseMapPlot";
 import { ImageComparisonGrid } from "./ImageComparisonGrid";
 import { IlluminationPlot } from "./IlluminationPlot";
 import type { AnalysisRun } from "../../types/session";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Chart03Icon } from "@hugeicons/core-free-icons";
 
 interface VisualizationPanelProps {
   run: AnalysisRun | null;
@@ -33,7 +34,12 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
     return (
       <div className="h-full flex items-center justify-center p-8">
         <EmptyState
-          icon={<BarChart2 className="h-16 w-16 text-muted-foreground/50" />}
+          icon={
+            <HugeiconsIcon
+              icon={Chart03Icon}
+              className="h-16 w-16 text-muted-foreground/50"
+            />
+          }
           title="No analysis yet"
           description="Run your first analysis to see results here"
           accentColor="purple"

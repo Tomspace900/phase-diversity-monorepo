@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Eye, Settings } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,6 +11,8 @@ import { LoadingState, StatsGrid, EmptyState, type Stat } from "../common";
 import type { Session, CachedPreview } from "../../types/session";
 import { previewConfig } from "../../api";
 import { ScrollArea } from "../ui/scroll-area";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Settings03Icon, ViewIcon } from "@hugeicons/core-free-icons";
 
 interface SetupPreviewProps {
   images: number[][][] | null;
@@ -159,7 +160,12 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
       ) : configChanged ? (
         <div className="h-full flex items-center justify-center">
           <EmptyState
-            icon={<Settings className="h-16 w-16 text-muted-foreground/50" />}
+            icon={
+              <HugeiconsIcon
+                icon={Settings03Icon}
+                className="h-16 w-16 text-muted-foreground/50"
+              />
+            }
             title="Configuration changed"
             description="Generate a preview to visualize your optical setup"
             accentColor="purple"
@@ -188,7 +194,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
 
         {configChanged && (
           <Button
-            icon={Eye}
+            icon={ViewIcon}
             color="primary"
             size="lg"
             onClick={handleGeneratePreview}
