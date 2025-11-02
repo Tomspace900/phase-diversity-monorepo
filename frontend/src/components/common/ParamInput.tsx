@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { ValidationResult } from "@/utils/validation";
-import { InfoIcon } from "lucide-react";
 import { Label } from "../ui/label";
 import {
   Select,
@@ -11,6 +10,8 @@ import {
 } from "../ui/select";
 import { Input } from "../ui/input";
 import { Slider } from "../ui/slider";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { InformationCircleIcon } from "@hugeicons/core-free-icons";
 
 export interface ParamInputProps {
   label: string;
@@ -81,7 +82,6 @@ const ParamInput: React.FC<ParamInputProps> = ({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      {/* Label with optional tooltip and required indicator */}
       <div className="flex items-center gap-2">
         <Label className="text-sm font-medium">
           {label}
@@ -90,13 +90,13 @@ const ParamInput: React.FC<ParamInputProps> = ({
 
         {tooltip && (
           <div className="flex items-center relative">
-            <InfoIcon
+            <HugeiconsIcon
+              icon={InformationCircleIcon}
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
               className="h-4 w-4 text-muted-foreground transition-colors"
               aria-label="Show tooltip"
             />
-            {/* Tooltip popup */}
             {showTooltip && (
               <div className="absolute left-6 -top-4 z-10 w-64 px-3 py-2 text-xs bg-popover text-popover-foreground rounded-lg shadow-lg border border-border">
                 {tooltip}
@@ -107,7 +107,6 @@ const ParamInput: React.FC<ParamInputProps> = ({
         )}
       </div>
 
-      {/* Input field with optional unit */}
       <div className="flex items-center gap-2">
         {type === "slider" ? (
           <div className="flex flex-1 items-center gap-4">
@@ -185,10 +184,8 @@ const ParamInput: React.FC<ParamInputProps> = ({
         )}
       </div>
 
-      {/* Validation messages */}
       {validation && (
         <div className="space-y-1">
-          {/* Error message */}
           {!validation.isValid && validation.error && (
             <p className="text-xs text-error flex items-start gap-1">
               <span>❌</span>
@@ -196,7 +193,6 @@ const ParamInput: React.FC<ParamInputProps> = ({
             </p>
           )}
 
-          {/* Warning message */}
           {validation.isValid && validation.warning && (
             <p className="text-xs text-yellow-500 flex items-start gap-1">
               <span>⚠️</span>
@@ -204,7 +200,6 @@ const ParamInput: React.FC<ParamInputProps> = ({
             </p>
           )}
 
-          {/* Helper text (always shown if present) */}
           {validation.helperText && (
             <p className="text-xs text-muted-foreground flex items-start gap-1">
               <span>ℹ️</span>
