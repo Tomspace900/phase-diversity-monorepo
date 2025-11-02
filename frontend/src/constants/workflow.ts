@@ -1,18 +1,18 @@
 import {
-  History,
-  Settings,
-  Search,
-  Upload,
-  Info,
-  type LucideIcon,
-} from "lucide-react";
+  Clock04Icon,
+  InformationCircleIcon,
+  Search02Icon,
+  Settings03Icon,
+  Upload01Icon,
+} from "@hugeicons/core-free-icons";
+import { IconSvgElement } from "@hugeicons/react";
 
 export type AccentColor = "green" | "cyan" | "purple" | "pink" | "orange";
 
 export interface WorkflowStep {
   title: string;
   shortTitle: string;
-  icon: LucideIcon;
+  icon: IconSvgElement;
   color: AccentColor;
 }
 
@@ -20,31 +20,31 @@ export const WORKFLOW_STEPS: Record<string, WorkflowStep> = {
   "/": {
     title: "Sessions",
     shortTitle: "Sessions",
-    icon: History,
+    icon: Clock04Icon,
     color: "green",
   },
   "/upload": {
     title: "Upload Images",
     shortTitle: "Upload",
-    icon: Upload,
+    icon: Upload01Icon,
     color: "cyan",
   },
   "/setup": {
     title: "Configure Optical Setup",
     shortTitle: "Configure",
-    icon: Settings,
+    icon: Settings03Icon,
     color: "purple",
   },
   "/search": {
     title: "Search Phase Diversity",
     shortTitle: "Search",
-    icon: Search,
+    icon: Search02Icon,
     color: "pink",
   },
   "/about": {
     title: "About",
     shortTitle: "About",
-    icon: Info,
+    icon: InformationCircleIcon,
     color: "orange",
   },
 };

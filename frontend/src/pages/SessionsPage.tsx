@@ -1,17 +1,5 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Trash2,
-  Image as ImageIcon,
-  LineChart,
-  Clock,
-  ChevronRight,
-  Aperture,
-  Waves,
-  Layers,
-  Target,
-} from "lucide-react";
 import { useSession } from "../contexts/SessionContext";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -27,6 +15,19 @@ import {
 import type { Session } from "../types/session";
 import type { SessionStatus } from "@/components/common/StatusBadge";
 import { cn, getPupilTypeLabel, getBasisLabel } from "@/lib/utils";
+import {
+  Add01Icon,
+  ArrowRight01Icon,
+  CameraLensIcon,
+  Chart03Icon,
+  Clock01Icon,
+  Delete01Icon,
+  Image02Icon,
+  Layers01Icon,
+  RadioButtonIcon,
+  WaveIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 const SessionsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -143,7 +144,7 @@ const SessionsPage: React.FC = () => {
           </p>
         </div>
         <Button
-          icon={Plus}
+          icon={Add01Icon}
           color="primary"
           size="md"
           onClick={handleCreateNewSession}
@@ -155,7 +156,12 @@ const SessionsPage: React.FC = () => {
       {/* Sessions list */}
       {sortedSessions.length === 0 ? (
         <EmptyState
-          icon={<ImageIcon className="h-16 w-16 text-muted-foreground/50" />}
+          icon={
+            <HugeiconsIcon
+              icon={Image02Icon}
+              className="h-16 w-16 text-muted-foreground/50"
+            />
+          }
           title="No sessions yet"
           description="Create your first session to start analyzing phase diversity data."
           accentColor="cyan"
@@ -199,7 +205,10 @@ const SessionsPage: React.FC = () => {
                         </h3>
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
-                            <Clock className="h-3 w-3" />
+                            <HugeiconsIcon
+                              icon={Clock01Icon}
+                              className="h-3 w-3"
+                            />
                             <span>
                               {new Date(session.updated_at).toLocaleDateString(
                                 "fr-FR",
@@ -214,7 +223,10 @@ const SessionsPage: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <ImageIcon className="h-3 w-3" />
+                            <HugeiconsIcon
+                              icon={Image02Icon}
+                              className="h-3 w-3"
+                            />
                             <span>
                               {session.images
                                 ? `${session.images.stats.shape[0]} images (${session.images.stats.shape[1]}×${session.images.stats.shape[2]})`
@@ -223,7 +235,10 @@ const SessionsPage: React.FC = () => {
                           </div>
                           {session.runs.length > 0 && (
                             <div className="flex items-center gap-1.5">
-                              <LineChart className="h-3 w-3" />
+                              <HugeiconsIcon
+                                icon={Chart03Icon}
+                                className="h-3 w-3"
+                              />
                               <span>
                                 {session.runs.length} run
                                 {session.runs.length > 1 ? "s" : ""}
@@ -243,19 +258,31 @@ const SessionsPage: React.FC = () => {
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline" className="text-xs">
-                            <Aperture className="h-3 w-3 mr-1" />
+                            <HugeiconsIcon
+                              icon={CameraLensIcon}
+                              className="h-3 w-3 mr-1"
+                            />
                             {pupilTypeLabel}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
-                            <Waves className="h-3 w-3 mr-1" />λ ={" "}
-                            {(config.wvl * 1e9).toFixed(0)} nm
+                            <HugeiconsIcon
+                              icon={WaveIcon}
+                              className="h-3 w-3 mr-1"
+                            />
+                            λ = {(config.wvl * 1e9).toFixed(0)} nm
                           </Badge>
                           <Badge variant="outline" className="text-xs">
-                            <Target className="h-3 w-3 mr-1" />
+                            <HugeiconsIcon
+                              icon={RadioButtonIcon}
+                              className="h-3 w-3 mr-1"
+                            />
                             f/{config.fratio}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
-                            <Layers className="h-3 w-3 mr-1" />
+                            <HugeiconsIcon
+                              icon={Layers01Icon}
+                              className="h-3 w-3 mr-1"
+                            />
                             {basisLabel} ({config.Jmax} modes)
                           </Badge>
                           {config.defoc_z && config.defoc_z.length > 0 && (
@@ -344,7 +371,10 @@ const SessionsPage: React.FC = () => {
 
                   {/* Actions */}
                   <div className="flex items-center gap-3 flex-shrink-0">
-                    <ChevronRight className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    <HugeiconsIcon
+                      icon={ArrowRight01Icon}
+                      className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all"
+                    />
 
                     <Button
                       variant="icon"
@@ -354,7 +384,7 @@ const SessionsPage: React.FC = () => {
                         handleDeleteSession(e, session.id, session.name)
                       }
                       className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/10 hover:text-error"
-                      icon={Trash2}
+                      icon={Delete01Icon}
                     />
                   </div>
                 </div>

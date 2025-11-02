@@ -1,6 +1,6 @@
-import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { Moon02Icon, Sun01Icon } from "@hugeicons/core-free-icons";
 
 export function ThemeSwitcher() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -33,7 +33,7 @@ export function ThemeSwitcher() {
       onClick={toggleTheme}
       className="relative"
       aria-label="Toggle theme"
-      icon={theme === "light" ? Sun : Moon}
+      icon={theme === "light" ? Sun01Icon : Moon02Icon}
     ></Button>
   );
 }

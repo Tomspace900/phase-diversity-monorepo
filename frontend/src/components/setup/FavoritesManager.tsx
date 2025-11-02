@@ -8,12 +8,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Star, Trash2, Plus, Images } from "lucide-react";
 import { type OpticalConfig, type FavoriteConfig } from "@/types/session";
 import { SaveFavoriteDialog } from "./SaveFavoriteDialog";
 import { ApplyFavoriteDialog } from "./ApplyFavoriteDialog";
 import { ConfirmDialog } from "../common";
 import { formatDate } from "@/lib/utils";
+import {
+  Add01Icon,
+  Album01Icon,
+  Delete01Icon,
+  StarIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 interface FavoritesManagerProps {
   iconOnly?: boolean;
@@ -94,11 +100,11 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
             color={iconOnly ? "secondary" : "primary"}
             className={iconOnly ? "" : "px-2 gap-1.5"}
             title="Favorite Configurations"
-            icon={iconOnly ? Star : undefined}
+            icon={iconOnly ? StarIcon : undefined}
           >
             {!iconOnly && (
               <>
-                <Star className="h-4 w-4" />
+                <HugeiconsIcon icon={StarIcon} className="h-4 w-4" />
                 {favoriteConfigs.length > 0 && (
                   <span className="text-xs font-medium">
                     {favoriteConfigs.length}
@@ -115,7 +121,7 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
               <Button
                 size="sm"
                 variant="default"
-                icon={Plus}
+                icon={Add01Icon}
                 disabled={!currentConfig}
                 onClick={() => {
                   setIsSaveDialogOpen(true);
@@ -135,7 +141,10 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
 
             {favoriteConfigs.length === 0 ? (
               <div className="py-6 text-center">
-                <Star className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2" />
+                <HugeiconsIcon
+                  icon={StarIcon}
+                  className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2"
+                />
                 <p className="text-sm text-muted-foreground mb-3">
                   No favorite configurations yet
                 </p>
@@ -161,7 +170,10 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
                           )}
                           <div className="flex items-center gap-3 mt-2">
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Images className="h-3 w-3" />
+                              <HugeiconsIcon
+                                icon={Album01Icon}
+                                className="h-3 w-3"
+                              />
                               <span>{favorite.imageCount} images</span>
                             </div>
                             <span className="text-xs text-muted-foreground">
@@ -178,7 +190,7 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
                             }
                             title="Delete this favorite"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                            icon={Trash2}
+                            icon={Delete01Icon}
                           />
                         </div>
                       </div>

@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -43,16 +44,19 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <div className="flex items-center gap-3">
             {variant === "destructive" && (
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-error/10">
-                <AlertTriangle className="h-5 w-5 text-error" />
+                <HugeiconsIcon
+                  icon={Alert02Icon}
+                  className="h-5 w-5 text-error"
+                />
               </div>
             )}
-            <DialogTitle className={variant === "destructive" ? "text-error" : ""}>
+            <DialogTitle
+              className={variant === "destructive" ? "text-error" : ""}
+            >
               {title}
             </DialogTitle>
           </div>
-          <DialogDescription className="pt-2">
-            {description}
-          </DialogDescription>
+          <DialogDescription className="pt-2">{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

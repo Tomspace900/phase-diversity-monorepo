@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import { ChevronRight, SquareTerminal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/contexts/SessionContext";
 import { useLogs } from "@/contexts/LogsContext";
@@ -14,6 +13,11 @@ import {
   type AccentColor,
 } from "@/constants/workflow";
 import { FavoritesManager } from "@/components/setup";
+import {
+  ArrowRight01Icon,
+  ComputerTerminal01Icon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 const colorStyles: Record<
   AccentColor,
@@ -122,7 +126,10 @@ export function Header() {
               </h1>
             </Link>
 
-            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <HugeiconsIcon
+              icon={ArrowRight01Icon}
+              className="h-4 w-4 text-muted-foreground flex-shrink-0"
+            />
 
             <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
               {isWorkflowPath ? (
@@ -137,7 +144,10 @@ export function Header() {
                     return (
                       <React.Fragment key={path}>
                         {index > 0 && (
-                          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0" />
+                          <HugeiconsIcon
+                            icon={ArrowRight01Icon}
+                            className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0"
+                          />
                         )}
                         <Button
                           variant={isCurrentStep ? "default" : "ghost"}
@@ -185,7 +195,7 @@ export function Header() {
               onClick={toggleDrawer}
               className="relative"
               title="Backend Logs"
-              icon={SquareTerminal}
+              icon={ComputerTerminal01Icon}
             >
               {unreadCount > 0 && (
                 <Badge

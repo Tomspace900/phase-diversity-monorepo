@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Play, Trash2, Clock, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -8,6 +7,13 @@ import { Separator } from "../ui/separator";
 import { useSession } from "../../contexts/SessionContext";
 import { EmptyState, ConfirmDialog } from "../common";
 import type { AnalysisRun } from "../../types/session";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Clock01Icon,
+  Clock04Icon,
+  Delete01Icon,
+  PlayIcon,
+} from "@hugeicons/core-free-icons";
 
 interface RunsHistoryPanelProps {
   runs: AnalysisRun[];
@@ -44,7 +50,12 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
     return (
       <div className="h-full flex-1 flex items-center justify-center p-4">
         <EmptyState
-          icon={<History className="h-16 w-16 text-muted-foreground/50" />}
+          icon={
+            <HugeiconsIcon
+              icon={Clock04Icon}
+              className="h-16 w-16 text-muted-foreground/50"
+            />
+          }
           title="No runs yet"
           description="Run your first analysis to see history"
           accentColor="pink"
@@ -91,7 +102,7 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
                         Run #{runNumber}
                       </div>
                       <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <Clock className="h-3 w-3" />
+                        <HugeiconsIcon icon={Clock01Icon} className="h-3 w-3" />
                         {new Date(run.timestamp).toLocaleTimeString()}
                       </div>
                     </div>
@@ -133,7 +144,7 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
                             e.stopPropagation();
                             await continueFromRun(run.id);
                           }}
-                          icon={Play}
+                          icon={PlayIcon}
                         >
                           Continue
                         </Button>
@@ -141,7 +152,7 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
                           size="sm"
                           variant="icon"
                           color="error"
-                          icon={Trash2}
+                          icon={Delete01Icon}
                           onClick={(e) => handleDeleteRun(e, run.id)}
                         />
                       </div>

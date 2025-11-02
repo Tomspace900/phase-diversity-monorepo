@@ -1,11 +1,18 @@
 import React, { useEffect, useRef } from "react";
-import { Terminal, Wifi, WifiOff, X, Trash2 } from "lucide-react";
 import { useLogs } from "../../contexts/LogsContext";
 import { LogEntry } from "../../types/logs";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "../ui/drawer";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  Cancel01Icon,
+  ComputerTerminal01Icon,
+  Delete01Icon,
+  Wifi02Icon,
+  WifiOff02Icon,
+} from "@hugeicons/core-free-icons";
 
 const LogEntryItem: React.FC<{ log: LogEntry }> = ({ log }) => {
   const time = new Date(log.timestamp).toLocaleTimeString("fr-FR", {
@@ -81,16 +88,19 @@ export const LogsDrawer: React.FC = () => {
         <DrawerHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Terminal className="h-5 w-5" />
+              <HugeiconsIcon
+                icon={ComputerTerminal01Icon}
+                className="h-5 w-5"
+              />
               <DrawerTitle>Core Algorithm Logs</DrawerTitle>
               {wsConnected ? (
                 <Badge variant="outline" className="gap-1">
-                  <Wifi className="h-3 w-3" />
+                  <HugeiconsIcon icon={Wifi02Icon} className="h-3 w-3" />
                   Connected
                 </Badge>
               ) : (
                 <Badge variant="error" className="gap-1">
-                  <WifiOff className="h-3 w-3" />
+                  <HugeiconsIcon icon={WifiOff02Icon} className="h-3 w-3" />
                   Disconnected
                 </Badge>
               )}
@@ -98,22 +108,21 @@ export const LogsDrawer: React.FC = () => {
 
             <div className="flex items-center gap-2">
               <Button
-                variant="ghost"
+                variant="icon"
                 size="sm"
+                color="secondary"
                 onClick={clearLogs}
                 title="Clear logs"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-
+                icon={Delete01Icon}
+              />
               <Button
-                variant="ghost"
+                variant="icon"
                 size="sm"
+                color="secondary"
                 onClick={closeDrawer}
                 title="Close (ESC)"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+                icon={Cancel01Icon}
+              />
             </div>
           </div>
         </DrawerHeader>

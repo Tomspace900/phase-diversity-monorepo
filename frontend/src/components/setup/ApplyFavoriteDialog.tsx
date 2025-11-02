@@ -10,15 +10,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import {
-  Aperture,
-  Waves,
-  Target,
-  Layers,
-  Image as ImageIcon,
-} from "lucide-react";
 import { type FavoriteConfig } from "@/types/session";
 import { getPupilTypeLabel, getBasisLabel, formatDate } from "@/lib/utils";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  CameraLensIcon,
+  Image02Icon,
+  Layers01Icon,
+  RadioButtonIcon,
+  WaveIcon,
+} from "@hugeicons/core-free-icons";
 
 interface ApplyFavoriteDialogProps {
   open: boolean;
@@ -81,22 +82,26 @@ export const ApplyFavoriteDialog: React.FC<ApplyFavoriteDialogProps> = ({
 
             <div className="flex flex-wrap gap-2 pt-3">
               <Badge variant="outline" className="text-xs">
-                <ImageIcon className="h-3 w-3 mr-1" />
+                <HugeiconsIcon icon={Image02Icon} className="h-3 w-3 mr-1" />
                 {favorite.imageCount} images
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <Aperture className="h-3 w-3 mr-1" />
+                <HugeiconsIcon icon={CameraLensIcon} className="h-3 w-3 mr-1" />
                 {getPupilTypeLabel(config.pupilType)}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <Waves className="h-3 w-3 mr-1" />λ = {(config.wvl * 1e9).toFixed(0)} nm
+                <HugeiconsIcon icon={WaveIcon} className="h-3 w-3 mr-1" />λ ={" "}
+                {(config.wvl * 1e9).toFixed(0)} nm
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <Target className="h-3 w-3 mr-1" />
+                <HugeiconsIcon
+                  icon={RadioButtonIcon}
+                  className="h-3 w-3 mr-1"
+                />
                 f/{config.fratio}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <Layers className="h-3 w-3 mr-1" />
+                <HugeiconsIcon icon={Layers01Icon} className="h-3 w-3 mr-1" />
                 {getBasisLabel(config.basis)} ({config.Jmax} modes)
               </Badge>
               {config.obscuration > 0 && (

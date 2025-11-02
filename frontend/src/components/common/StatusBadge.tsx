@@ -1,13 +1,14 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import {
-  Image as ImageIcon,
-  Settings,
-  LineChart,
-  XCircle,
-  Loader2,
-} from "lucide-react";
 import { Session } from "@/types/session";
+import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
+import {
+  CancelCircleIcon,
+  Chart03Icon,
+  Image01Icon,
+  Loading03Icon,
+  Settings03Icon,
+} from "@hugeicons/core-free-icons";
 
 export type SessionStatus =
   | "needs-images"
@@ -41,7 +42,7 @@ const statusConfig: Record<
   SessionStatus,
   {
     label: string;
-    icon: React.ElementType;
+    icon: IconSvgElement;
     bg: string;
     text: string;
     border: string;
@@ -50,21 +51,21 @@ const statusConfig: Record<
 > = {
   "needs-images": {
     label: "Needs Images",
-    icon: ImageIcon,
+    icon: Image01Icon,
     bg: "bg-muted/50",
     text: "text-muted-foreground",
     border: "border-border",
   },
   ready: {
     label: "Ready to Analyze",
-    icon: Settings,
+    icon: Settings03Icon,
     bg: "bg-accent-orange/10",
     text: "text-accent-orange",
     border: "border-accent-orange/50",
   },
   running: {
     label: "Running Analysis",
-    icon: Loader2,
+    icon: Loading03Icon,
     bg: "bg-accent-cyan/10",
     text: "text-accent-cyan",
     border: "border-accent-cyan/50",
@@ -72,14 +73,14 @@ const statusConfig: Record<
   },
   completed: {
     label: "Results Available",
-    icon: LineChart,
+    icon: Chart03Icon,
     bg: "bg-accent-green/10",
     text: "text-accent-green",
     border: "border-accent-green/50",
   },
   error: {
     label: "Error",
-    icon: XCircle,
+    icon: CancelCircleIcon,
     bg: "bg-error/10",
     text: "text-error",
     border: "border-error/50",
@@ -102,7 +103,6 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   const sizeClasses =
     size === "xs" ? "px-2 py-0.5 text-xs gap-1" : "px-3 py-1 text-sm gap-1.5";
   const iconSize = size === "xs" ? "h-3 w-3" : "h-3.5 w-3.5";
-  const IconComponent = config.icon;
 
   return (
     <div
@@ -116,7 +116,10 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
         className
       )}
     >
-      <IconComponent className={cn(iconSize, animationClass)} />
+      <HugeiconsIcon
+        icon={config.icon}
+        className={cn(iconSize, animationClass)}
+      />
       <span>{label}</span>
     </div>
   );
