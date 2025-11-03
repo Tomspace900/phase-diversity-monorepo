@@ -1,6 +1,11 @@
-import React from "react";
-import { StatsGrid, DataTable, SquarePlot } from "../common";
-import { transpose, createPhaseMapLayout, scientificPlotConfig } from "../../lib/plotUtils";
+import React, { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { StatsGrid, DataTable, SquarePlot, ColorbarLegend } from "../common";
+import {
+  transpose,
+  createPhaseMapLayout,
+  scientificPlotConfig,
+} from "../../lib/plotUtils";
 import type { PhaseResults, ConfigInfo } from "../../types/session";
 
 interface PhaseMapPlotProps {
@@ -25,44 +30,107 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
   const N = results.phase_map_notilt.length;
   const pdiam = configInfo.pdiam;
 
+  // Calculer min/max pour chaque plot séparément
+  const notiltValues = useMemo(() => {
+    return phaseNotiltT.flat().filter((v) => !isNaN(v) && isFinite(v));
+  }, [phaseNotiltT]);
+
+  const notiltdefValues = useMemo(() => {
+    return phaseNotiltdefT.flat().filter((v) => !isNaN(v) && isFinite(v));
+  }, [phaseNotiltdefT]);
+
+  const minValNotilt = useMemo(() => Math.min(...notiltValues), [notiltValues]);
+  const maxValNotilt = useMemo(() => Math.max(...notiltValues), [notiltValues]);
+  const minValNotiltdef = useMemo(
+    () => Math.min(...notiltdefValues),
+    [notiltdefValues]
+  );
+  const maxValNotiltdef = useMemo(
+    () => Math.max(...notiltdefValues),
+    [notiltdefValues]
+  );
+
   const heatmapData = (z: number[][]) => ({
     z,
     type: "heatmap" as const,
     colorscale: "RdBu",
     reversescale: true,
-    colorbar: {
-      title: { text: "Phase (nm)" },
-      len: 0.8,
-    },
+    showscale: false,
     hovertemplate: "x: %{x}<br>y: %{y}<br>Phase: %{z:.2f} nm<extra></extra>",
   });
+
+  // Layout mémorisé pour éviter les re-renders
+  const phaseCardLayout = useMemo(
+    () => ({
+      ...createPhaseMapLayout(N, pdiam, ""),
+      margin: { l: 0, r: 0, t: 0, b: 0 },
+    }),
+    [N, pdiam]
+  );
+
+  // Config sans mode bar pour un affichage propre
+  const cleanPlotConfig = useMemo(
+    () => ({
+      ...scientificPlotConfig,
+      displayModeBar: false,
+    }),
+    []
+  );
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <SquarePlot
-          data={[heatmapData(phaseNotiltT)]}
-          layout={createPhaseMapLayout(
-            N,
-            pdiam,
-            `Phase without Tip-Tilt<br>${results.rms_stats.weighted_notilt.toFixed(
-              1
-            )} nm rms`
-          )}
-          config={scientificPlotConfig}
-        />
+        <div className="space-y-2">
+          <Card className="border-accent-purple/20">
+            <CardHeader className="bg-accent-purple/5 pb-3">
+              <CardTitle className="text-accent-purple text-sm">
+                Phase without Tip-Tilt
+                <br />({results.rms_stats.weighted_notilt.toFixed(1)} nm rms)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 flex flex-col gap-4">
+              <SquarePlot
+                data={[heatmapData(phaseNotiltT)]}
+                layout={phaseCardLayout}
+                config={cleanPlotConfig}
+              />
+              <ColorbarLegend
+                colorscale="RdBu"
+                reversescale={true}
+                min={minValNotilt}
+                max={maxValNotilt}
+                title="Phase (nm)"
+                orientation="h"
+              />
+            </CardContent>
+          </Card>
+        </div>
 
-        <SquarePlot
-          data={[heatmapData(phaseNotiltdefT)]}
-          layout={createPhaseMapLayout(
-            N,
-            pdiam,
-            `Phase without Tip-Tilt-Defocus<br>${results.rms_stats.weighted_notiltdef.toFixed(
-              1
-            )} nm rms`
-          )}
-          config={scientificPlotConfig}
-        />
+        <div className="space-y-2">
+          <Card className="border-accent-purple/20">
+            <CardHeader className="bg-accent-purple/5 pb-3">
+              <CardTitle className="text-accent-purple text-sm">
+                Phase without Tip-Tilt-Defocus
+                <br />({results.rms_stats.weighted_notiltdef.toFixed(1)} nm rms)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 flex flex-col gap-4">
+              <SquarePlot
+                data={[heatmapData(phaseNotiltdefT)]}
+                layout={phaseCardLayout}
+                config={cleanPlotConfig}
+              />
+              <ColorbarLegend
+                colorscale="RdBu"
+                reversescale={true}
+                min={minValNotiltdef}
+                max={maxValNotiltdef}
+                title="Phase (nm)"
+                orientation="h"
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <StatsGrid

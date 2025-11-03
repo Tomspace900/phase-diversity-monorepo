@@ -8,3 +8,4 @@ export { default as LoadingState } from './LoadingState';
 export { default as EmptyState } from './EmptyState';
 export { ConfirmDialog } from './ConfirmDialog';
 export { default as SquarePlot } from './SquarePlot';
+export { default as ColorbarLegend } from './ColorbarLegend';

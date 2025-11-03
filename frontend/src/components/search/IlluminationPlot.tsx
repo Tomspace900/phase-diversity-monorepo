@@ -1,5 +1,6 @@
-import React from "react";
-import { SquarePlot } from "../common";
+import React, { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { SquarePlot, ColorbarLegend } from "../common";
 import {
   transpose,
   createPhaseMapLayout,
@@ -27,29 +28,79 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
   const pupillumT = transpose(results.pupillum);
   const N = results.pupillum.length;
 
+  // Calculer min/max pour la colorbar
+  const allValues = useMemo(() => {
+    return pupillumT.flat().filter((v) => !isNaN(v) && isFinite(v));
+  }, [pupillumT]);
+
+  const minVal = useMemo(() => Math.min(...allValues), [allValues]);
+  const maxVal = useMemo(() => Math.max(...allValues), [allValues]);
+
+  // Layout et config mémorisés pour éviter les re-renders
+  const illuminationLayout = useMemo(
+    () => ({
+      ...createPhaseMapLayout(N, configInfo.pdiam, ""),
+      margin: { l: 0, r: 0, t: 0, b: 0 },
+    }),
+    [N, configInfo.pdiam]
+  );
+
+  const illuminationConfig = useMemo(
+    () => ({
+      ...scientificPlotConfig,
+      displayModeBar: false,
+    }),
+    []
+  );
+
+  const illuminationData = useMemo(
+    () => [
+      {
+        z: pupillumT,
+        type: "heatmap" as const,
+        colorscale: "Greys",
+        reversescale: false,
+        showscale: false,
+        hovertemplate:
+          "x: %{x}<br>y: %{y}<br>Illumination: %{z:.4f}<extra></extra>",
+      },
+    ],
+    [pupillumT]
+  );
+
   return (
-    <div className="space-y-2">
-      <SquarePlot
-        data={[
-          {
-            z: pupillumT,
-            type: "heatmap",
-            colorscale: "Greys",
-            reversescale: false,
-            colorbar: {
-              title: { text: "Illumination" },
-              len: 0.8,
-            },
-            hovertemplate:
-              "x: %{x}<br>y: %{y}<br>Illumination: %{z:.4f}<extra></extra>",
-          },
-        ]}
-        layout={createPhaseMapLayout(N, configInfo.pdiam, "Pupil Illumination")}
-        config={scientificPlotConfig}
-      />
-      <div className="text-sm text-muted-foreground text-center">
-        Coefficients: [{results.illum.map((v) => v.toFixed(3)).join(", ")}]
-      </div>
-    </div>
+    <Card className="border-accent-green/20">
+      <CardHeader className="bg-accent-green/5 pb-3">
+        <CardTitle className="text-accent-green text-sm">
+          Pupil Illumination
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        <div className="flex items-stretch gap-2" style={{ minHeight: "400px" }}>
+          <div className="flex-1">
+            <SquarePlot
+              data={illuminationData}
+              layout={illuminationLayout}
+              config={illuminationConfig}
+            />
+          </div>
+          <div className="self-stretch">
+            <ColorbarLegend
+              colorscale="Greys"
+              reversescale={false}
+              min={minVal}
+              max={maxVal}
+              title="Illumination"
+              orientation="v"
+            />
+          </div>
+        </div>
+      </CardContent>
+      <CardContent className="pt-2 pb-4">
+        <div className="text-sm text-muted-foreground text-center">
+          Coefficients: [{results.illum.map((v) => v.toFixed(3)).join(", ")}]
+        </div>
+      </CardContent>
+    </Card>
   );
 };
