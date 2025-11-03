@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
+import { Loading03Icon } from "@hugeicons/core-free-icons";
 
 type CTAColor =
   | "primary"
@@ -176,7 +177,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           variantClasses[variant],
           sizeClasses[size],
           icon && !isIconOnly && "flex-nowrap",
-          (disabled || loading) && "opacity-50 cursor-not-allowed",
+          (disabled || loading) &&
+            "opacity-50 cursor-not-allowed pointer-events-none",
           className
         )}
         {...props}
@@ -185,7 +187,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           icon ? (
             <>
               <HugeiconsIcon
-                icon={icon}
+                icon={loading ? Loading03Icon : icon}
                 className={cn(
                   iconSizeClasses[size],
                   iconClasses[variant],
@@ -202,7 +204,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           <>
             {icon && iconPosition === "left" && (
               <HugeiconsIcon
-                icon={icon}
+                icon={loading ? Loading03Icon : icon}
                 className={cn(
                   iconSizeClasses[size],
                   iconClasses[variant],
