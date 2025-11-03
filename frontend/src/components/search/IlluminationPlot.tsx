@@ -1,6 +1,6 @@
 import React from "react";
-import Plot from "react-plotly.js";
-import { transpose, createPhaseMapLayout } from "../../lib/plotUtils";
+import { SquarePlot } from "../common";
+import { transpose, createPhaseMapLayout, scientificPlotConfig } from "../../lib/plotUtils";
 import type { PhaseResults, ConfigInfo } from "../../types/session";
 
 interface IlluminationPlotProps {
@@ -25,7 +25,7 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
 
   return (
     <div className="space-y-2">
-      <Plot
+      <SquarePlot
         data={[
           {
             z: pupillumT,
@@ -39,16 +39,8 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
             hovertemplate: "x: %{x}<br>y: %{y}<br>Illumination: %{z:.4f}<extra></extra>",
           },
         ]}
-        layout={createPhaseMapLayout(N, configInfo.pdiam, "Pupil Illumination", 400)}
-        config={{
-          responsive: true,
-          displayModeBar: true,
-          displaylogo: false,
-          modeBarButtonsToRemove: ["lasso2d", "select2d"] as any,
-        }}
-        className="w-full"
-        useResizeHandler
-        style={{ width: "100%", height: "100%" }}
+        layout={createPhaseMapLayout(N, configInfo.pdiam, "Pupil Illumination")}
+        config={scientificPlotConfig}
       />
       <div className="text-sm text-muted-foreground text-center">
         Coefficients: [{results.illum.map((v) => v.toFixed(3)).join(", ")}]

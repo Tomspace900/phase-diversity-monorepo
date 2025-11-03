@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
-import Plot from "react-plotly.js";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { ScrollArea } from "../ui/scroll-area";
+import { SquarePlot } from "../common";
+import { createBasicSquareLayout } from "../../lib/plotUtils";
 
 interface ImageInfo {
   source_file: string;
@@ -17,27 +18,7 @@ export const ImagePlotGrid: React.FC<ImagePlotGridProps> = ({
   images,
   imageInfo,
 }) => {
-  const baseLayout = useMemo(
-    () => ({
-      xaxis: { visible: false, scaleanchor: "y" as any },
-      yaxis: {
-        visible: false,
-        scaleratio: 1,
-        autorange: "reversed" as const,
-      },
-      margin: { l: 0, r: 0, t: 0, b: 0 },
-      width: undefined,
-      height: 300,
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
-    }),
-    []
-  );
-
-  const plotConfig = useMemo(
-    () => ({ responsive: true, displayModeBar: false }),
-    []
-  );
+  const baseLayout = useMemo(() => createBasicSquareLayout(), []);
 
   const heatmapData = (z: number[][]) => ({
     z,
@@ -58,13 +39,9 @@ export const ImagePlotGrid: React.FC<ImagePlotGridProps> = ({
                 <CardTitle className="text-sm">Image {idx + 1}</CardTitle>
               </CardHeader>
               <CardContent>
-                <Plot
+                <SquarePlot
                   data={[heatmapData(image)]}
                   layout={baseLayout}
-                  config={plotConfig}
-                  className="w-full"
-                  useResizeHandler
-                  style={{ width: "100%", height: "100%" }}
                 />
                 <div className="text-xs text-muted-foreground text-center mt-2">
                   <p className="font-mono truncate">{info.source_file}</p>

@@ -3,6 +3,35 @@
  */
 
 /**
+ * Create basic square heatmap layout (responsive, no axes, no decorations)
+ * Used for simple image displays in grids
+ */
+export const createBasicSquareLayout = () => ({
+  xaxis: { visible: false, scaleanchor: "y" as any, constrain: "domain" as const },
+  yaxis: {
+    visible: false,
+    scaleratio: 1,
+    autorange: "reversed" as const,
+    constrain: "domain" as const,
+  },
+  margin: { l: 0, r: 0, t: 0, b: 0 },
+  autosize: true,
+  paper_bgcolor: "rgba(0,0,0,0)",
+  plot_bgcolor: "rgba(0,0,0,0)",
+});
+
+/**
+ * Common plot config for scientific plots with interactive features
+ * Enables mode bar for zooming/panning but removes selection tools
+ */
+export const scientificPlotConfig = {
+  responsive: true,
+  displayModeBar: true,
+  displaylogo: false,
+  modeBarButtonsToRemove: ["lasso2d", "select2d"] as any,
+};
+
+/**
  * Transpose a 2D matrix (equivalent to .T in Python/NumPy)
  */
 export const transpose = (matrix: number[][]): number[][] => {
@@ -44,7 +73,7 @@ export const applyFFTShift = (image: number[][], alpha: number = 1.0): number[][
  * Calculate zoom bounds for pupil display
  * Matches diversity.py zone calculation (line 1209)
  */
-export const getPupilZoomBounds = (N: number, pdiam: number): [number, number] => {
+const getPupilZoomBounds = (N: number, pdiam: number): [number, number] => {
   const zoomMin = (N - pdiam * 1.1) / 2;
   const zoomMax = (N + pdiam * 1.1) / 2;
   return [zoomMin, zoomMax];
@@ -54,7 +83,7 @@ export const getPupilZoomBounds = (N: number, pdiam: number): [number, number] =
  * Create pupil circle shape for Plotly overlay
  * Matches pupilArtist from diversity.py
  */
-export const createPupilCircleShape = (N: number, pdiam: number) => ({
+const createPupilCircleShape = (N: number, pdiam: number) => ({
   type: "circle" as const,
   xref: "x" as const,
   yref: "y" as const,
@@ -75,8 +104,7 @@ export const createPupilCircleShape = (N: number, pdiam: number) => ({
 export const createPhaseMapLayout = (
   N: number,
   pdiam: number,
-  title: string,
-  height: number = 350
+  title: string
 ) => {
   const [zoomMin, zoomMax] = getPupilZoomBounds(N, pdiam);
 
@@ -91,16 +119,17 @@ export const createPhaseMapLayout = (
       scaleratio: 1,
       range: [zoomMin, zoomMax],
       showticklabels: false,
+      constrain: "domain" as const,
     },
     yaxis: {
       title: "",
       autorange: "reversed" as const,
       range: [zoomMin, zoomMax],
       showticklabels: false,
+      constrain: "domain" as const,
     },
     shapes: [createPupilCircleShape(N, pdiam)],
-    width: undefined,
-    height,
+    autosize: true,
     margin: { l: 10, r: 10, t: 30, b: 10 },
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",

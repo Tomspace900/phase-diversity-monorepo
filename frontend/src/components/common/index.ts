@@ -7,3 +7,4 @@ export type { Column } from './DataTable';
 export { default as LoadingState } from './LoadingState';
 export { default as EmptyState } from './EmptyState';
 export { ConfirmDialog } from './ConfirmDialog';
+export { default as SquarePlot } from './SquarePlot';
