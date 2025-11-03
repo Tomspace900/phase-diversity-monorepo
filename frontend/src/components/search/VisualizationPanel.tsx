@@ -1,5 +1,5 @@
 import React from "react";
-import { CardContent } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Alert } from "../ui/alert";
 import { Badge } from "../ui/badge";
@@ -91,33 +91,42 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
                     coefficient: coef,
                   }))}
                   compact
-                  className="max-h-64"
                 />
               </div>
             </TabsContent>
 
             <TabsContent value="pupil" className="space-y-4 pr-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold mb-2 text-sm text-muted-foreground uppercase tracking-wide">
-                    Pupil
-                  </h3>
-                  <img
-                    src={run.response.pupil_image}
-                    alt="Pupil"
-                    className="w-full border rounded"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2 text-sm text-muted-foreground uppercase tracking-wide">
-                    Illumination
-                  </h3>
-                  <img
-                    src={run.response.illumination_image}
-                    alt="Illumination"
-                    className="w-full border rounded"
-                  />
-                </div>
+                <Card className="border-accent-cyan/20">
+                  <CardHeader className="bg-accent-cyan/5 pb-3">
+                    <CardTitle className="text-accent-cyan text-sm">
+                      Pupil
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <img
+                      src={run.response.pupil_image}
+                      alt="Pupil"
+                      className="w-full rounded-lg border border-border"
+                      style={{ imageRendering: "pixelated" }}
+                    />
+                  </CardContent>
+                </Card>
+                <Card className="border-accent-green/20">
+                  <CardHeader className="bg-accent-green/5 pb-3">
+                    <CardTitle className="text-accent-green text-sm">
+                      Illumination
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <img
+                      src={run.response.illumination_image}
+                      alt="Illumination"
+                      className="w-full rounded-lg border border-border"
+                      style={{ imageRendering: "pixelated" }}
+                    />
+                  </CardContent>
+                </Card>
               </div>
 
               <IlluminationPlot
