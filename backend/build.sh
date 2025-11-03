@@ -9,6 +9,7 @@ sed -i \
     -e 's/^from utilib import /from .utilib import /' \
     -e 's/^import elt_pupil_simplified as eltps$/from . import elt_pupil_simplified as eltps/' \
     -e 's/^from long_messages import /from .long_messages import /' \
+    -e "s/^\([ \t]*\)import matplotlib\.pyplot as plt/\1import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt/" \
     diversity.py
 cd ../..
 
