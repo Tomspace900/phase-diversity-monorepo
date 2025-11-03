@@ -13,6 +13,7 @@ import { previewConfig } from "../../api";
 import { ScrollArea } from "../ui/scroll-area";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Settings03Icon, ViewIcon } from "@hugeicons/core-free-icons";
+import { hasPupilChanged } from "../../lib/configUtils";
 
 interface SetupPreviewProps {
   images: number[][][] | null;
@@ -33,11 +34,12 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
   const cachedPreview = currentSession.lastPreview;
   const previewData = cachedPreview?.preview ?? null;
 
-  // Deep comparison to detect config changes
+  // Check if pupil-affecting parameters have changed
+  // Only compares parameters that actually affect pupil geometry/illumination
+  // (not defoc_z, object_fwhm_pix, basis, Jmax which don't change the pupil)
   const hasConfigChanged = (): boolean => {
     if (!cachedPreview || !config) return true;
-    // Compare current session config with the config used for the cached preview
-    return JSON.stringify(config) !== JSON.stringify(cachedPreview.config);
+    return hasPupilChanged(cachedPreview.config, config);
   };
 
   const configChanged = hasConfigChanged();
@@ -166,7 +168,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
                 className="h-16 w-16 text-muted-foreground/50"
               />
             }
-            title="Configuration changed"
+            title="Pupil configuration changed"
             description="Generate a preview to visualize your optical setup"
             accentColor="purple"
           />
