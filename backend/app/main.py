@@ -335,7 +335,11 @@ async def load_flexible_image_collection(
 
 
 def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
-    """Generate base64 PNG thumbnail from 2D numpy array"""
+    """Generate base64 PNG thumbnail from 2D numpy array
+
+    Core algorithm uses [x, y] convention, but PIL expects [height, width] = [y, x].
+    We transpose to match PIL's expected format and flip vertically to get origin='lower' effect.
+    """
     if image_2d.size == 0:
         raise ValueError("Cannot generate thumbnail from empty array")
 
@@ -346,6 +350,9 @@ def generate_thumbnail(image_2d: np.ndarray, size: int = 128) -> str:
         )
     else:
         img_normalized = np.full_like(image_2d, 128, dtype=np.uint8)
+
+    # Transpose from [x, y] to [y, x] and flip vertically to match origin='lower'
+    img_normalized = np.flipud(img_normalized.T)
 
     img_pil = Image.fromarray(img_normalized)
     img_pil.thumbnail((size, size), Image.Resampling.LANCZOS)
