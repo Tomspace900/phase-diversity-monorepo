@@ -1,6 +1,10 @@
 import React from "react";
 import { SquarePlot } from "../common";
-import { transpose, createPhaseMapLayout, scientificPlotConfig } from "../../lib/plotUtils";
+import {
+  transpose,
+  createPhaseMapLayout,
+  scientificPlotConfig,
+} from "../../lib/plotUtils";
 import type { PhaseResults, ConfigInfo } from "../../types/session";
 
 interface IlluminationPlotProps {
@@ -36,7 +40,8 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
               title: { text: "Illumination" },
               len: 0.8,
             },
-            hovertemplate: "x: %{x}<br>y: %{y}<br>Illumination: %{z:.4f}<extra></extra>",
+            hovertemplate:
+              "x: %{x}<br>y: %{y}<br>Illumination: %{z:.4f}<extra></extra>",
           },
         ]}
         layout={createPhaseMapLayout(N, configInfo.pdiam, "Pupil Illumination")}

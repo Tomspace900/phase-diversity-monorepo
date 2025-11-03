@@ -25,20 +25,11 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
   const N = results.phase_map_notilt.length;
   const pdiam = configInfo.pdiam;
 
-  // Find min/max for consistent color scale across both maps
-  const allValues = [...phaseNotiltT.flat(), ...phaseNotiltdefT.flat()].filter(
-    (v) => !isNaN(v) && isFinite(v)
-  );
-  const minVal = Math.min(...allValues);
-  const maxVal = Math.max(...allValues);
-
   const heatmapData = (z: number[][]) => ({
     z,
     type: "heatmap" as const,
     colorscale: "RdBu",
     reversescale: true,
-    zmin: minVal,
-    zmax: maxVal,
     colorbar: {
       title: { text: "Phase (nm)" },
       len: 0.8,

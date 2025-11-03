@@ -116,15 +116,14 @@ export const createPhaseMapLayout = (
     xaxis: {
       title: "",
       scaleanchor: "y" as any,
-      scaleratio: 1,
       range: [zoomMin, zoomMax],
       showticklabels: false,
       constrain: "domain" as const,
     },
     yaxis: {
       title: "",
-      autorange: "reversed" as const,
-      range: [zoomMin, zoomMax],
+      scaleratio: 1,
+      range: [zoomMax, zoomMin],
       showticklabels: false,
       constrain: "domain" as const,
     },
