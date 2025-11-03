@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
-import Plot from "react-plotly.js";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Slider } from "../ui/slider";
-import { applyFFTShift } from "../../lib/plotUtils";
+import { SquarePlot } from "../common";
+import { applyFFTShift, createBasicSquareLayout } from "../../lib/plotUtils";
 import type { AnalysisRun } from "../../types/session";
 
 interface ImageComparisonGridProps {
@@ -23,27 +23,15 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
 
   const [alpha, setAlpha] = useState(0.5);
 
-  const baseLayout = useMemo(
-    () => ({
-      xaxis: { visible: false, scaleanchor: "y" as any },
-      yaxis: {
-        visible: false,
-        scaleratio: 1,
-        autorange: "reversed" as const,
-      },
-      margin: { l: 0, r: 0, t: 0, b: 0 },
-      width: undefined,
-      height: 200,
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
-    }),
-    []
-  );
+  const baseLayout = useMemo(() => createBasicSquareLayout(), []);
 
-  const plotConfig = useMemo(
-    () => ({ responsive: true, displayModeBar: false }),
-    []
-  );
+  const heatmapData = (z: number[][]) => ({
+    z,
+    type: "heatmap" as const,
+    colorscale: "Greys",
+    showscale: false,
+    hovertemplate: "x: %{x}<br>y: %{y}<br>Value: %{z:.2f}<extra></extra>",
+  });
 
   return (
     <div className="space-y-4">
@@ -107,15 +95,6 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
             ],
           };
 
-          const heatmapData = (z: number[][]) => ({
-            z,
-            type: "heatmap" as const,
-            colorscale: "Greys",
-            showscale: false,
-            hovertemplate:
-              "x: %{x}<br>y: %{y}<br>Value: %{z:.2f}<extra></extra>",
-          });
-
           return (
             <React.Fragment key={idx}>
               <Card>
@@ -123,13 +102,9 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
                   <CardTitle className="text-sm">Input PSF {idx + 1}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Plot
+                  <SquarePlot
                     data={[heatmapData(observedShifted)]}
                     layout={layoutWithAnnotation}
-                    config={plotConfig}
-                    className="w-full"
-                    useResizeHandler
-                    style={{ width: "100%", height: "100%" }}
                   />
                   <div className="text-xs text-muted-foreground text-center mt-1">
                     Defocus: {(defoc_z[idx] * 1000).toFixed(2)} mm
@@ -144,13 +119,9 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Plot
+                  <SquarePlot
                     data={[heatmapData(modelShifted)]}
                     layout={layoutWithAnnotation}
-                    config={plotConfig}
-                    className="w-full"
-                    useResizeHandler
-                    style={{ width: "100%", height: "100%" }}
                   />
                 </CardContent>
               </Card>
@@ -160,13 +131,9 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({
                   <CardTitle className="text-sm">Diff {idx + 1}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Plot
+                  <SquarePlot
                     data={[heatmapData(diffShifted)]}
                     layout={layoutWithAnnotation}
-                    config={plotConfig}
-                    className="w-full"
-                    useResizeHandler
-                    style={{ width: "100%", height: "100%" }}
                   />
                 </CardContent>
               </Card>

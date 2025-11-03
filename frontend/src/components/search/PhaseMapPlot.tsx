@@ -1,7 +1,6 @@
 import React from "react";
-import Plot from "react-plotly.js";
-import { StatsGrid, DataTable } from "../common";
-import { transpose, createPhaseMapLayout } from "../../lib/plotUtils";
+import { StatsGrid, DataTable, SquarePlot } from "../common";
+import { transpose, createPhaseMapLayout, scientificPlotConfig } from "../../lib/plotUtils";
 import type { PhaseResults, ConfigInfo } from "../../types/session";
 
 interface PhaseMapPlotProps {
@@ -33,13 +32,6 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
   const minVal = Math.min(...allValues);
   const maxVal = Math.max(...allValues);
 
-  const commonPlotConfig = {
-    responsive: true,
-    displayModeBar: true,
-    displaylogo: false,
-    modeBarButtonsToRemove: ["lasso2d", "select2d"] as any,
-  };
-
   const heatmapData = (z: number[][]) => ({
     z,
     type: "heatmap" as const,
@@ -57,7 +49,7 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <Plot
+        <SquarePlot
           data={[heatmapData(phaseNotiltT)]}
           layout={createPhaseMapLayout(
             N,
@@ -66,13 +58,10 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
               1
             )} nm rms`
           )}
-          config={commonPlotConfig}
-          className="w-full"
-          useResizeHandler={true}
-          style={{ width: "100%", height: "100%" }}
+          config={scientificPlotConfig}
         />
 
-        <Plot
+        <SquarePlot
           data={[heatmapData(phaseNotiltdefT)]}
           layout={createPhaseMapLayout(
             N,
@@ -81,10 +70,7 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
               1
             )} nm rms`
           )}
-          config={commonPlotConfig}
-          className="w-full"
-          useResizeHandler={true}
-          style={{ width: "100%", height: "100%" }}
+          config={scientificPlotConfig}
         />
       </div>
 
