@@ -76,7 +76,10 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        <div className="flex items-stretch gap-2" style={{ minHeight: "400px" }}>
+        <div
+          className="flex items-stretch gap-2"
+          style={{ minHeight: "400px" }}
+        >
           <div className="flex-1">
             <SquarePlot
               data={illuminationData}
@@ -87,7 +90,7 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
           <div className="self-stretch">
             <ColorbarLegend
               colorscale="Greys"
-              reversescale={false}
+              reversescale={true}
               min={minVal}
               max={maxVal}
               title="Illumination"
