@@ -32,7 +32,7 @@ const SquarePlot: React.FC<SquarePlotProps> = ({
     const resizeObserver = new ResizeObserver(() => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
-        setRevision(prev => prev + 1);
+        setRevision((prev) => prev + 1);
       }, 150);
     });
 
@@ -45,7 +45,10 @@ const SquarePlot: React.FC<SquarePlotProps> = ({
   }, []);
 
   return (
-    <div ref={containerRef} className={`w-full aspect-square ${className}`}>
+    <div
+      ref={containerRef}
+      className={`w-full aspect-square rounded-md overflow-hidden ${className}`}
+    >
       <Plot
         data={data}
         layout={layout}
