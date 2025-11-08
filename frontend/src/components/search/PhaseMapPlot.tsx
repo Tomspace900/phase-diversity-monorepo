@@ -30,7 +30,6 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
   const N = results.phase_map_notilt.length;
   const pdiam = configInfo.pdiam;
 
-  // Calculer min/max pour chaque plot séparément
   const notiltValues = useMemo(() => {
     return phaseNotiltT.flat().filter((v) => !isNaN(v) && isFinite(v));
   }, [phaseNotiltT]);
@@ -59,7 +58,6 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
     hovertemplate: "x: %{x}<br>y: %{y}<br>Phase: %{z:.2f} nm<extra></extra>",
   });
 
-  // Layout mémorisé pour éviter les re-renders
   const phaseCardLayout = useMemo(
     () => ({
       ...createPhaseMapLayout(N, pdiam, ""),

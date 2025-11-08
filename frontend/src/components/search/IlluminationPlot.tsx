@@ -28,7 +28,6 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
   const pupillumT = transpose(results.pupillum);
   const N = results.pupillum.length;
 
-  // Calculer min/max pour la colorbar
   const allValues = useMemo(() => {
     return pupillumT.flat().filter((v) => !isNaN(v) && isFinite(v));
   }, [pupillumT]);
@@ -36,7 +35,6 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
   const minVal = useMemo(() => Math.min(...allValues), [allValues]);
   const maxVal = useMemo(() => Math.max(...allValues), [allValues]);
 
-  // Layout et config mémorisés pour éviter les re-renders
   const illuminationLayout = useMemo(
     () => ({
       ...createPhaseMapLayout(N, configInfo.pdiam, ""),

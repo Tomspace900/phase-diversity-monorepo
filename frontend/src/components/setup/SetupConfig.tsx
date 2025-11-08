@@ -21,13 +21,7 @@ import {
   validateFlattening,
   checkShannonSampling,
 } from "../../utils/validation";
-import {
-  ImagesTab,
-  PupilTab,
-  OpticsTab,
-  ObjectTab,
-  PhaseTab,
-} from "../setup";
+import { ImagesTab, PupilTab, OpticsTab, ObjectTab, PhaseTab } from "../setup";
 
 const SetupConfig = ({
   config,
