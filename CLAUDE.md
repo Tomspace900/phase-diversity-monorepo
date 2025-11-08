@@ -100,37 +100,13 @@ phase-diversity/
 
 ## Technology Stack
 
-### Backend
+**Backend:** Python 3.10+, FastAPI, NumPy/SciPy, Pydantic, astropy (see `backend/requirements.txt`)
 
-- **FastAPI 0.115.6** - Modern async web framework
-- **Python 3.10+** - Type hints and modern features
-- **NumPy 1.26.4, SciPy 1.14.1** - Scientific computing
-- **Pydantic 2.10.3** - Data validation
-- **WebSockets 14.1** - Real-time logging
-- **astropy** - FITS file parsing
-
-### Frontend
-
-- **React 18.3.1** + **TypeScript 5.7.2** - Type-safe UI
-- **Vite 6.0.3** - Fast build tool with HMR
-- **TailwindCSS 3.4.17** - Utility-first CSS
-- **shadcn/ui** - Accessible component library built on Radix UI
-- **React Router 7.1.1** - Client routing
-- **Plotly.js 2.35.2** - Interactive plots
-- **React Context API** - State management (no Redux/Zustand needed)
+**Frontend:** React 18.3, TypeScript 5.7, Vite 6, TailwindCSS, shadcn/ui, Plotly.js (see `frontend/package.json`)
 
 ## Quick Start
 
-```bash
-# Install (once)
-./scripts/setup.sh
-
-# Develop
-./scripts/dev.sh
-# → Frontend: http://localhost:5173
-# → Backend:  http://localhost:8000
-# → API Docs: http://localhost:8000/docs
-```
+See [QUICKSTART.md](QUICKSTART.md) for detailed setup. TL;DR: `./scripts/setup.sh` then `./scripts/dev.sh`
 
 ## Core Algorithm (Git Submodule)
 
@@ -159,35 +135,9 @@ This single change is applied automatically by `scripts/setup-core.sh`.
 
 ### Working with the Submodule
 
-**Initial clone (for new contributors):**
-```bash
-git clone --recurse-submodules https://github.com/Tomspace900/phase-diversity-monorepo.git
-cd phase-diversity-monorepo
-./scripts/setup-core.sh  # Apply import patch (takes 1 second)
-./scripts/setup.sh       # Install dependencies
-```
+**Update to latest:** `cd backend/app/core && git pull origin main && cd ../../.. && ./scripts/setup-core.sh`
 
-**Update core to latest upstream:**
-```bash
-cd backend/app/core
-git pull origin main
-cd ../../..
-./scripts/setup-core.sh  # Re-apply import patch
-git add backend/app/core
-git commit -m "Update core submodule to latest upstream"
-```
-
-**View submodule status:**
-```bash
-git submodule status
-```
-
-**Important Notes:**
-
-- **DO NOT commit changes inside the submodule** - the import patch is temporary
-- After any `git pull` in the submodule, run `./scripts/setup-core.sh` (it's fast!)
-- The submodule always points to a specific commit - update explicitly when needed
-- To contribute changes to the core algorithm, work in the original repository
+**Important:** DO NOT commit changes inside the submodule. The import patch is temporary. Contribute to core algorithm via the original repository.
 
 ## Backend Architecture
 
@@ -282,128 +232,21 @@ The files in `backend/app/core/` contain the phase diversity algorithm that rese
 - All state update methods are async (await pattern)
 - Handles quota exceeded errors gracefully
 
-**Session Structure** ([frontend/src/types/session.ts](frontend/src/types/session.ts)):
+**Session Structure:** See [frontend/src/types/session.ts](frontend/src/types/session.ts) for full type definitions. Key interfaces: `Session`, `AnalysisRun`, `ParsedImages`, `OpticalConfig`.
 
-```typescript
-interface Session {
-  id: string; // UUID
-  name: string; // User-editable
-  created_at: string; // ISO timestamp
-  updated_at: string;
-  images: ParsedImages | null; // Uploaded images
-  currentConfig: OpticalConfig; // Current optical setup
-  runs: AnalysisRun[]; // History of all searches
-}
+### Type System
 
-interface AnalysisRun {
-  id: string; // UUID
-  timestamp: string;
-  config: OpticalConfig; // Snapshot of config used
-  flags: SearchFlags; // Search parameters used
-  response: SearchPhaseResponse; // Complete backend response
-}
+All API interactions fully typed in [frontend/src/api.ts](frontend/src/api.ts). Request types match backend Pydantic models. Response types include `PreviewConfigResponse` and `SearchPhaseResponse`.
 
-interface ParsedImages {
-  images: number[][][]; // 3D array [N, H, W]
-  thumbnails: string[]; // base64 PNG
-  stats: ImageStats;
-  original_dtype: string;
-}
-```
+### React Pages
 
-### Type System ([frontend/src/api.ts](frontend/src/api.ts))
+**Workflow:** SessionsPage → UploadPage → SetupPage → SearchPage → ResultsPage
 
-**All API interactions fully typed:**
-
-```typescript
-// Request types match backend Pydantic models exactly
-interface PreviewConfigRequest {
-  images: number[][][];
-  config: OpticalConfig;
-}
-
-interface SearchPhaseRequest {
-  images: number[][][];
-  config: OpticalConfig;
-  // All SearchFlags inline
-  defoc_z_flag: boolean;
-  focscale_flag: boolean;
-  // ... etc
-}
-
-// Response types
-interface PreviewConfigResponse {
-  success: boolean;
-  config_info: ConfigInfo;
-  pupil_image: string; // base64 PNG
-  illumination_image: string;
-  warnings: string[];
-}
-
-interface SearchPhaseResponse {
-  success: boolean;
-  config_info: ConfigInfo;
-  pupil_image: string;
-  illumination_image: string;
-  results: PhaseResults; // phase map, coefficients, etc.
-  duration_ms: number;
-  warnings: string[];
-}
-```
-
-### React Pages (TypeScript)
-
-1. **SessionsPage.tsx** (NEW - now homepage):
-
-   - Lists all sessions from IndexedDB
-   - Create new session or continue existing
-   - View results from completed analyses
-   - Delete/export sessions
-
-2. **UploadPage.tsx**:
-
-   - Upload FITS images (.fits, .fit)
-   - NumPy import: Planned feature
-   - Calls parseImages() API
-   - Creates new session in SessionContext
-   - Displays interactive Plotly heatmaps and stats
-
-3. **SetupPage.tsx**:
-
-   - 5 tabs: Images, Pupil, Optics, Object, Phase Basis
-   - Real-time preview with 500ms debounce
-   - Calls previewConfig() API on every config change
-   - Updates currentSession.currentConfig
-   - Navigate to SearchPage when done
-
-4. **SearchPage.tsx**:
-
-   - Configure search flags (which parameters to optimize)
-   - Calls runAnalysis() from SessionContext
-   - Creates new AnalysisRun in session
-   - Navigate to ResultsPage after completion
-
-5. **ResultsPage.tsx**:
-   - Displays latest AnalysisRun from session
-   - Plotly.js interactive phase/pupil maps
-   - Numerical coefficients and fitted parameters
-   - All data from IndexedDB (via SessionContext) - no backend calls
-
-### User Workflow
-
-```
-SessionsPage (home)
-    ↓ "New Session"
-UploadPage
-    ↓ Upload images → parseImages() → Create Session in IndexedDB
-SetupPage
-    ↓ Configure params → previewConfig() (debounced, real-time)
-    ↓ Edit until satisfied
-SearchPage
-    ↓ Set flags → searchPhase() → Store AnalysisRun in Session
-ResultsPage
-    ↓ View results from IndexedDB (via SessionContext)
-```
+- **SessionsPage**: Manage sessions (IndexedDB)
+- **UploadPage**: Upload FITS → `parseImages()` → create Session
+- **SetupPage**: Configure params → `previewConfig()` (500ms debounce) → real-time preview
+- **SearchPage**: Set flags → `searchPhase()` → store AnalysisRun
+- **ResultsPage**: Display results (Plotly visualizations, coefficients)
 
 ### Styling
 
@@ -461,36 +304,13 @@ This provides up-to-date documentation, props, usage patterns, and implementatio
 
 ### Update Dependencies
 
-**Backend:**
+**Backend:** `cd backend && source venv/bin/activate && pip install --upgrade <package> && pip freeze > requirements.txt`
 
-```bash
-cd backend && source venv/bin/activate
-pip install --upgrade <package>
-pip freeze > requirements.txt
-```
-
-**Frontend:**
-
-```bash
-cd frontend
-npm update              # Minor updates
-npm install pkg@latest  # Major updates
-```
+**Frontend:** `cd frontend && npm update` (or `npm install pkg@latest` for major versions)
 
 ## TypeScript Development
 
-```bash
-cd frontend
-
-# Type check (no compilation)
-npm run type-check
-
-# Lint
-npm run lint
-
-# Build (includes type check)
-npm run build
-```
+**Commands:** `npm run type-check`, `npm run lint`, `npm run build` (in frontend/)
 
 ## Important Implementation Details
 
@@ -553,73 +373,18 @@ SetupPage uses 500ms debounce to avoid overwhelming backend with preview request
 
 ## Debugging
 
-### Backend
+**Backend:** Terminal logs, `/docs` for API testing, `logger.info()` for diagnostics
 
-- Check terminal logs
-- Use `/docs` for API testing
-- Add `logger.info()` for diagnostics
+**Frontend:** Browser DevTools (F12), React DevTools, IndexedDB inspector (DevTools → Application)
 
-### Frontend
-
-- Browser DevTools (F12)
-- React DevTools extension
-- TypeScript errors in terminal during `npm run dev`
-- IndexedDB inspector in DevTools → Application → IndexedDB → phase-diversity-db
-- localStorage inspector in DevTools → Application → Local Storage (only for current_session_id)
-
-### WebSocket
-
-- Check browser console
-- Test at `ws://localhost:8000/ws/logs`
-- Use "WebSocket King" extension
+**WebSocket:** Browser console, test at `ws://localhost:8000/ws/logs`
 
 ## Troubleshooting
 
-### TypeScript Errors
-
-```bash
-cd frontend
-rm -rf node_modules package-lock.json
-npm install
-npm run type-check
-```
-
-### Backend Won't Start
-
-- Python 3.10+? `python3 --version`
-- Venv activated? `source backend/venv/bin/activate`
-- Port 8000 free? `lsof -i :8000`
-
-### Frontend Won't Start
-
-- Node 18+? `node --version`
-- Port 5173 free? `lsof -i :5173`
-- Try: `rm -rf node_modules && npm install`
-
-### Storage Issues
-
-**IndexedDB:**
-- Check quota: DevTools → Application → Storage → IndexedDB
-- Clear if corrupted: DevTools → Application → IndexedDB → phase-diversity-db → Delete database
-- Export sessions before clearing
-
-**localStorage:**
-- Only stores `current_session_id` - safe to clear if needed
-- Clear: `localStorage.removeItem('current_session_id')`
-
-## Resources
-
-- [FastAPI Docs](https://fastapi.tiangolo.com/)
-- [React Docs](https://react.dev/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Vite Docs](https://vitejs.dev/)
-- [TailwindCSS Docs](https://tailwindcss.com/)
-- [Design System](frontend/DESIGN_SYSTEM.md) - Complete design system documentation
-
-## Version Info
-
-- Backend: Python 3.10+, FastAPI 0.115.6
-- Frontend: Node 18+, React 18.3.1, TypeScript 5.7.2
-- Core: Original implementation (preserved)
+See [QUICKSTART.md](QUICKSTART.md) for detailed troubleshooting. Common fixes:
+- TypeScript: `rm -rf node_modules && npm install && npm run type-check`
+- Backend: Check Python 3.10+, venv activated, port 8000 free
+- Frontend: Check Node 18+, port 5173 free
+- IndexedDB: DevTools → Application → IndexedDB → Delete database if corrupted
 
 **Last updated:** January 2025
