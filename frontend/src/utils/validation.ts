@@ -14,7 +14,15 @@ export interface ValidationResult {
  * Validate wavelength in meters
  */
 export const validateWavelength = (value: number): ValidationResult => {
-  if (isNaN(value) || value <= 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Wavelength must be a number",
+      helperText: "Typical: 550e-9 m (550nm)",
+    };
+  }
+
+  if (value <= 0) {
     return {
       isValid: false,
       error: "Wavelength must be positive",
@@ -48,7 +56,15 @@ export const validateWavelength = (value: number): ValidationResult => {
  * Validate pixel size in meters
  */
 export const validatePixelSize = (value: number): ValidationResult => {
-  if (isNaN(value) || value <= 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Pixel size must be a number",
+      helperText: "Typical: 7.4e-6 m (7.4µm)",
+    };
+  }
+
+  if (value <= 0) {
     return {
       isValid: false,
       error: "Pixel size must be positive",
@@ -82,7 +98,15 @@ export const validatePixelSize = (value: number): ValidationResult => {
  * Validate F-ratio
  */
 export const validateFratio = (value: number): ValidationResult => {
-  if (isNaN(value) || value <= 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "F-ratio must be a number",
+      helperText: "Focal ratio f/D (e.g., 18 for f/18)",
+    };
+  }
+
+  if (value <= 0) {
     return {
       isValid: false,
       error: "F-ratio must be positive",
@@ -108,7 +132,15 @@ export const validateFratio = (value: number): ValidationResult => {
  * Validate obscuration ratio
  */
 export const validateObscuration = (value: number): ValidationResult => {
-  if (isNaN(value) || value < 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Obscuration must be a number",
+      helperText: "Fraction of pupil diameter (0-0.99)",
+    };
+  }
+
+  if (value < 0) {
     return {
       isValid: false,
       error: "Obscuration must be ≥ 0",
@@ -146,7 +178,15 @@ export const validateComputationSize = (
     };
   }
 
-  if (isNaN(value) || value <= 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Size must be a number",
+      helperText: "FFT size, must be even (e.g., 64, 128, 256)",
+    };
+  }
+
+  if (value <= 0) {
     return {
       isValid: false,
       error: "Size must be positive",
@@ -228,7 +268,9 @@ export const validateDefocusArray = (
   if (maxAbsDefoc > 0.1) {
     return {
       isValid: false,
-      error: `Defocus value too large: ${maxAbsDefoc.toExponential(2)} m (>10cm)`,
+      error: `Defocus value too large: ${maxAbsDefoc.toExponential(
+        2
+      )} m (>10cm)`,
       helperText: "Typical defocus range: ±0.01 to ±0.05 meters",
     };
   }
@@ -253,7 +295,8 @@ export const validateDefocusArray = (
       warning: allPositive
         ? "All defocus values positive"
         : "All defocus values negative",
-      helperText: "Consider symmetric defocus (both + and -) for better retrieval",
+      helperText:
+        "Consider symmetric defocus (both + and -) for better retrieval",
     };
   }
 
@@ -269,7 +312,15 @@ export const validateDefocusArray = (
  * Validate number of edges for polygon
  */
 export const validateEdges = (value: number): ValidationResult => {
-  if (isNaN(value) || value < 3) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Must be a number",
+      helperText: "Regular polygon (3=triangle, 6=hexagon)",
+    };
+  }
+
+  if (value < 3) {
     return {
       isValid: false,
       error: "Must have ≥3 edges",
@@ -295,7 +346,15 @@ export const validateEdges = (value: number): ValidationResult => {
  * Validate edge blur percentage
  */
 export const validateEdgeBlur = (value: number): ValidationResult => {
-  if (isNaN(value) || value < 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Edge blur must be a number",
+      helperText: "Recommended: 3-5%",
+    };
+  }
+
+  if (value < 0) {
     return {
       isValid: false,
       error: "Edge blur must be ≥0",
@@ -332,7 +391,15 @@ export const validateJmax = (
   value: number,
   basis: string
 ): ValidationResult => {
-  if (isNaN(value) || value < 1) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Jmax must be a number",
+      helperText: "Number of phase modes to compute",
+    };
+  }
+
+  if (value < 1) {
     return {
       isValid: false,
       error: "Jmax must be ≥1",
@@ -366,7 +433,15 @@ export const validateJmax = (
  * Validate object FWHM
  */
 export const validateObjectFWHM = (value: number): ValidationResult => {
-  if (isNaN(value) || value < 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "FWHM must be a number",
+      helperText: "0 = point source",
+    };
+  }
+
+  if (value < 0) {
     return {
       isValid: false,
       error: "FWHM must be ≥0",
@@ -399,7 +474,15 @@ export const validateObjectFWHM = (value: number): ValidationResult => {
  * Validate flattening factor
  */
 export const validateFlattening = (value: number): ValidationResult => {
-  if (isNaN(value) || value <= 0) {
+  if (typeof value !== "number" || isNaN(value)) {
+    return {
+      isValid: false,
+      error: "Flattening must be a number",
+      helperText: "1.0 = circular, <1 = flattened, >1 = expanded",
+    };
+  }
+
+  if (value <= 0) {
     return {
       isValid: false,
       error: "Flattening must be positive",
