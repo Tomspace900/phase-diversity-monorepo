@@ -3,11 +3,29 @@
 
 set -e  # Exit on error
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "🔧 Setting up Phase Diversity project..."
 echo ""
 
-# Backend (Python)
-echo "📦 Installing Python dependencies..."
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Step 1: Patch core submodule
+echo "🔧 Step 1/3: Patching core submodule..."
+echo "🔧 Patching core submodule (monorepo context)..."
+echo ""
+
+# Call backend/build.sh but skip pip install
+# (pip install will be done in the venv)
+pushd "$PROJECT_ROOT/backend" > /dev/null
+SKIP_PIP_INSTALL=1 ./build.sh
+popd > /dev/null
+
+echo ""
+echo "The submodule is ready to use. Python 3.3+ will treat it as a namespace package."
+
+# Step 2: Backend (Python)
+echo "📦 Step 2/3: Installing Python dependencies..."
 cd backend
 
 ## Option 1: venv (default, uncommented)
@@ -27,8 +45,8 @@ cd ..
 echo "✅ Backend dependencies installed"
 echo ""
 
-# Frontend (Node)
-echo "📦 Installing Node dependencies..."
+# Step 3: Frontend (Node)
+echo "📦 Step 3/3: Installing Node dependencies..."
 cd frontend
 npm install
 cd ..
