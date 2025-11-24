@@ -8,7 +8,12 @@ import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
 import { Alert } from "../ui/alert";
 import { DEFAULT_SEARCH_FLAGS, type SearchFlags } from "../../types/session";
-import { PlayIcon, RotateClockwiseIcon } from "@hugeicons/core-free-icons";
+import {
+  ArrowLeft01Icon,
+  PlayIcon,
+  RotateClockwiseIcon,
+} from "@hugeicons/core-free-icons";
+import { useNavigate } from "react-router-dom";
 
 interface ConfigPanelProps {
   hasContinuation: boolean;
@@ -19,6 +24,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   hasContinuation,
   parentRunId,
 }) => {
+  const navigate = useNavigate();
   const {
     runAnalysis,
     resetToInitialConfig,
@@ -228,6 +234,15 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
           className="w-full"
         >
           {isLoading ? "Running..." : "Run Analysis"}
+        </Button>
+        <Button
+          icon={ArrowLeft01Icon}
+          color="secondary"
+          size="lg"
+          onClick={() => navigate("/setup")}
+          className="w-full"
+        >
+          Back to Setup
         </Button>
 
         {hasContinuation && (

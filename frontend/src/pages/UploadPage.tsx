@@ -121,6 +121,7 @@ const UploadPage: React.FC = () => {
                 <Button
                   icon={ArrowRight01Icon}
                   color="primary"
+                  iconPosition="right"
                   size="lg"
                   onClick={() => navigate("/setup")}
                   className="w-full"

@@ -12,8 +12,14 @@ import type { Session, CachedPreview } from "../../types/session";
 import { previewConfig } from "../../api";
 import { ScrollArea } from "../ui/scroll-area";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Settings03Icon, ViewIcon } from "@hugeicons/core-free-icons";
+import {
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Settings03Icon,
+  ViewIcon,
+} from "@hugeicons/core-free-icons";
 import { hasPupilChanged } from "../../lib/configUtils";
+import { useNavigate } from "react-router-dom";
 
 interface SetupPreviewProps {
   images: number[][][] | null;
@@ -26,6 +32,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
   currentSession,
   onPreviewUpdate,
 }) => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -206,6 +213,27 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
             Generate Preview
           </Button>
         )}
+        <div className="flex nowrap gap-2">
+          <Button
+            icon={ArrowLeft01Icon}
+            color="secondary"
+            size="lg"
+            onClick={() => navigate("/upload")}
+            className="w-full"
+          >
+            Upload
+          </Button>
+          <Button
+            icon={ArrowRight01Icon}
+            iconPosition="right"
+            color="primary"
+            size="lg"
+            onClick={() => navigate("/search")}
+            className="w-full"
+          >
+            Search
+          </Button>
+        </div>
       </div>
     </div>
   );
