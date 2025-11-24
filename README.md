@@ -47,17 +47,14 @@ Phase retrieval from defocused focal plane images using Levenberg-Marquardt opti
 git clone --recurse-submodules https://github.com/Tomspace900/phase-diversity-monorepo.git
 cd phase-diversity-monorepo
 
-# Patch the core submodule (converts imports)
-./scripts/setup-core.sh
-
-# Install dependencies
+# Install dependencies and patch core submodule
 ./scripts/setup.sh
 ```
 
 This will:
 
 - Clone the repository with the core algorithm submodule
-- Apply necessary patches to the core submodule
+- Automatically patch the core submodule (converts imports, configures matplotlib)
 - Create a Python virtual environment
 - Install all Python dependencies
 - Install all Node.js dependencies
@@ -110,7 +107,6 @@ phase-diversity/
 │   └── Dockerfile
 │
 ├── scripts/               # Development scripts
-│   ├── setup-core.sh     # Patch core submodule imports
 │   ├── setup.sh          # Install dependencies
 │   ├── dev.sh            # Start dev servers
 │   └── clean.sh          # Clean build artifacts
@@ -131,7 +127,7 @@ phase-diversity/
 cd backend
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+./build.sh  # Patches submodule and installs dependencies
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -244,12 +240,32 @@ The core algorithm lives in `backend/app/core/` as a **Git submodule** pointing 
 cd backend/app/core
 git pull origin main
 cd ../../..
-./scripts/setup-core.sh  # Re-apply import patch (takes 1 second)
+
+# Re-apply patches
+# Option 1: From monorepo root (uses wrapper)
+./scripts/setup.sh
+
+# Option 2: From backend directory (direct call)
+cd backend && ./build.sh && cd ..
+
 git add backend/app/core
 git commit -m "Update core submodule to latest upstream"
 ```
 
-**Note:** The submodule requires a minimal patch (converting absolute imports to relative imports) applied by `scripts/setup-core.sh`. This patch is **not committed** to the submodule - it's applied locally after clone/update.
+**Note:** The submodule requires minimal patches applied automatically:
+
+- Converts absolute imports to relative imports (for Python package compatibility)
+- Configures matplotlib to use non-interactive 'Agg' backend (for headless operation)
+
+These patches are applied by `backend/build.sh` which is:
+
+- The main patching script (can be run standalone for backend-only builds)
+- Called automatically by `scripts/setup.sh` during monorepo setup
+- Cross-platform compatible (macOS/Linux with automatic sed syntax detection)
+- Idempotent (safe to run multiple times)
+- Creates backups before patching
+
+Patches are **not committed** to the submodule - they're applied locally after clone/update.
 
 For complete submodule documentation, see [CLAUDE.md](CLAUDE.md#core-algorithm-git-submodule).
 

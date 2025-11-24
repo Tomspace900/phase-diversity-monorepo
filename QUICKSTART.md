@@ -29,11 +29,14 @@ If any are missing, install them first:
 # Clone the repository (if not already done)
 cd phase-diversity
 
-# Run the setup script
+# Run the setup script (automatically patches core submodule)
 ./scripts/setup.sh
 ```
 
 This will:
+- ✅ Patch core submodule (via `backend/build.sh`)
+  - Converts imports to relative imports
+  - Configures matplotlib for headless operation
 - ✅ Create Python virtual environment
 - ✅ Install all Python dependencies
 - ✅ Install all Node.js dependencies
