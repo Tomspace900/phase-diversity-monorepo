@@ -71,7 +71,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         {files.length === 0 && (
           <Alert variant="info" className="flex-shrink-0">
-            <strong>NumPy arrays:</strong> If you're interested in importing or
+            <strong>NumPy arrays:</strong> If you&apos;re interested in importing or
             pasting NumPy arrays directly, let me know!
           </Alert>
         )}

@@ -17,23 +17,32 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
   results,
   configInfo,
 }) => {
-  if (!results.pupillum || results.pupillum.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        No illumination data available
-      </div>
-    );
-  }
+  const hasData = results.pupillum && results.pupillum.length > 0;
 
-  const pupillumT = transpose(results.pupillum);
-  const N = results.pupillum.length;
+  const pupillumT = useMemo(
+    () => hasData ? transpose(results.pupillum) : [],
+    [hasData, results.pupillum]
+  );
+
+  const N = useMemo(
+    () => hasData ? results.pupillum.length : 0,
+    [hasData, results.pupillum]
+  );
 
   const allValues = useMemo(() => {
+    if (!hasData) return [];
     return pupillumT.flat().filter((v) => !isNaN(v) && isFinite(v));
-  }, [pupillumT]);
+  }, [hasData, pupillumT]);
 
-  const minVal = useMemo(() => Math.min(...allValues), [allValues]);
-  const maxVal = useMemo(() => Math.max(...allValues), [allValues]);
+  const minVal = useMemo(
+    () => allValues.length > 0 ? Math.min(...allValues) : 0,
+    [allValues]
+  );
+
+  const maxVal = useMemo(
+    () => allValues.length > 0 ? Math.max(...allValues) : 0,
+    [allValues]
+  );
 
   const illuminationLayout = useMemo(
     () => ({
@@ -65,6 +74,14 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
     ],
     [pupillumT]
   );
+
+  if (!hasData) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        No illumination data available
+      </div>
+    );
+  }
 
   return (
     <Card className="border-accent-green/20">

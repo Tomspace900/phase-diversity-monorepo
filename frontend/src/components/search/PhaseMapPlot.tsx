@@ -17,36 +17,69 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
   results,
   configInfo,
 }) => {
-  if (!results.phase_map_notilt || results.phase_map_notilt.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        No phase data available
-      </div>
-    );
-  }
+  const hasData = results.phase_map_notilt && results.phase_map_notilt.length > 0;
 
-  const phaseNotiltT = transpose(results.phase_map_notilt);
-  const phaseNotiltdefT = transpose(results.phase_map_notiltdef);
-  const N = results.phase_map_notilt.length;
+  const phaseNotiltT = useMemo(
+    () => hasData ? transpose(results.phase_map_notilt) : [],
+    [hasData, results.phase_map_notilt]
+  );
+
+  const phaseNotiltdefT = useMemo(
+    () => hasData ? transpose(results.phase_map_notiltdef) : [],
+    [hasData, results.phase_map_notiltdef]
+  );
+
+  const N = useMemo(
+    () => hasData ? results.phase_map_notilt.length : 0,
+    [hasData, results.phase_map_notilt]
+  );
+
   const pdiam = configInfo.pdiam;
 
   const notiltValues = useMemo(() => {
+    if (!hasData) return [];
     return phaseNotiltT.flat().filter((v) => !isNaN(v) && isFinite(v));
-  }, [phaseNotiltT]);
+  }, [hasData, phaseNotiltT]);
 
   const notiltdefValues = useMemo(() => {
+    if (!hasData) return [];
     return phaseNotiltdefT.flat().filter((v) => !isNaN(v) && isFinite(v));
-  }, [phaseNotiltdefT]);
+  }, [hasData, phaseNotiltdefT]);
 
-  const minValNotilt = useMemo(() => Math.min(...notiltValues), [notiltValues]);
-  const maxValNotilt = useMemo(() => Math.max(...notiltValues), [notiltValues]);
+  const minValNotilt = useMemo(
+    () => notiltValues.length > 0 ? Math.min(...notiltValues) : 0,
+    [notiltValues]
+  );
+
+  const maxValNotilt = useMemo(
+    () => notiltValues.length > 0 ? Math.max(...notiltValues) : 0,
+    [notiltValues]
+  );
+
   const minValNotiltdef = useMemo(
-    () => Math.min(...notiltdefValues),
+    () => notiltdefValues.length > 0 ? Math.min(...notiltdefValues) : 0,
     [notiltdefValues]
   );
+
   const maxValNotiltdef = useMemo(
-    () => Math.max(...notiltdefValues),
+    () => notiltdefValues.length > 0 ? Math.max(...notiltdefValues) : 0,
     [notiltdefValues]
+  );
+
+  const phaseCardLayout = useMemo(
+    () => ({
+      ...createPhaseMapLayout(N, pdiam, ""),
+      margin: { l: 0, r: 0, t: 0, b: 0 },
+    }),
+    [N, pdiam]
+  );
+
+  const cleanPlotConfig = useMemo(
+    () => ({
+      ...scientificPlotConfig,
+      displayModeBar: false,
+    }),
+    []
   );
 
   const heatmapData = (z: number[][]) => ({
@@ -58,22 +91,13 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
     hovertemplate: "x: %{x}<br>y: %{y}<br>Phase: %{z:.2f} nm<extra></extra>",
   });
 
-  const phaseCardLayout = useMemo(
-    () => ({
-      ...createPhaseMapLayout(N, pdiam, ""),
-      margin: { l: 0, r: 0, t: 0, b: 0 },
-    }),
-    [N, pdiam]
-  );
-
-  // Config sans mode bar pour un affichage propre
-  const cleanPlotConfig = useMemo(
-    () => ({
-      ...scientificPlotConfig,
-      displayModeBar: false,
-    }),
-    []
-  );
+  if (!hasData) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        No phase data available
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

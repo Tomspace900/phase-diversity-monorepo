@@ -438,7 +438,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
           if (!current) return null;
 
           const currentImageCount = current.images?.images.length ?? 0;
-          let configToApply = { ...favorite.config };
+          const configToApply = { ...favorite.config };
 
           // Adjust defoc_z array if image count doesn't match
           if (currentImageCount !== favorite.imageCount) {

@@ -137,7 +137,7 @@ const AboutPage: React.FC = () => {
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
             The phase retrieval consists in iterating on the phase coefficients
-            until the produced images become as close as possible to the user's
+            until the produced images become as close as possible to the user&apos;s
             data, in a (weighted) least-square sense. The minimization is
             performed using a Levenberg-Marquardt algorithm.
           </p>
