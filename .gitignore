@@ -214,10 +214,13 @@ frontend/.vite/
 # Test data and results
 *.fits
 *.npy
-test_data/
+samples/
 
 # macOS
 .DS_Store
 
 # Docker volumes
 .docker-data/
+
+# Claude
+*CLAUDE.md
