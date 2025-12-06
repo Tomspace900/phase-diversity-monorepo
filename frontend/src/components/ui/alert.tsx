@@ -47,8 +47,7 @@ const descriptionVariants = cva("[&_p]:leading-relaxed", {
 });
 
 export interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
   icon?: React.ReactNode;
   title?: string;
 }
@@ -61,9 +60,9 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
       className={cn(alertVariants({ variant, size }), className)}
       {...props}
     >
-      <div className="flex gap-2 items-center">
-        {icon && <span className="flex-shrink-0 self-start">{icon}</span>}
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-2">
+        {icon && <span className="shrink-0 self-start">{icon}</span>}
+        <div className="min-w-0 flex-1">
           {title && <h5 className={cn(titleVariants({ size }))}>{title}</h5>}
           <div className={cn(descriptionVariants({ size }))}>{children}</div>
         </div>

@@ -52,22 +52,19 @@ export const ApplyFavoriteDialog: React.FC<ApplyFavoriteDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Apply Favorite Configuration?</DialogTitle>
           <DialogDescription>
-            This will replace your current optical configuration with the
-            selected favorite.
+            This will replace your current optical configuration with the selected favorite.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <div className="flex items-start justify-between">
-              <div className="space-y-1 flex-1">
-                <h4 className="font-semibold text-base">{favorite.name}</h4>
+              <div className="flex-1 space-y-1">
+                <h4 className="text-base font-semibold">{favorite.name}</h4>
                 {favorite.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {favorite.description}
-                  </p>
+                  <p className="text-muted-foreground text-sm">{favorite.description}</p>
                 )}
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Created:{" "}
                   {formatDate(favorite.created_at, {
                     year: "numeric",
@@ -82,26 +79,23 @@ export const ApplyFavoriteDialog: React.FC<ApplyFavoriteDialogProps> = ({
 
             <div className="flex flex-wrap gap-2 pt-3">
               <Badge variant="outline" className="text-xs">
-                <HugeiconsIcon icon={Image02Icon} className="h-3 w-3 mr-1" />
+                <HugeiconsIcon icon={Image02Icon} className="mr-1 h-3 w-3" />
                 {favorite.imageCount} images
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <HugeiconsIcon icon={CameraLensIcon} className="h-3 w-3 mr-1" />
+                <HugeiconsIcon icon={CameraLensIcon} className="mr-1 h-3 w-3" />
                 {getPupilTypeLabel(config.pupilType)}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <HugeiconsIcon icon={WaveIcon} className="h-3 w-3 mr-1" />λ ={" "}
+                <HugeiconsIcon icon={WaveIcon} className="mr-1 h-3 w-3" />λ ={" "}
                 {(config.wvl * 1e9).toFixed(0)} nm
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <HugeiconsIcon
-                  icon={RadioButtonIcon}
-                  className="h-3 w-3 mr-1"
-                />
+                <HugeiconsIcon icon={RadioButtonIcon} className="mr-1 h-3 w-3" />
                 f/{config.fratio}
               </Badge>
               <Badge variant="outline" className="text-xs">
-                <HugeiconsIcon icon={Layers01Icon} className="h-3 w-3 mr-1" />
+                <HugeiconsIcon icon={Layers01Icon} className="mr-1 h-3 w-3" />
                 {getBasisLabel(config.basis)} ({config.Jmax} modes)
               </Badge>
               {config.obscuration > 0 && (
@@ -115,18 +109,13 @@ export const ApplyFavoriteDialog: React.FC<ApplyFavoriteDialogProps> = ({
           {imageCountMismatch && (
             <Alert variant="warning" icon="⚠️" title="Image Count Mismatch">
               <p className="text-sm">
-                This favorite was created for{" "}
-                <strong>{favorite.imageCount} images</strong>, but your current
-                session has <strong>{currentImageCount} images</strong>.
+                This favorite was created for <strong>{favorite.imageCount} images</strong>, but
+                your current session has <strong>{currentImageCount} images</strong>.
               </p>
-              <p className="text-sm mt-2">
-                The defocus array will be automatically adjusted:
-              </p>
-              <ul className="text-sm mt-1 ml-4 list-disc">
+              <p className="mt-2 text-sm">The defocus array will be automatically adjusted:</p>
+              <ul className="mt-1 ml-4 list-disc text-sm">
                 {currentImageCount > favorite.imageCount ? (
-                  <li>
-                    Extra positions will be padded with the last defocus value
-                  </li>
+                  <li>Extra positions will be padded with the last defocus value</li>
                 ) : (
                   <li>The array will be truncated to match your image count</li>
                 )}

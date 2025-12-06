@@ -158,19 +158,14 @@ export const validateObscuration = (value: number): ValidationResult => {
 
   return {
     isValid: true,
-    helperText:
-      value === 0
-        ? "No obscuration"
-        : `${(value * 100).toFixed(0)}% obscuration`,
+    helperText: value === 0 ? "No obscuration" : `${(value * 100).toFixed(0)}% obscuration`,
   };
 };
 
 /**
  * Validate computation size N (must be even)
  */
-export const validateComputationSize = (
-  value: number | undefined | null
-): ValidationResult => {
+export const validateComputationSize = (value: number | undefined | null): ValidationResult => {
   if (value === undefined || value === null) {
     return {
       isValid: true,
@@ -268,9 +263,7 @@ export const validateDefocusArray = (
   if (maxAbsDefoc > 0.1) {
     return {
       isValid: false,
-      error: `Defocus value too large: ${maxAbsDefoc.toExponential(
-        2
-      )} m (>10cm)`,
+      error: `Defocus value too large: ${maxAbsDefoc.toExponential(2)} m (>10cm)`,
       helperText: "Typical defocus range: ±0.01 to ±0.05 meters",
     };
   }
@@ -292,11 +285,8 @@ export const validateDefocusArray = (
   if (allPositive || allNegative) {
     return {
       isValid: true,
-      warning: allPositive
-        ? "All defocus values positive"
-        : "All defocus values negative",
-      helperText:
-        "Consider symmetric defocus (both + and -) for better retrieval",
+      warning: allPositive ? "All defocus values positive" : "All defocus values negative",
+      helperText: "Consider symmetric defocus (both + and -) for better retrieval",
     };
   }
 
@@ -387,10 +377,7 @@ export const validateEdgeBlur = (value: number): ValidationResult => {
 /**
  * Validate Jmax (number of modes)
  */
-export const validateJmax = (
-  value: number,
-  basis: string
-): ValidationResult => {
+export const validateJmax = (value: number, basis: string): ValidationResult => {
   if (typeof value !== "number" || isNaN(value)) {
     return {
       isValid: false,
@@ -531,9 +518,7 @@ export const checkShannonSampling = (
   if (samplingFactor < 2.0) {
     return {
       isValid: false,
-      error: `Undersampled! Sampling factor: ${samplingFactor.toFixed(
-        2
-      )} < 2.0`,
+      error: `Undersampled! Sampling factor: ${samplingFactor.toFixed(2)} < 2.0`,
       helperText: "Increase wvl/fratio or decrease pixelSize",
     };
   }

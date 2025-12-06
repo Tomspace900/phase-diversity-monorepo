@@ -8,11 +8,8 @@ export function ThemeSwitcher() {
   useEffect(() => {
     // Check localStorage et system preference
     const stored = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    const initial =
-      stored === "dark" || (!stored && prefersDark) ? "dark" : "light";
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const initial = stored === "dark" || (!stored && prefersDark) ? "dark" : "light";
 
     setTheme(initial);
     document.documentElement.classList.toggle("dark", initial === "dark");

@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { useSession } from "@/contexts/SessionContext";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -13,21 +9,14 @@ import { SaveFavoriteDialog } from "./SaveFavoriteDialog";
 import { ApplyFavoriteDialog } from "./ApplyFavoriteDialog";
 import { ConfirmDialog } from "../common";
 import { formatDate } from "@/lib/utils";
-import {
-  Add01Icon,
-  Album01Icon,
-  Delete01Icon,
-  StarIcon,
-} from "@hugeicons/core-free-icons";
+import { Add01Icon, Album01Icon, Delete01Icon, StarIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 interface FavoritesManagerProps {
   iconOnly?: boolean;
 }
 
-export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
-  iconOnly = false,
-}) => {
+export const FavoritesManager: React.FC<FavoritesManagerProps> = ({ iconOnly = false }) => {
   const {
     currentSession,
     favoriteConfigs,
@@ -42,8 +31,7 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [isApplyDialogOpen, setIsApplyDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedFavorite, setSelectedFavorite] =
-    useState<FavoriteConfig | null>(null);
+  const [selectedFavorite, setSelectedFavorite] = useState<FavoriteConfig | null>(null);
   const [favoriteToDelete, setFavoriteToDelete] = useState<{
     id: string;
     name: string;
@@ -51,11 +39,7 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
 
   const currentImageCount = currentSession?.images?.images.length ?? 0;
 
-  const handleSave = async (
-    name: string,
-    config: OpticalConfig,
-    description?: string
-  ) => {
+  const handleSave = async (name: string, config: OpticalConfig, description?: string) => {
     if (!config) return;
     await saveFavoriteConfig(name, config, currentImageCount, description);
   };
@@ -86,8 +70,7 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
   };
 
   const sortedFavorites = [...favoriteConfigs].sort(
-    (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
   return (
@@ -98,7 +81,7 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
             variant={iconOnly ? "icon" : "ghost"}
             size={iconOnly ? "md" : "sm"}
             color={iconOnly ? "secondary" : "primary"}
-            className={iconOnly ? "" : "px-2 gap-1.5"}
+            className={iconOnly ? "" : "gap-1.5 px-2"}
             title="Favorite Configurations"
             icon={iconOnly ? StarIcon : undefined}
           >
@@ -106,18 +89,16 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
               <>
                 <HugeiconsIcon icon={StarIcon} className="h-4 w-4" />
                 {favoriteConfigs.length > 0 && (
-                  <span className="text-xs font-medium">
-                    {favoriteConfigs.length}
-                  </span>
+                  <span className="text-xs font-medium">{favoriteConfigs.length}</span>
                 )}
               </>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 mx-4" align="start">
+        <PopoverContent className="mx-4 w-80" align="start">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-sm">Favorite Configurations</h4>
+              <h4 className="text-sm font-medium">Favorite Configurations</h4>
               <Button
                 size="sm"
                 variant="default"
@@ -143,11 +124,9 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
               <div className="py-6 text-center">
                 <HugeiconsIcon
                   icon={StarIcon}
-                  className="mx-auto h-8 w-8 text-muted-foreground/50 mb-2"
+                  className="text-muted-foreground/50 mx-auto mb-2 h-8 w-8"
                 />
-                <p className="text-sm text-muted-foreground mb-3">
-                  No favorite configurations yet
-                </p>
+                <p className="text-muted-foreground mb-3 text-sm">No favorite configurations yet</p>
               </div>
             ) : (
               <ScrollArea className="max-h-[400px]">
@@ -156,27 +135,22 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
                     <div
                       key={favorite.id}
                       onClick={() => handleFavoriteClick(favorite)}
-                      className="group rounded-lg border bg-card p-3 hover:bg-accent/50 transition-colors cursor-pointer"
+                      className="group bg-card hover:bg-accent/50 cursor-pointer rounded-lg border p-3 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-medium text-sm truncate">
-                            {favorite.name}
-                          </h5>
+                        <div className="min-w-0 flex-1">
+                          <h5 className="truncate text-sm font-medium">{favorite.name}</h5>
                           {favorite.description && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
                               {favorite.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-3 mt-2">
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <HugeiconsIcon
-                                icon={Album01Icon}
-                                className="h-3 w-3"
-                              />
+                          <div className="mt-2 flex items-center gap-3">
+                            <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                              <HugeiconsIcon icon={Album01Icon} className="h-3 w-3" />
                               <span>{favorite.imageCount} images</span>
                             </div>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-muted-foreground text-xs">
                               {formatDate(favorite.created_at)}
                             </span>
                           </div>
@@ -185,9 +159,7 @@ export const FavoritesManager: React.FC<FavoritesManagerProps> = ({
                           <Button
                             variant="icon"
                             size="sm"
-                            onClick={(e) =>
-                              handleDelete(e, favorite.id, favorite.name)
-                            }
+                            onClick={(e) => handleDelete(e, favorite.id, favorite.name)}
                             title="Delete this favorite"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             icon={Delete01Icon}

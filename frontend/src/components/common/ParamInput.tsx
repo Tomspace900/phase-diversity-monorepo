@@ -1,13 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { ValidationResult } from "@/utils/validation";
+import { type ValidationResult } from "@/utils/validation";
 import { Label } from "../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Input } from "../ui/input";
 import { Slider } from "../ui/slider";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -85,22 +79,22 @@ const ParamInput: React.FC<ParamInputProps> = ({
       <div className="flex items-center gap-2">
         <Label className="text-sm font-medium">
           {label}
-          {required && <span className="ml-1 text-error">*</span>}
+          {required && <span className="text-error ml-1">*</span>}
         </Label>
 
         {tooltip && (
-          <div className="flex items-center relative">
+          <div className="relative flex items-center">
             <HugeiconsIcon
               icon={InformationCircleIcon}
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              className="h-4 w-4 text-muted-foreground transition-colors"
+              className="text-muted-foreground h-4 w-4 transition-colors"
               aria-label="Show tooltip"
             />
             {showTooltip && (
-              <div className="absolute left-6 -top-4 z-10 w-64 px-3 py-2 text-xs bg-popover text-popover-foreground rounded-lg shadow-lg border border-border">
+              <div className="bg-popover text-popover-foreground border-border absolute -top-4 left-6 z-10 w-64 rounded-lg border px-3 py-2 text-xs shadow-lg">
                 {tooltip}
-                <div className="absolute left-0 top-1/2 transform -translate-x-1 -translate-y-1/2 w-2 h-2 bg-popover border-l border-b border-border rotate-45"></div>
+                <div className="bg-popover border-border absolute top-1/2 left-0 h-2 w-2 -translate-x-1 -translate-y-1/2 rotate-45 transform border-b border-l"></div>
               </div>
             )}
           </div>
@@ -122,11 +116,11 @@ const ParamInput: React.FC<ParamInputProps> = ({
                 validation && !validation.isValid
                   ? "error"
                   : validation?.warning
-                  ? "warning"
-                  : "default"
+                    ? "warning"
+                    : "default"
               }
             />
-            <div className="w-1/5 min-w-24 relative">
+            <div className="relative w-1/5 min-w-24">
               <Input
                 type="number"
                 value={value}
@@ -139,18 +133,14 @@ const ParamInput: React.FC<ParamInputProps> = ({
                 className={`${unit ? "pr-10" : ""} ${validationClass}`}
               />
               {unit && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">
                   {unit}
                 </span>
               )}
             </div>
           </div>
         ) : type === "select" ? (
-          <Select
-            value={String(value)}
-            onValueChange={handleSelectChange}
-            disabled={disabled}
-          >
+          <Select value={String(value)} onValueChange={handleSelectChange} disabled={disabled}>
             <SelectTrigger className={`flex-1 ${validationClass}`}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
@@ -176,7 +166,7 @@ const ParamInput: React.FC<ParamInputProps> = ({
               className={`w-full ${unit ? "pr-10" : ""} ${validationClass}`}
             />
             {unit && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+              <span className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm">
                 {unit}
               </span>
             )}
@@ -187,21 +177,21 @@ const ParamInput: React.FC<ParamInputProps> = ({
       {validation && (
         <div className="space-y-1">
           {!validation.isValid && validation.error && (
-            <p className="text-xs text-error flex items-start gap-1">
+            <p className="text-error flex items-start gap-1 text-xs">
               <span>❌</span>
               <span>{validation.error}</span>
             </p>
           )}
 
           {validation.isValid && validation.warning && (
-            <p className="text-xs text-yellow-500 flex items-start gap-1">
+            <p className="flex items-start gap-1 text-xs text-yellow-500">
               <span>⚠️</span>
               <span>{validation.warning}</span>
             </p>
           )}
 
           {validation.helperText && (
-            <p className="text-xs text-muted-foreground flex items-start gap-1">
+            <p className="text-muted-foreground flex items-start gap-1 text-xs">
               <span>ℹ️</span>
               <span>{validation.helperText}</span>
             </p>

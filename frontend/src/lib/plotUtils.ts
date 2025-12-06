@@ -7,7 +7,7 @@
  * Used for simple image displays in grids
  */
 export const createBasicSquareLayout = () => ({
-  xaxis: { visible: false, scaleanchor: "y" as any, constrain: "domain" as const },
+  xaxis: { visible: false, scaleanchor: "y" as const, constrain: "domain" as const },
   yaxis: {
     visible: false,
     scaleratio: 1,
@@ -28,7 +28,7 @@ export const scientificPlotConfig = {
   responsive: true,
   displayModeBar: true,
   displaylogo: false,
-  modeBarButtonsToRemove: ["lasso2d", "select2d"] as any,
+  modeBarButtonsToRemove: ["lasso2d", "select2d"] as ("lasso2d" | "select2d")[],
 };
 
 /**
@@ -101,11 +101,7 @@ const createPupilCircleShape = (N: number, pdiam: number) => ({
  * Common Plotly layout for scientific phase maps
  * Ensures correct display conventions (origin='lower', transpose, zoom)
  */
-export const createPhaseMapLayout = (
-  N: number,
-  pdiam: number,
-  title: string
-) => {
+export const createPhaseMapLayout = (N: number, pdiam: number, title: string) => {
   const [zoomMin, zoomMax] = getPupilZoomBounds(N, pdiam);
 
   return {
@@ -115,7 +111,7 @@ export const createPhaseMapLayout = (
     },
     xaxis: {
       title: "",
-      scaleanchor: "y" as any,
+      scaleanchor: "y" as const,
       range: [zoomMin, zoomMax],
       showticklabels: false,
       constrain: "domain" as const,

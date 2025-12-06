@@ -5,7 +5,7 @@ import {
   Settings03Icon,
   Upload01Icon,
 } from "@hugeicons/core-free-icons";
-import { IconSvgElement } from "@hugeicons/react";
+import { type IconSvgElement } from "@hugeicons/react";
 
 export type AccentColor = "green" | "cyan" | "purple" | "pink" | "orange";
 

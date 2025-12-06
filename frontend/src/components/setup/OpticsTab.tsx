@@ -13,17 +13,10 @@ interface OpticsTabProps {
     edgeblur: ValidationResult;
     shannon: ValidationResult;
   };
-  updateConfig: <K extends keyof OpticalConfig>(
-    key: K,
-    value: OpticalConfig[K]
-  ) => void;
+  updateConfig: <K extends keyof OpticalConfig>(key: K, value: OpticalConfig[K]) => void;
 }
 
-const OpticsTab: React.FC<OpticsTabProps> = ({
-  config,
-  validations,
-  updateConfig,
-}) => {
+const OpticsTab: React.FC<OpticsTabProps> = ({ config, validations, updateConfig }) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-row space-x-8">
@@ -101,8 +94,8 @@ const OpticsTab: React.FC<OpticsTabProps> = ({
           !validations.shannon.isValid
             ? "error"
             : validations.shannon.warning
-            ? "warning"
-            : "success"
+              ? "warning"
+              : "success"
         }
         icon="🔍"
         title="Shannon Sampling Check"

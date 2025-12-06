@@ -1,4 +1,4 @@
-import { Session, FavoriteConfig } from "../types/session";
+import { type Session, type FavoriteConfig } from "../types/session";
 
 const DB_NAME = "phase-diversity-db";
 const DB_VERSION = 1;
@@ -7,7 +7,10 @@ const STORE_SESSIONS = "sessions";
 const STORE_FAVORITES = "favorite_configs";
 
 export class IndexedDBError extends Error {
-  constructor(message: string, public cause?: unknown) {
+  constructor(
+    message: string,
+    public cause?: unknown
+  ) {
     super(message);
     this.name = "IndexedDBError";
   }
@@ -73,9 +76,7 @@ export async function getAllSessions(): Promise<Session[]> {
     };
 
     request.onerror = () => {
-      reject(
-        new IndexedDBError("Failed to get all sessions", request.error)
-      );
+      reject(new IndexedDBError("Failed to get all sessions", request.error));
     };
 
     transaction.oncomplete = () => {
@@ -159,12 +160,7 @@ export async function getAllFavoriteConfigs(): Promise<FavoriteConfig[]> {
     };
 
     request.onerror = () => {
-      reject(
-        new IndexedDBError(
-          "Failed to get all favorite configs",
-          request.error
-        )
-      );
+      reject(new IndexedDBError("Failed to get all favorite configs", request.error));
     };
 
     transaction.oncomplete = () => {
@@ -173,9 +169,7 @@ export async function getAllFavoriteConfigs(): Promise<FavoriteConfig[]> {
   });
 }
 
-export async function saveFavoriteConfig(
-  config: FavoriteConfig
-): Promise<void> {
+export async function saveFavoriteConfig(config: FavoriteConfig): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_FAVORITES, "readwrite");
@@ -187,9 +181,7 @@ export async function saveFavoriteConfig(
     };
 
     request.onerror = () => {
-      reject(
-        new IndexedDBError("Failed to save favorite config", request.error)
-      );
+      reject(new IndexedDBError("Failed to save favorite config", request.error));
     };
 
     transaction.oncomplete = () => {
@@ -210,9 +202,7 @@ export async function deleteFavoriteConfig(id: string): Promise<void> {
     };
 
     request.onerror = () => {
-      reject(
-        new IndexedDBError("Failed to delete favorite config", request.error)
-      );
+      reject(new IndexedDBError("Failed to delete favorite config", request.error));
     };
 
     transaction.oncomplete = () => {

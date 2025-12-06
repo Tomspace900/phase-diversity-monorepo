@@ -31,14 +31,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 const SessionsPage: React.FC = () => {
   const navigate = useNavigate();
-  const {
-    sessions,
-    loadSession,
-    createSession,
-    deleteSession,
-    unsetCurrentSession,
-    isLoading,
-  } = useSession();
+  const { sessions, loadSession, createSession, deleteSession, unsetCurrentSession, isLoading } =
+    useSession();
 
   // Reset current session when landing on sessions page
   useEffect(() => {
@@ -55,8 +49,7 @@ const SessionsPage: React.FC = () => {
   // Sort sessions by last updated (newest first)
   const sortedSessions = React.useMemo(() => {
     return [...sessions].sort(
-      (a, b) =>
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
     );
   }, [sessions]);
 
@@ -81,8 +74,7 @@ const SessionsPage: React.FC = () => {
         await deleteSession(sessionToDelete.id);
       } catch (err) {
         alert(
-          "Failed to delete session: " +
-            (err instanceof Error ? err.message : "Unknown error")
+          "Failed to delete session: " + (err instanceof Error ? err.message : "Unknown error")
         );
       }
       setSessionToDelete(null);
@@ -101,16 +93,11 @@ const SessionsPage: React.FC = () => {
       await loadSession(session.id);
       navigate(getNextStep(session));
     } catch (err) {
-      alert(
-        "Failed to load session: " +
-          (err instanceof Error ? err.message : "Unknown error")
-      );
+      alert("Failed to load session: " + (err instanceof Error ? err.message : "Unknown error"));
     }
   };
 
-  const getSessionStatus = (
-    session: Session
-  ): { status: SessionStatus; label: string } => {
+  const getSessionStatus = (session: Session): { status: SessionStatus; label: string } => {
     const status = getCurrentSessionStatus(session);
 
     switch (status) {
@@ -130,25 +117,18 @@ const SessionsPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       {/* Header with New Session button */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Your Sessions</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-foreground text-2xl font-bold">Your Sessions</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
             {sortedSessions.length === 0
               ? "Start your first phase diversity analysis"
-              : `${sortedSessions.length} session${
-                  sortedSessions.length > 1 ? "s" : ""
-                } available`}
+              : `${sortedSessions.length} session${sortedSessions.length > 1 ? "s" : ""} available`}
           </p>
         </div>
-        <Button
-          icon={Add01Icon}
-          color="primary"
-          size="md"
-          onClick={handleCreateNewSession}
-        >
+        <Button icon={Add01Icon} color="primary" size="md" onClick={handleCreateNewSession}>
           New Session
         </Button>
       </div>
@@ -156,12 +136,7 @@ const SessionsPage: React.FC = () => {
       {/* Sessions list */}
       {sortedSessions.length === 0 ? (
         <EmptyState
-          icon={
-            <HugeiconsIcon
-              icon={Image02Icon}
-              className="h-16 w-16 text-muted-foreground/50"
-            />
-          }
+          icon={<HugeiconsIcon icon={Image02Icon} className="text-muted-foreground/50 h-16 w-16" />}
           title="No sessions yet"
           description="Create your first session to start analyzing phase diversity data."
           accentColor="cyan"
@@ -171,62 +146,45 @@ const SessionsPage: React.FC = () => {
           {sortedSessions.map((session) => {
             const { status, label } = getSessionStatus(session);
             const config = session.currentConfig;
-            const lastRun =
-              session.runs.length > 0
-                ? session.runs[session.runs.length - 1]
-                : null;
+            const lastRun = session.runs.length > 0 ? session.runs[session.runs.length - 1] : null;
 
             // Config labels
-            const pupilTypeLabel = config
-              ? getPupilTypeLabel(config.pupilType)
-              : "Not configured";
-            const basisLabel = config
-              ? getBasisLabel(config.basis)
-              : "Not configured";
+            const pupilTypeLabel = config ? getPupilTypeLabel(config.pupilType) : "Not configured";
+            const basisLabel = config ? getBasisLabel(config.basis) : "Not configured";
 
             return (
               <Card
                 key={session.id}
                 className={cn(
                   "group relative overflow-hidden transition-all duration-200",
-                  "hover:shadow-lg hover:border-primary/30 cursor-pointer"
+                  "hover:border-primary/30 cursor-pointer hover:shadow-lg"
                 )}
                 onClick={() => handleOpenSession(session)}
               >
                 <div className="flex items-start gap-6 p-6">
                   {/* Main info section */}
-                  <div className="flex-1 min-w-0 space-y-4">
+                  <div className="min-w-0 flex-1 space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-foreground truncate mb-1">
-                          {session.name ||
-                            `Session ${session.id.substring(0, 8)}`}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-foreground mb-1 truncate text-lg font-semibold">
+                          {session.name || `Session ${session.id.substring(0, 8)}`}
                         </h3>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <div className="text-muted-foreground flex items-center gap-3 text-xs">
                           <div className="flex items-center gap-1.5">
-                            <HugeiconsIcon
-                              icon={Clock01Icon}
-                              className="h-3 w-3"
-                            />
+                            <HugeiconsIcon icon={Clock01Icon} className="h-3 w-3" />
                             <span>
-                              {new Date(session.updated_at).toLocaleDateString(
-                                "fr-FR",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
+                              {new Date(session.updated_at).toLocaleDateString("fr-FR", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <HugeiconsIcon
-                              icon={Image02Icon}
-                              className="h-3 w-3"
-                            />
+                            <HugeiconsIcon icon={Image02Icon} className="h-3 w-3" />
                             <span>
                               {session.images
                                 ? `${session.images.stats.shape[0]} images (${session.images.stats.shape[1]}×${session.images.stats.shape[2]})`
@@ -235,10 +193,7 @@ const SessionsPage: React.FC = () => {
                           </div>
                           {session.runs.length > 0 && (
                             <div className="flex items-center gap-1.5">
-                              <HugeiconsIcon
-                                icon={Chart03Icon}
-                                className="h-3 w-3"
-                              />
+                              <HugeiconsIcon icon={Chart03Icon} className="h-3 w-3" />
                               <span>
                                 {session.runs.length} run
                                 {session.runs.length > 1 ? "s" : ""}
@@ -253,44 +208,30 @@ const SessionsPage: React.FC = () => {
                     {/* Configuration overview */}
                     {config ? (
                       <div className="space-y-2">
-                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        <h4 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                           Configuration
                         </h4>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline" className="text-xs">
-                            <HugeiconsIcon
-                              icon={CameraLensIcon}
-                              className="h-3 w-3 mr-1"
-                            />
+                            <HugeiconsIcon icon={CameraLensIcon} className="mr-1 h-3 w-3" />
                             {pupilTypeLabel}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
-                            <HugeiconsIcon
-                              icon={WaveIcon}
-                              className="h-3 w-3 mr-1"
-                            />
-                            λ = {(config.wvl * 1e9).toFixed(0)} nm
+                            <HugeiconsIcon icon={WaveIcon} className="mr-1 h-3 w-3" />λ ={" "}
+                            {(config.wvl * 1e9).toFixed(0)} nm
                           </Badge>
                           <Badge variant="outline" className="text-xs">
-                            <HugeiconsIcon
-                              icon={RadioButtonIcon}
-                              className="h-3 w-3 mr-1"
-                            />
+                            <HugeiconsIcon icon={RadioButtonIcon} className="mr-1 h-3 w-3" />
                             f/{config.fratio}
                           </Badge>
                           <Badge variant="outline" className="text-xs">
-                            <HugeiconsIcon
-                              icon={Layers01Icon}
-                              className="h-3 w-3 mr-1"
-                            />
+                            <HugeiconsIcon icon={Layers01Icon} className="mr-1 h-3 w-3" />
                             {basisLabel} ({config.Jmax} modes)
                           </Badge>
                           {config.defoc_z && config.defoc_z.length > 0 && (
                             <Badge variant="outline" className="text-xs">
                               Defocus:{" "}
-                              {config.defoc_z
-                                .map((d) => `${(d * 1000).toFixed(2)}mm`)
-                                .join(", ")}
+                              {config.defoc_z.map((d) => `${(d * 1000).toFixed(2)}mm`).join(", ")}
                             </Badge>
                           )}
                           {config.obscuration > 0 && (
@@ -301,7 +242,7 @@ const SessionsPage: React.FC = () => {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-muted-foreground italic">
+                      <div className="text-muted-foreground text-sm italic">
                         Configuration not set up yet
                       </div>
                     )}
@@ -311,26 +252,19 @@ const SessionsPage: React.FC = () => {
                       <>
                         <Separator />
                         <div className="space-y-2">
-                          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                          <h4 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                             Latest Analysis
                           </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                          <div className="grid grid-cols-2 gap-3 text-xs md:grid-cols-4">
                             <div>
-                              <span className="text-muted-foreground">
-                                Duration
-                              </span>
-                              <p className="font-mono font-medium text-foreground">
-                                {(lastRun.response.duration_ms / 1000).toFixed(
-                                  2
-                                )}
-                                s
+                              <span className="text-muted-foreground">Duration</span>
+                              <p className="text-foreground font-mono font-medium">
+                                {(lastRun.response.duration_ms / 1000).toFixed(2)}s
                               </p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">
-                                Phase RMS
-                              </span>
-                              <p className="font-mono font-medium text-foreground">
+                              <span className="text-muted-foreground">Phase RMS</span>
+                              <p className="text-foreground font-mono font-medium">
                                 {lastRun.response.results.phase
                                   ? `${Math.sqrt(
                                       lastRun.response.results.phase
@@ -341,25 +275,19 @@ const SessionsPage: React.FC = () => {
                               </p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">
-                                Active Flags
-                              </span>
-                              <p className="font-medium text-foreground">
+                              <span className="text-muted-foreground">Active Flags</span>
+                              <p className="text-foreground font-medium">
                                 {
                                   Object.entries(lastRun.flags).filter(
                                     ([key, val]) =>
-                                      typeof val === "boolean" &&
-                                      val &&
-                                      key.endsWith("_flag")
+                                      typeof val === "boolean" && val && key.endsWith("_flag")
                                   ).length
                                 }
                               </p>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">
-                                Modes
-                              </span>
-                              <p className="font-mono font-medium text-foreground">
+                              <span className="text-muted-foreground">Modes</span>
+                              <p className="text-foreground font-mono font-medium">
                                 {lastRun.response.results.phase?.length || 0}
                               </p>
                             </div>
@@ -370,20 +298,18 @@ const SessionsPage: React.FC = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="flex shrink-0 items-center gap-3">
                     <HugeiconsIcon
                       icon={ArrowRight01Icon}
-                      className="h-5 w-5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all"
+                      className="text-muted-foreground/50 group-hover:text-primary h-5 w-5 transition-all group-hover:translate-x-1"
                     />
 
                     <Button
                       variant="icon"
                       size="sm"
                       color="error"
-                      onClick={(e) =>
-                        handleDeleteSession(e, session.id, session.name)
-                      }
-                      className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/10 hover:text-error"
+                      onClick={(e) => handleDeleteSession(e, session.id, session.name)}
+                      className="hover:bg-error/10 hover:text-error opacity-0 transition-opacity group-hover:opacity-100"
                       icon={Delete01Icon}
                     />
                   </div>

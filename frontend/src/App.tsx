@@ -15,10 +15,10 @@ const App: React.FC = () => {
     <Router>
       <SessionProvider>
         <LogsProvider>
-          <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+          <div className="bg-background text-foreground flex h-screen flex-col overflow-hidden">
             <Header />
 
-            <main className="flex-1 px-4 py-8 overflow-auto">
+            <main className="flex-1 overflow-auto px-4 py-8">
               <Routes>
                 <Route path="/" element={<SessionsPage />} />
                 <Route path="/upload" element={<UploadPage />} />

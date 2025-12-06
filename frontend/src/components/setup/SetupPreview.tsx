@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Alert } from "../../components/ui/alert";
 import { LoadingState, StatsGrid, EmptyState, type Stat } from "../common";
@@ -27,11 +22,7 @@ interface SetupPreviewProps {
   onPreviewUpdate: (preview: CachedPreview | null) => void;
 }
 
-const SetupPreview: React.FC<SetupPreviewProps> = ({
-  images,
-  currentSession,
-  onPreviewUpdate,
-}) => {
+const SetupPreview: React.FC<SetupPreviewProps> = ({ images, currentSession, onPreviewUpdate }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,8 +65,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
       };
       onPreviewUpdate(cached);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Preview failed";
+      const errorMessage = err instanceof Error ? err.message : "Preview failed";
       setError(errorMessage);
       onPreviewUpdate(null);
     } finally {
@@ -102,8 +92,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
           label: "Sampling Factor",
           value: previewData.config_info.sampling_factor,
           precision: 2,
-          color:
-            previewData.config_info.sampling_factor >= 2 ? "green" : "orange",
+          color: previewData.config_info.sampling_factor >= 2 ? "green" : "orange",
         },
         {
           label: "Phase Modes",
@@ -122,12 +111,9 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
   const showPreview = !error && previewData && !configChanged;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {isLoading ? (
-        <LoadingState
-          message="Loading pupil preview..."
-          className="h-full w-full aspect-square"
-        />
+        <LoadingState message="Loading pupil preview..." className="aspect-square h-full w-full" />
       ) : showPreview ? (
         <ScrollArea className="flex-1">
           <div className="space-y-4 p-6">
@@ -135,7 +121,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
             <Card className="border-accent-cyan/20">
               <CardHeader className="bg-accent-cyan/5">
                 <CardTitle className="text-accent-cyan flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-accent-cyan animate-pulse" />
+                  <div className="bg-accent-cyan h-2 w-2 animate-pulse rounded-full" />
                   Pupil Preview
                 </CardTitle>
               </CardHeader>
@@ -143,7 +129,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
                 <img
                   src={previewData.pupil_image}
                   alt="Pupil"
-                  className="w-full rounded-lg border border-border"
+                  className="border-border w-full rounded-lg border"
                   style={{ imageRendering: "pixelated" }}
                 />
               </CardContent>
@@ -151,15 +137,13 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
             {/* Illumination Visualization */}
             <Card className="border-accent-green/20">
               <CardHeader className="bg-accent-green/5">
-                <CardTitle className="text-accent-green text-sm">
-                  Illumination
-                </CardTitle>
+                <CardTitle className="text-accent-green text-sm">Illumination</CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
                 <img
                   src={previewData.illumination_image}
                   alt="Illumination"
-                  className="w-full rounded-lg border border-border"
+                  className="border-border w-full rounded-lg border"
                   style={{ imageRendering: "pixelated" }}
                 />
               </CardContent>
@@ -167,13 +151,10 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
           </div>
         </ScrollArea>
       ) : configChanged ? (
-        <div className="h-full flex items-center justify-center">
+        <div className="flex h-full items-center justify-center">
           <EmptyState
             icon={
-              <HugeiconsIcon
-                icon={Settings03Icon}
-                className="h-16 w-16 text-muted-foreground/50"
-              />
+              <HugeiconsIcon icon={Settings03Icon} className="text-muted-foreground/50 h-16 w-16" />
             }
             title="Pupil configuration changed"
             description="Generate a preview to visualize your optical setup"
@@ -182,16 +163,10 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
         </div>
       ) : null}
 
-      <div className="p-4 border-t space-y-4">
+      <div className="space-y-4 border-t p-4">
         <>
           {/* Technical Info */}
-          {showPreview && (
-            <StatsGrid
-              title="Configuration Info"
-              stats={previewStats}
-              columns={2}
-            />
-          )}
+          {showPreview && <StatsGrid title="Configuration Info" stats={previewStats} columns={2} />}
 
           {/* Errors */}
           {error && (
@@ -213,7 +188,7 @@ const SetupPreview: React.FC<SetupPreviewProps> = ({
             Generate Preview
           </Button>
         )}
-        <div className="flex nowrap gap-2">
+        <div className="nowrap flex gap-2">
           <Button
             icon={ArrowLeft01Icon}
             color="secondary"

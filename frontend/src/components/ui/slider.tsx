@@ -7,9 +7,7 @@ import { cn } from "@/lib/utils";
 
 type SliderVariant = "default" | "error" | "warning" | "success";
 
-type SliderProps = React.ComponentPropsWithoutRef<
-  typeof SliderPrimitive.Root
-> & {
+type SliderProps = React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> & {
   variant?: SliderVariant;
 };
 
@@ -47,39 +45,32 @@ const variantClasses = (v: SliderVariant = "default") => {
   }
 };
 
-const Slider = React.forwardRef<
-  React.ElementRef<typeof SliderPrimitive.Root>,
-  SliderProps
->(({ className, variant = "default", ...props }, ref) => {
-  const v = variantClasses(variant);
+const Slider = React.forwardRef<React.ElementRef<typeof SliderPrimitive.Root>, SliderProps>(
+  ({ className, variant = "default", ...props }, ref) => {
+    const v = variantClasses(variant);
 
-  return (
-    <SliderPrimitive.Root
-      ref={ref}
-      className={cn(
-        "relative flex w-full touch-none select-none items-center",
-        className
-      )}
-      {...props}
-    >
-      <SliderPrimitive.Track
-        className={cn(
-          "relative h-1.5 w-full grow overflow-hidden rounded-full",
-          v.track
-        )}
+    return (
+      <SliderPrimitive.Root
+        ref={ref}
+        className={cn("relative flex w-full touch-none items-center select-none", className)}
+        {...props}
       >
-        <SliderPrimitive.Range className={cn("absolute h-full", v.range)} />
-      </SliderPrimitive.Track>
-      <SliderPrimitive.Thumb
-        className={cn(
-          "block h-4 w-4 rounded-full border bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 disabled:pointer-events-none disabled:opacity-50",
-          v.thumbBorder,
-          v.ring
-        )}
-      />
-    </SliderPrimitive.Root>
-  );
-});
+        <SliderPrimitive.Track
+          className={cn("relative h-1.5 w-full grow overflow-hidden rounded-full", v.track)}
+        >
+          <SliderPrimitive.Range className={cn("absolute h-full", v.range)} />
+        </SliderPrimitive.Track>
+        <SliderPrimitive.Thumb
+          className={cn(
+            "bg-background block h-4 w-4 rounded-full border shadow transition-colors focus-visible:ring-1 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+            v.thumbBorder,
+            v.ring
+          )}
+        />
+      </SliderPrimitive.Root>
+    );
+  }
+);
 Slider.displayName = "Slider";
 
 export { Slider };

@@ -13,7 +13,7 @@ export interface DatasetStats {
 export interface ImageInfo {
   source_file: string; // Nom du fichier d'origine
   source_hdu_index: number; // Index du HDU dans ce fichier
-  header: Record<string, any>; // Le header FITS sérialisé
+  header: Record<string, unknown>; // Le header FITS sérialisé
 }
 
 // L'objet de réponse final
@@ -232,9 +232,7 @@ export const generateDefaultConfig = (numImages: number): OpticalConfig => {
     7: [-0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03],
     8: [-0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035],
     9: [-0.04, -0.03, -0.02, -0.01, 0.0, 0.01, 0.02, 0.03, 0.04],
-    10: [
-      -0.045, -0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035, 0.045,
-    ],
+    10: [-0.045, -0.035, -0.025, -0.015, -0.005, 0.005, 0.015, 0.025, 0.035, 0.045],
   };
 
   // Clamp to valid range and get preset

@@ -1,11 +1,7 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { SquarePlot, ColorbarLegend } from "../common";
-import {
-  transpose,
-  createPhaseMapLayout,
-  scientificPlotConfig,
-} from "../../lib/plotUtils";
+import { transpose, createPhaseMapLayout, scientificPlotConfig } from "../../lib/plotUtils";
 import type { PhaseResults, ConfigInfo } from "../../types/session";
 
 interface IlluminationPlotProps {
@@ -13,36 +9,24 @@ interface IlluminationPlotProps {
   configInfo: ConfigInfo;
 }
 
-export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
-  results,
-  configInfo,
-}) => {
+export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({ results, configInfo }) => {
   const hasData = results.pupillum && results.pupillum.length > 0;
 
   const pupillumT = useMemo(
-    () => hasData ? transpose(results.pupillum) : [],
+    () => (hasData ? transpose(results.pupillum) : []),
     [hasData, results.pupillum]
   );
 
-  const N = useMemo(
-    () => hasData ? results.pupillum.length : 0,
-    [hasData, results.pupillum]
-  );
+  const N = useMemo(() => (hasData ? results.pupillum.length : 0), [hasData, results.pupillum]);
 
   const allValues = useMemo(() => {
     if (!hasData) return [];
     return pupillumT.flat().filter((v) => !isNaN(v) && isFinite(v));
   }, [hasData, pupillumT]);
 
-  const minVal = useMemo(
-    () => allValues.length > 0 ? Math.min(...allValues) : 0,
-    [allValues]
-  );
+  const minVal = useMemo(() => (allValues.length > 0 ? Math.min(...allValues) : 0), [allValues]);
 
-  const maxVal = useMemo(
-    () => allValues.length > 0 ? Math.max(...allValues) : 0,
-    [allValues]
-  );
+  const maxVal = useMemo(() => (allValues.length > 0 ? Math.max(...allValues) : 0), [allValues]);
 
   const illuminationLayout = useMemo(
     () => ({
@@ -68,8 +52,7 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
         colorscale: "Greys",
         reversescale: false,
         showscale: false,
-        hovertemplate:
-          "x: %{x}<br>y: %{y}<br>Illumination: %{z:.4f}<extra></extra>",
+        hovertemplate: "x: %{x}<br>y: %{y}<br>Illumination: %{z:.4f}<extra></extra>",
       },
     ],
     [pupillumT]
@@ -77,7 +60,7 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
 
   if (!hasData) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
+      <div className="text-muted-foreground flex h-64 items-center justify-center">
         No illumination data available
       </div>
     );
@@ -86,15 +69,10 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
   return (
     <Card className="border-accent-green/20">
       <CardHeader className="bg-accent-green/5 pb-3">
-        <CardTitle className="text-accent-green text-sm">
-          Pupil Illumination
-        </CardTitle>
+        <CardTitle className="text-accent-green text-sm">Pupil Illumination</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
-        <div
-          className="flex items-stretch gap-2"
-          style={{ minHeight: "400px" }}
-        >
+        <div className="flex items-stretch gap-2" style={{ minHeight: "400px" }}>
           <div className="flex-1">
             <SquarePlot
               data={illuminationData}
@@ -115,7 +93,7 @@ export const IlluminationPlot: React.FC<IlluminationPlotProps> = ({
         </div>
       </CardContent>
       <CardContent className="pt-2 pb-4">
-        <div className="text-sm text-muted-foreground text-center">
+        <div className="text-muted-foreground text-center text-sm">
           Coefficients: [{results.illum.map((v) => v.toFixed(3)).join(", ")}]
         </div>
       </CardContent>

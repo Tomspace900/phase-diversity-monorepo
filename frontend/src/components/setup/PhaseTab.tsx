@@ -9,27 +9,17 @@ interface PhaseTabProps {
   validations: {
     Jmax: ValidationResult;
   };
-  updateConfig: <K extends keyof OpticalConfig>(
-    key: K,
-    value: OpticalConfig[K]
-  ) => void;
+  updateConfig: <K extends keyof OpticalConfig>(key: K, value: OpticalConfig[K]) => void;
 }
 
-const PhaseTab: React.FC<PhaseTabProps> = ({
-  config,
-  validations,
-  updateConfig,
-}) => {
+const PhaseTab: React.FC<PhaseTabProps> = ({ config, validations, updateConfig }) => {
   return (
     <div className="space-y-4">
       <ParamInput
         label="Basis Type"
         value={config.basis}
         onChange={(val) =>
-          updateConfig(
-            "basis",
-            val as "eigen" | "eigenfull" | "zernike" | "zonal"
-          )
+          updateConfig("basis", val as "eigen" | "eigenfull" | "zernike" | "zonal")
         }
         type="select"
         options={["eigen", "eigenfull", "zernike", "zonal"]}
@@ -51,13 +41,7 @@ const PhaseTab: React.FC<PhaseTabProps> = ({
         validation={validations.Jmax}
       />
 
-      <Alert
-        variant="info"
-        icon="📘"
-        title="Basis Selection Guide"
-        size="sm"
-        className="mt-6"
-      >
+      <Alert variant="info" icon="📘" title="Basis Selection Guide" size="sm" className="mt-6">
         <ul className="space-y-1">
           <li>
             <strong>eigen:</strong> Best for {"<"}1000 pixels, fast computation
@@ -66,8 +50,7 @@ const PhaseTab: React.FC<PhaseTabProps> = ({
             <strong>eigenfull:</strong> All modes, slow for large pupils
           </li>
           <li>
-            <strong>zernike:</strong> Classical polynomials, good for circular
-            pupils
+            <strong>zernike:</strong> Classical polynomials, good for circular pupils
           </li>
           <li>
             <strong>zonal:</strong> Direct pixel representation (experimental)

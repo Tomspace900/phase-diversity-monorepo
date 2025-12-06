@@ -9,12 +9,7 @@ interface SquarePlotProps {
   className?: string;
 }
 
-const SquarePlot: React.FC<SquarePlotProps> = ({
-  data,
-  layout,
-  config,
-  className = "",
-}) => {
+const SquarePlot: React.FC<SquarePlotProps> = ({ data, layout, config, className = "" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [revision, setRevision] = useState(0);
 
@@ -47,13 +42,13 @@ const SquarePlot: React.FC<SquarePlotProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`w-full aspect-square rounded-md overflow-hidden ${className}`}
+      className={`aspect-square w-full overflow-hidden rounded-md ${className}`}
     >
       <Plot
         data={data}
         layout={layout}
         config={defaultConfig}
-        className="w-full h-full"
+        className="h-full w-full"
         useResizeHandler
         style={{ width: "100%", height: "100%" }}
         revision={revision}

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 
 interface ColorbarLegendProps {
-  colorscale: string | any[];
+  colorscale: string | [number, string][];
   min: number;
   max: number;
   title: string;
@@ -54,11 +54,7 @@ function getNiceNumber(value: number, round: boolean): number {
   return niceFraction * Math.pow(10, exponent);
 }
 
-function generateNiceTicks(
-  min: number,
-  max: number,
-  maxTicks: number = 5
-): string[] {
+function generateNiceTicks(min: number, max: number, maxTicks: number = 5): string[] {
   const range = max - min;
   if (range === 0) return [min.toString()];
 
@@ -109,28 +105,22 @@ const ColorbarLegend: React.FC<ColorbarLegendProps> = ({
 
   if (isHorizontal) {
     return (
-      <div className="w-full flex flex-col gap-1">
-        <div
-          className="h-3 w-full rounded-sm"
-          style={{ background: gradient }}
-        />
-        <div className="flex justify-between text-xs text-foreground px-1">
+      <div className="flex w-full flex-col gap-1">
+        <div className="h-3 w-full rounded-sm" style={{ background: gradient }} />
+        <div className="text-foreground flex justify-between px-1 text-xs">
           {ticks.map((tick, i) => (
             <span key={i}>{tick}</span>
           ))}
         </div>
-        <div className="text-xs text-center text-muted-foreground">{title}</div>
+        <div className="text-muted-foreground text-center text-xs">{title}</div>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex gap-2 items-stretch">
-      <div
-        className="w-3 rounded-sm flex-shrink-0"
-        style={{ background: gradient }}
-      />
-      <div className="flex flex-col justify-between text-xs text-foreground flex-shrink-0">
+    <div className="flex h-full items-stretch gap-2">
+      <div className="w-3 shrink-0 rounded-sm" style={{ background: gradient }} />
+      <div className="text-foreground flex shrink-0 flex-col justify-between text-xs">
         {[...ticks].reverse().map((tick, i) => (
           <span key={i} className="leading-none">
             {tick}
@@ -138,7 +128,7 @@ const ColorbarLegend: React.FC<ColorbarLegendProps> = ({
         ))}
       </div>
       <div
-        className="text-xs text-muted-foreground flex items-center justify-center"
+        className="text-muted-foreground flex items-center justify-center text-xs"
         style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
       >
         {title}

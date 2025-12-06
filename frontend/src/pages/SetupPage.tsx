@@ -1,17 +1,13 @@
+import { LoadingState } from "@/components/common";
+import { SetupPreview } from "@/components/setup";
+import SetupConfig from "@/components/setup/SetupConfig";
+import { Alert } from "@/components/ui/alert";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSession } from "../contexts/SessionContext";
 import { Button } from "../components/ui/button";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "@/components/ui/resizable";
-import { type OpticalConfig, generateDefaultConfig } from "../types/session";
-import { Alert } from "@/components/ui/alert";
-import { LoadingState } from "@/components/common";
-import SetupConfig from "@/components/setup/SetupConfig";
-import { SetupPreview } from "@/components/setup";
+import { useSession } from "../contexts/SessionContext";
+import { generateDefaultConfig, type OpticalConfig } from "../types/session";
 
 const SetupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,22 +20,24 @@ const SetupPage: React.FC = () => {
 
   useEffect(() => {
     if (!isSessionLoading && !currentSession) navigate("/");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSession, isSessionLoading]);
 
   // Initialize config when images are loaded but config is null
   useEffect(() => {
-    if (
-      currentSession?.images &&
-      !currentSession.currentConfig &&
-      !isSessionLoading
-    ) {
+    if (currentSession?.images && !currentSession.currentConfig && !isSessionLoading) {
       const numImages = currentSession.images.images.length;
       const defaultConfig = generateDefaultConfig(numImages);
       updateSessionConfig(defaultConfig).catch((err) => {
         console.error("Failed to initialize config:", err);
       });
     }
-  }, [currentSession?.images, currentSession?.currentConfig, isSessionLoading, updateSessionConfig]);
+  }, [
+    currentSession?.images,
+    currentSession?.currentConfig,
+    isSessionLoading,
+    updateSessionConfig,
+  ]);
 
   if (isSessionLoading || !currentSession) {
     return <LoadingState message="Loading session..." />;
@@ -60,26 +58,18 @@ const SetupPage: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
+    <div className="flex h-[calc(100vh-8rem)] flex-col space-y-4">
       {!hasImages && (
         <Alert variant="warning" icon="⚠️" title="No Images">
           <p>Please upload images first before configuring the setup.</p>
-          <Button
-            onClick={() => navigate("/upload")}
-            variant="outline"
-            size="sm"
-            className="mt-4"
-          >
+          <Button onClick={() => navigate("/upload")} variant="outline" size="sm" className="mt-4">
             Go to Upload
           </Button>
         </Alert>
       )}
 
       {config ? (
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="flex-1 rounded-lg border"
-        >
+        <ResizablePanelGroup direction="horizontal" className="flex-1 rounded-lg border">
           {/* Configuration Panel - Left (67%) */}
           <ResizablePanel defaultSize={67} minSize={50} maxSize={80}>
             <SetupConfig config={config} updateConfig={updateConfig} />

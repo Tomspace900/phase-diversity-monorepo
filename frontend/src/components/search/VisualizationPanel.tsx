@@ -17,29 +17,17 @@ interface VisualizationPanelProps {
   run: AnalysisRun | null;
 }
 
-export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
-  run,
-}) => {
+export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({ run }) => {
   const { isAnalysisLoading } = useSession();
 
   if (isAnalysisLoading)
-    return (
-      <LoadingState
-        message="Analysis running..."
-        className="h-full justify-center"
-      />
-    );
+    return <LoadingState message="Analysis running..." className="h-full justify-center" />;
 
   if (!run) {
     return (
-      <div className="h-full flex items-center justify-center p-8">
+      <div className="flex h-full items-center justify-center p-8">
         <EmptyState
-          icon={
-            <HugeiconsIcon
-              icon={Chart03Icon}
-              className="h-16 w-16 text-muted-foreground/50"
-            />
-          }
+          icon={<HugeiconsIcon icon={Chart03Icon} className="text-muted-foreground/50 h-16 w-16" />}
           title="No analysis yet"
           description="Run your first analysis to see results here"
           accentColor="purple"
@@ -49,9 +37,9 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <CardContent className="flex-1 overflow-hidden p-6">
-        <Tabs defaultValue="phase" className="h-full flex flex-col">
+        <Tabs defaultValue="phase" className="flex h-full flex-col">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="phase">Phase</TabsTrigger>
             <TabsTrigger value="pupil">Pupil</TabsTrigger>
@@ -59,15 +47,12 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
             <TabsTrigger value="params">Parameters</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1 mt-4">
+          <ScrollArea className="mt-4 flex-1">
             <TabsContent value="phase" className="space-y-4 pr-4">
-              <PhaseMapPlot
-                results={run.response.results}
-                configInfo={run.response.config_info}
-              />
+              <PhaseMapPlot results={run.response.results} configInfo={run.response.config_info} />
 
               <div>
-                <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                   Modal Coefficients
                 </h3>
                 <DataTable
@@ -99,30 +84,26 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <Card className="border-accent-cyan/20">
                   <CardHeader className="bg-accent-cyan/5 pb-3">
-                    <CardTitle className="text-accent-cyan text-sm">
-                      Pupil
-                    </CardTitle>
+                    <CardTitle className="text-accent-cyan text-sm">Pupil</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <img
                       src={run.response.pupil_image}
                       alt="Pupil"
-                      className="w-full rounded-lg border border-border"
+                      className="border-border w-full rounded-lg border"
                       style={{ imageRendering: "pixelated" }}
                     />
                   </CardContent>
                 </Card>
                 <Card className="border-accent-green/20">
                   <CardHeader className="bg-accent-green/5 pb-3">
-                    <CardTitle className="text-accent-green text-sm">
-                      Illumination
-                    </CardTitle>
+                    <CardTitle className="text-accent-green text-sm">Illumination</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-4">
                     <img
                       src={run.response.illumination_image}
                       alt="Illumination"
-                      className="w-full rounded-lg border border-border"
+                      className="border-border w-full rounded-lg border"
                       style={{ imageRendering: "pixelated" }}
                     />
                   </CardContent>
@@ -185,7 +166,7 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
               />
 
               <div>
-                <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                   Defocus Values
                 </h3>
                 <DataTable
@@ -213,7 +194,7 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
               </div>
 
               <div>
-                <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                   Amplitude & Background
                 </h3>
                 <DataTable
@@ -260,7 +241,7 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({
               />
 
               <div>
-                <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
                   Active Search Flags
                 </h3>
                 <div className="flex flex-wrap gap-2">

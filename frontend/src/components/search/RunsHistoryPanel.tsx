@@ -8,12 +8,7 @@ import { useSession } from "../../contexts/SessionContext";
 import { EmptyState, ConfirmDialog } from "../common";
 import type { AnalysisRun } from "../../types/session";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Clock01Icon,
-  Clock04Icon,
-  Delete01Icon,
-  PlayIcon,
-} from "@hugeicons/core-free-icons";
+import { Clock01Icon, Clock04Icon, Delete01Icon, PlayIcon } from "@hugeicons/core-free-icons";
 
 interface RunsHistoryPanelProps {
   runs: AnalysisRun[];
@@ -48,14 +43,9 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
 
   if (runs.length === 0) {
     return (
-      <div className="h-full flex-1 flex items-center justify-center p-4">
+      <div className="flex h-full flex-1 items-center justify-center p-4">
         <EmptyState
-          icon={
-            <HugeiconsIcon
-              icon={Clock04Icon}
-              className="h-16 w-16 text-muted-foreground/50"
-            />
-          }
+          icon={<HugeiconsIcon icon={Clock04Icon} className="text-muted-foreground/50 h-16 w-16" />}
           title="No runs yet"
           description="Run your first analysis to see history"
           accentColor="pink"
@@ -65,20 +55,16 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Runs History</CardTitle>
-        <p className="text-xs text-muted-foreground mt-1">
-          {runs.length} total run(s)
-        </p>
+        <p className="text-muted-foreground mt-1 text-xs">{runs.length} total run(s)</p>
       </CardHeader>
 
       <ScrollArea className="flex-1">
         <CardContent className="space-y-3">
           {sortedRuns.map((run, index) => {
-            const isSelected =
-              selectedRunId === run.id ||
-              (selectedRunId === null && index === 0);
+            const isSelected = selectedRunId === run.id || (selectedRunId === null && index === 0);
             const runNumber = runs.length - index;
 
             const activeFlags = Object.entries(run.flags)
@@ -89,28 +75,22 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
               <Card
                 key={run.id}
                 className={`cursor-pointer transition-colors ${
-                  isSelected
-                    ? "border-primary bg-primary/5"
-                    : "hover:bg-muted/50"
+                  isSelected ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                 }`}
                 onClick={() => onSelectRun(isSelected ? null : run.id)}
               >
-                <CardContent className="p-3 space-y-2">
+                <CardContent className="space-y-2 p-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <div className="font-semibold text-sm">
-                        Run #{runNumber}
-                      </div>
-                      <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <div className="text-sm font-semibold">Run #{runNumber}</div>
+                      <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
                         <HugeiconsIcon icon={Clock01Icon} className="h-3 w-3" />
                         {new Date(run.timestamp).toLocaleTimeString()}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-xs text-muted-foreground">
-                        Duration
-                      </div>
-                      <div className="text-sm font-mono">
+                      <div className="text-muted-foreground text-xs">Duration</div>
+                      <div className="font-mono text-sm">
                         {(run.response.duration_ms / 1000).toFixed(1)}s
                       </div>
                     </div>

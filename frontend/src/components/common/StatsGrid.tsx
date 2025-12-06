@@ -16,12 +16,7 @@ interface StatsGridProps {
   className?: string;
 }
 
-const StatsGrid: React.FC<StatsGridProps> = ({
-  title,
-  stats,
-  columns = 2,
-  className = "",
-}) => {
+const StatsGrid: React.FC<StatsGridProps> = ({ title, stats, columns = 2, className = "" }) => {
   // Grid column classes mapping
   const gridColsClasses = {
     1: "grid-cols-1",
@@ -33,12 +28,10 @@ const StatsGrid: React.FC<StatsGridProps> = ({
   const gridClass = gridColsClasses[columns];
 
   return (
-    <div
-      className={`overflow-hidden rounded-lg border border-border ${className}`}
-    >
+    <div className={`border-border overflow-hidden rounded-lg border ${className}`}>
       {title && (
-        <div className="bg-muted/30 px-4 py-3 border-b border-border">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <div className="bg-muted/30 border-border border-b px-4 py-3">
+          <h3 className="text-foreground text-sm font-semibold">{title}</h3>
         </div>
       )}
       <div className="p-4">
@@ -77,9 +70,7 @@ const ScientificValue: React.FC<Stat> = ({
         const exp = Math.floor(Math.log10(Math.abs(value)));
         const engExp = Math.floor(exp / 3) * 3;
         const mantissa = value / Math.pow(10, engExp);
-        return `${mantissa.toFixed(precision)}e${
-          engExp >= 0 ? "+" : ""
-        }${engExp}`;
+        return `${mantissa.toFixed(precision)}e${engExp >= 0 ? "+" : ""}${engExp}`;
       }
       case "standard":
       default:
@@ -96,28 +87,20 @@ const ScientificValue: React.FC<Stat> = ({
     const unitLower = unit.toLowerCase();
 
     // Time units
-    if (unitLower === "s" || unitLower === "ms" || unitLower === "μs")
-      return "cyan";
+    if (unitLower === "s" || unitLower === "ms" || unitLower === "μs") return "cyan";
 
     // Spatial units (pixels, image-related)
-    if (unitLower === "px" || unitLower === "pixel" || unitLower === "pixels")
-      return "purple";
+    if (unitLower === "px" || unitLower === "pixel" || unitLower === "pixels") return "purple";
 
     // Distance units
-    if (
-      unitLower === "m" ||
-      unitLower === "mm" ||
-      unitLower === "μm" ||
-      unitLower === "cm"
-    )
+    if (unitLower === "m" || unitLower === "mm" || unitLower === "μm" || unitLower === "cm")
       return "orange";
 
     // Wavelength/optical units
     if (unitLower === "nm" || unitLower === "λ") return "green";
 
     // Phase/angle units
-    if (unitLower === "rad" || unitLower === "°" || unitLower === "deg")
-      return "pink";
+    if (unitLower === "rad" || unitLower === "°" || unitLower === "deg") return "pink";
 
     // ADU (Analog-to-Digital Units) - astronomical pixel values
     if (unitLower === "adu") return "cyan";
@@ -140,8 +123,8 @@ const ScientificValue: React.FC<Stat> = ({
   const valueColor = colorClasses[finalColor];
 
   return (
-    <div className="flex justify-between items-center py-1">
-      <span className="text-sm text-muted-foreground">{label}:</span>
+    <div className="flex items-center justify-between py-1">
+      <span className="text-muted-foreground text-sm">{label}:</span>
       <span className={`font-mono text-sm font-medium ${valueColor}`}>
         {formatValue()}
         {unit && <span className="ml-1">{unit}</span>}

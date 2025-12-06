@@ -7,16 +7,9 @@ import { useLogs } from "@/contexts/LogsContext";
 import { Badge } from "@/components/ui/badge";
 import React from "react";
 import { getCurrentSessionStatus } from "@/components/common";
-import {
-  WORKFLOW_STEPS,
-  WORKFLOW_ORDER,
-  type AccentColor,
-} from "@/constants/workflow";
+import { WORKFLOW_STEPS, WORKFLOW_ORDER, type AccentColor } from "@/constants/workflow";
 import { FavoritesManager } from "@/components/setup";
-import {
-  ArrowRight01Icon,
-  ComputerTerminal01Icon,
-} from "@hugeicons/core-free-icons";
+import { ArrowRight01Icon, ComputerTerminal01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 const colorStyles: Record<
@@ -30,46 +23,36 @@ const colorStyles: Record<
   }
 > = {
   green: {
-    backgroundGradient:
-      "bg-gradient-to-br from-accent-green/15 via-accent-green/5 to-background",
-    titleGradient:
-      "bg-gradient-to-r from-accent-green to-primary bg-clip-text text-transparent",
+    backgroundGradient: "bg-gradient-to-br from-accent-green/15 via-accent-green/5 to-background",
+    titleGradient: "bg-gradient-to-r from-accent-green to-primary bg-clip-text text-transparent",
     iconBg: "bg-accent-green/10 hover:bg-accent-green/10",
     iconBorder: "border-accent-green/20",
     iconText: "text-accent-green",
   },
   cyan: {
-    backgroundGradient:
-      "bg-gradient-to-br from-accent-cyan/15 via-accent-cyan/5 to-background",
-    titleGradient:
-      "bg-gradient-to-r from-accent-cyan to-primary bg-clip-text text-transparent",
+    backgroundGradient: "bg-gradient-to-br from-accent-cyan/15 via-accent-cyan/5 to-background",
+    titleGradient: "bg-gradient-to-r from-accent-cyan to-primary bg-clip-text text-transparent",
     iconBg: "bg-accent-cyan/10 hover:bg-accent-cyan/10",
     iconBorder: "border-accent-cyan/20",
     iconText: "text-accent-cyan",
   },
   purple: {
-    backgroundGradient:
-      "bg-gradient-to-br from-accent-purple/15 via-accent-purple/5 to-background",
-    titleGradient:
-      "bg-gradient-to-r from-accent-purple to-primary bg-clip-text text-transparent",
+    backgroundGradient: "bg-gradient-to-br from-accent-purple/15 via-accent-purple/5 to-background",
+    titleGradient: "bg-gradient-to-r from-accent-purple to-primary bg-clip-text text-transparent",
     iconBg: "bg-accent-purple/10 hover:bg-accent-purple/10",
     iconBorder: "border-accent-purple/20",
     iconText: "text-accent-purple",
   },
   pink: {
-    backgroundGradient:
-      "bg-gradient-to-br from-accent-pink/15 via-accent-pink/5 to-background",
-    titleGradient:
-      "bg-gradient-to-r from-accent-pink to-primary bg-clip-text text-transparent",
+    backgroundGradient: "bg-gradient-to-br from-accent-pink/15 via-accent-pink/5 to-background",
+    titleGradient: "bg-gradient-to-r from-accent-pink to-primary bg-clip-text text-transparent",
     iconBg: "bg-accent-pink/10 hover:bg-accent-pink/10",
     iconBorder: "border-accent-pink/20",
     iconText: "text-accent-pink",
   },
   orange: {
-    backgroundGradient:
-      "bg-gradient-to-br from-accent-orange/15 via-accent-orange/5 to-background",
-    titleGradient:
-      "bg-gradient-to-r from-accent-orange to-primary bg-clip-text text-transparent",
+    backgroundGradient: "bg-gradient-to-br from-accent-orange/15 via-accent-orange/5 to-background",
+    titleGradient: "bg-gradient-to-r from-accent-orange to-primary bg-clip-text text-transparent",
     iconBg: "bg-accent-orange/10 hover:bg-accent-orange/10",
     iconBorder: "border-accent-orange/20",
     iconText: "text-accent-orange",
@@ -85,11 +68,8 @@ export function Header() {
   const currentPath = location.pathname;
   const currentStep = WORKFLOW_STEPS[currentPath];
 
-  const isWorkflowPath = (WORKFLOW_ORDER as readonly string[]).includes(
-    currentPath
-  );
-  const isOtherStepPath =
-    (currentPath === "/" || currentPath === "/about") && currentStep;
+  const isWorkflowPath = (WORKFLOW_ORDER as readonly string[]).includes(currentPath);
+  const isOtherStepPath = (currentPath === "/" || currentPath === "/about") && currentStep;
 
   const styles = currentStep ? colorStyles[currentStep.color] : null;
 
@@ -99,39 +79,33 @@ export function Header() {
     if (path === "/" || path === "/about") return true;
     if (path === "/upload") return true;
     if (path === "/setup") return status !== "needs-images";
-    if (path === "/search")
-      return status !== "needs-images" && status !== "error";
+    if (path === "/search") return status !== "needs-images" && status !== "error";
     return false;
   };
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 border-b backdrop-blur supports-[backdrop-filter]:bg-background/70",
+        "supports-[backdrop-filter]:bg-background/70 sticky top-0 z-50 border-b backdrop-blur",
         styles ? styles.backgroundGradient : "bg-card/50"
       )}
     >
       <div className="px-4 py-3">
         <nav className="flex items-center justify-between gap-4">
-          <div className="flex flex-1 items-center gap-2 min-w-0">
-            <Link
-              to="/"
-              className="flex items-center gap-2 group flex-shrink-0"
-            >
-              <div className="p-1.5 rounded-lg border bg-primary/10 border-primary/20 group-hover:bg-primary/20 transition-colors">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <Link to="/" className="group flex shrink-0 items-center gap-2">
+              <div className="bg-primary/10 border-primary/20 group-hover:bg-primary/20 rounded-lg border p-1.5 transition-colors">
                 <img src="/logo.png" alt="Logo" className="h-5 w-5" />
               </div>
-              <h1 className="text-lg font-semibold text-primary">
-                Phase Diversity
-              </h1>
+              <h1 className="text-primary text-lg font-semibold">Phase Diversity</h1>
             </Link>
 
             <HugeiconsIcon
               icon={ArrowRight01Icon}
-              className="h-4 w-4 text-muted-foreground flex-shrink-0"
+              className="text-muted-foreground h-4 w-4 shrink-0"
             />
 
-            <div className="flex items-center gap-1 overflow-x-auto flex-1 min-w-0">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
               {isWorkflowPath ? (
                 <>
                   {WORKFLOW_ORDER.map((path, index) => {
@@ -146,7 +120,7 @@ export function Header() {
                         {index > 0 && (
                           <HugeiconsIcon
                             icon={ArrowRight01Icon}
-                            className="h-3.5 w-3.5 text-muted-foreground/50 flex-shrink-0"
+                            className="text-muted-foreground/50 h-3.5 w-3.5 shrink-0"
                           />
                         )}
                         <Button
@@ -176,7 +150,7 @@ export function Header() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             <FavoritesManager iconOnly />
             {WORKFLOW_STEPS["/about"] && (
               <Button

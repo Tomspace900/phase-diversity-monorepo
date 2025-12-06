@@ -8,38 +8,35 @@ import type { OpticalConfig } from "../types/session";
  */
 const pupilAffectingParams = [
   // Pupil geometry
-  'pupilType',
-  'flattening',
-  'obscuration',
-  'angle',
-  'nedges',
+  "pupilType",
+  "flattening",
+  "obscuration",
+  "angle",
+  "nedges",
 
   // Spider configuration
-  'spiderAngle',
-  'spiderArms',
-  'spiderOffset',
+  "spiderAngle",
+  "spiderArms",
+  "spiderOffset",
 
   // Rendering
-  'edgeblur_percent',
+  "edgeblur_percent",
 
   // Sampling (affects pdiam calculation)
-  'N',
-  'wvl',
-  'fratio',
-  'pixelSize',
+  "N",
+  "wvl",
+  "fratio",
+  "pixelSize",
 
   // Illumination
-  'illum',
+  "illum",
 ] as const;
 
 /**
  * Check if pupil-affecting parameters have changed between two configs.
  * This is more efficient than deep comparing entire configs.
  */
-export function hasPupilChanged(
-  oldConfig: OpticalConfig,
-  newConfig: OpticalConfig
-): boolean {
+export function hasPupilChanged(oldConfig: OpticalConfig, newConfig: OpticalConfig): boolean {
   return pupilAffectingParams.some((param) => {
     const oldVal = oldConfig[param];
     const newVal = newConfig[param];

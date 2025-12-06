@@ -1,7 +1,5 @@
-import React from "react";
 import { cn } from "@/lib/utils";
-import { Session } from "@/types/session";
-import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
+import { type Session } from "@/types/session";
 import {
   CancelCircleIcon,
   Chart03Icon,
@@ -9,17 +7,13 @@ import {
   Loading03Icon,
   Settings03Icon,
 } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import React from "react";
 
-export type SessionStatus =
-  | "needs-images"
-  | "ready"
-  | "running"
-  | "completed"
-  | "error";
+export type SessionStatus = "needs-images" | "ready" | "running" | "completed" | "error";
 
-export const getCurrentSessionStatus = (
-  session: Session | null
-): SessionStatus => {
+// eslint-disable-next-line react-refresh/only-export-components
+export const getCurrentSessionStatus = (session: Session | null): SessionStatus => {
   if (!session) return "error";
 
   const hasImages = session.images !== null && session.images.images.length > 0;
@@ -97,18 +91,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   const config = statusConfig[status];
   const label = customLabel || config.label;
   const animationClass =
-    status === "running" || pulse === true
-      ? config.pulseClass || "animate-pulse"
-      : "";
-  const sizeClasses =
-    size === "xs" ? "px-2 py-0.5 text-xs gap-1" : "px-3 py-1 text-sm gap-1.5";
+    status === "running" || pulse === true ? config.pulseClass || "animate-pulse" : "";
+  const sizeClasses = size === "xs" ? "px-2 py-0.5 text-xs gap-1" : "px-3 py-1 text-sm gap-1.5";
   const iconSize = size === "xs" ? "h-3 w-3" : "h-3.5 w-3.5";
 
   return (
     <div
       className={cn(
-        `inline-flex items-center rounded-full border whitespace-nowrap
-         font-medium transition-all`,
+        `inline-flex items-center rounded-full border font-medium whitespace-nowrap transition-all`,
         config.bg,
         config.text,
         config.border,
@@ -116,10 +106,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
         className
       )}
     >
-      <HugeiconsIcon
-        icon={config.icon}
-        className={cn(iconSize, animationClass)}
-      />
+      <HugeiconsIcon icon={config.icon} className={cn(iconSize, animationClass)} />
       <span>{label}</span>
     </div>
   );

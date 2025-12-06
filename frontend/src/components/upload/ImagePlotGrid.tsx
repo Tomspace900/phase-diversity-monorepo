@@ -14,10 +14,7 @@ interface ImagePlotGridProps {
   imageInfo: ImageInfo[];
 }
 
-export const ImagePlotGrid: React.FC<ImagePlotGridProps> = ({
-  images,
-  imageInfo,
-}) => {
+export const ImagePlotGrid: React.FC<ImagePlotGridProps> = ({ images, imageInfo }) => {
   const baseLayout = useMemo(() => createBasicSquareLayout(), []);
 
   const heatmapData = (z: number[][]) => ({
@@ -30,7 +27,7 @@ export const ImagePlotGrid: React.FC<ImagePlotGridProps> = ({
 
   return (
     <ScrollArea className="h-full">
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 p-1">
+      <div className="grid grid-cols-2 gap-4 p-1 lg:grid-cols-3">
         {images.map((image, idx) => {
           const info = imageInfo[idx];
           return (
@@ -39,15 +36,10 @@ export const ImagePlotGrid: React.FC<ImagePlotGridProps> = ({
                 <CardTitle className="text-sm">Image {idx + 1}</CardTitle>
               </CardHeader>
               <CardContent>
-                <SquarePlot
-                  data={[heatmapData(image)]}
-                  layout={baseLayout}
-                />
-                <div className="text-xs text-muted-foreground text-center mt-2">
-                  <p className="font-mono truncate">{info.source_file}</p>
-                  {info.source_hdu_index > 0 && (
-                    <p>HDU {info.source_hdu_index}</p>
-                  )}
+                <SquarePlot data={[heatmapData(image)]} layout={baseLayout} />
+                <div className="text-muted-foreground mt-2 text-center text-xs">
+                  <p className="truncate font-mono">{info.source_file}</p>
+                  {info.source_hdu_index > 0 && <p>HDU {info.source_hdu_index}</p>}
                 </div>
               </CardContent>
             </Card>

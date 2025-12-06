@@ -43,16 +43,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <DialogHeader>
           <div className="flex items-center gap-3">
             {variant === "destructive" && (
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-error/10">
-                <HugeiconsIcon
-                  icon={Alert02Icon}
-                  className="h-5 w-5 text-error"
-                />
+              <div className="bg-error/10 flex h-10 w-10 items-center justify-center rounded-full">
+                <HugeiconsIcon icon={Alert02Icon} className="text-error h-5 w-5" />
               </div>
             )}
-            <DialogTitle
-              className={variant === "destructive" ? "text-error" : ""}
-            >
+            <DialogTitle className={variant === "destructive" ? "text-error" : ""}>
               {title}
             </DialogTitle>
           </div>
@@ -62,10 +57,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {cancelLabel}
           </Button>
-          <Button
-            color={variant === "destructive" ? "error" : "primary"}
-            onClick={handleConfirm}
-          >
+          <Button color={variant === "destructive" ? "error" : "primary"} onClick={handleConfirm}>
             {confirmLabel}
           </Button>
         </DialogFooter>

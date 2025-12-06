@@ -8,11 +8,7 @@ import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
 import { Alert } from "../ui/alert";
 import { DEFAULT_SEARCH_FLAGS, type SearchFlags } from "../../types/session";
-import {
-  ArrowLeft01Icon,
-  PlayIcon,
-  RotateClockwiseIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, PlayIcon, RotateClockwiseIcon } from "@hugeicons/core-free-icons";
 import { useNavigate } from "react-router-dom";
 
 interface ConfigPanelProps {
@@ -20,16 +16,9 @@ interface ConfigPanelProps {
   parentRunId?: string;
 }
 
-export const ConfigPanel: React.FC<ConfigPanelProps> = ({
-  hasContinuation,
-  parentRunId,
-}) => {
+export const ConfigPanel: React.FC<ConfigPanelProps> = ({ hasContinuation, parentRunId }) => {
   const navigate = useNavigate();
-  const {
-    runAnalysis,
-    resetToInitialConfig,
-    isAnalysisLoading: isLoading,
-  } = useSession();
+  const { runAnalysis, resetToInitialConfig, isAnalysisLoading: isLoading } = useSession();
   const [flags, setFlags] = useState<SearchFlags>(DEFAULT_SEARCH_FLAGS);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,11 +49,11 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
   //   .map(([key]) => key.replace("_flag", ""));
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Configuration</CardTitle>
         {hasContinuation && (
-          <Badge variant="secondary" className="w-fit mt-2">
+          <Badge variant="secondary" className="mt-2 w-fit">
             Continuing from previous run
           </Badge>
         )}
@@ -78,7 +67,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="phase_flag" className="text-sm cursor-pointer">
+                <Label htmlFor="phase_flag" className="cursor-pointer text-sm">
                   Phase Aberrations
                 </Label>
                 <Switch
@@ -89,7 +78,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="optax_flag" className="text-sm cursor-pointer">
+                <Label htmlFor="optax_flag" className="cursor-pointer text-sm">
                   Optical Axis Shifts
                 </Label>
                 <Switch
@@ -100,7 +89,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="illum_flag" className="text-sm cursor-pointer">
+                <Label htmlFor="illum_flag" className="cursor-pointer text-sm">
                   Illumination
                 </Label>
                 <Switch
@@ -111,10 +100,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="defoc_z_flag"
-                  className="text-sm cursor-pointer"
-                >
+                <Label htmlFor="defoc_z_flag" className="cursor-pointer text-sm">
                   Defocus Values
                 </Label>
                 <Switch
@@ -125,10 +111,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="amplitude_flag"
-                  className="text-sm cursor-pointer"
-                >
+                <Label htmlFor="amplitude_flag" className="cursor-pointer text-sm">
                   Amplitude Scaling
                 </Label>
                 <Switch
@@ -139,10 +122,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="background_flag"
-                  className="text-sm cursor-pointer"
-                >
+                <Label htmlFor="background_flag" className="cursor-pointer text-sm">
                   Background Level
                 </Label>
                 <Switch
@@ -153,10 +133,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="focscale_flag"
-                  className="text-sm cursor-pointer"
-                >
+                <Label htmlFor="focscale_flag" className="cursor-pointer text-sm">
                   Focal Scale
                 </Label>
                 <Switch
@@ -167,10 +144,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="objsize_flag"
-                  className="text-sm cursor-pointer"
-                >
+                <Label htmlFor="objsize_flag" className="cursor-pointer text-sm">
                   Object Size
                 </Label>
                 <Switch
@@ -181,10 +155,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="estimate_snr"
-                  className="text-sm cursor-pointer"
-                >
+                <Label htmlFor="estimate_snr" className="cursor-pointer text-sm">
                   Estimate SNR
                 </Label>
                 <Switch
@@ -223,7 +194,7 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({
       </ScrollArea>
 
       {/* Action Buttons */}
-      <div className="p-4 border-t space-y-2">
+      <div className="space-y-2 border-t p-4">
         <Button
           icon={PlayIcon}
           color="primary"

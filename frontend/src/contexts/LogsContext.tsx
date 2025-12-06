@@ -1,16 +1,17 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
   useRef,
-  ReactNode,
+  useState,
+  type ReactNode,
 } from "react";
 import { connectLogsWebSocket } from "../api";
-import { LogEntry, LogsContextType } from "../types/logs";
+import { type LogEntry, type LogsContextType } from "../types/logs";
 
 const LogsContext = createContext<LogsContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useLogs = (): LogsContextType => {
   const context = useContext(LogsContext);
   if (!context) {
@@ -115,10 +116,7 @@ export const LogsProvider: React.FC<LogsProviderProps> = ({ children }) => {
           isConnectingRef.current = false;
 
           // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
-          const backoffDelay = Math.min(
-            1000 * Math.pow(2, reconnectAttemptsRef.current),
-            30000
-          );
+          const backoffDelay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
           reconnectAttemptsRef.current++;
 
           reconnectTimeoutRef.current = setTimeout(() => {
@@ -130,7 +128,7 @@ export const LogsProvider: React.FC<LogsProviderProps> = ({ children }) => {
           setWsConnected(false);
           isConnectingRef.current = false;
         });
-      } catch (error) {
+      } catch (_error) {
         setWsConnected(false);
         isConnectingRef.current = false;
       }
@@ -147,6 +145,7 @@ export const LogsProvider: React.FC<LogsProviderProps> = ({ children }) => {
         wsRef.current.close();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleDrawer = () => {

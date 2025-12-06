@@ -1,30 +1,30 @@
 import React, {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
-  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
 } from "react";
-import {
-  Session,
-  AnalysisRun,
-  OpticalConfig,
-  SearchFlags,
-  ParsedImages,
-  FavoriteConfig,
-  CachedPreview,
-} from "../types/session";
 import { searchPhase } from "../api";
 import {
-  getAllSessions,
-  saveSession,
+  IndexedDBError,
+  deleteFavoriteConfig as deleteFavoriteConfigFromDB,
   deleteSession as deleteSessionFromDB,
   getAllFavoriteConfigs,
+  getAllSessions,
   saveFavoriteConfig as saveFavoriteConfigToDB,
-  deleteFavoriteConfig as deleteFavoriteConfigFromDB,
-  IndexedDBError,
+  saveSession,
 } from "../lib/indexedDB";
+import {
+  type AnalysisRun,
+  type CachedPreview,
+  type FavoriteConfig,
+  type OpticalConfig,
+  type ParsedImages,
+  type SearchFlags,
+  type Session,
+} from "../types/session";
 
 interface SessionContextType {
   // Read-only state
@@ -46,10 +46,7 @@ interface SessionContextType {
   updateSessionPreview: (preview: CachedPreview | null) => Promise<void>;
 
   // Analysis
-  runAnalysis: (
-    flags: SearchFlags,
-    parentRunId?: string
-  ) => Promise<AnalysisRun>;
+  runAnalysis: (flags: SearchFlags, parentRunId?: string) => Promise<AnalysisRun>;
   continueFromRun: (runId: string) => Promise<void>;
   resetToInitialConfig: () => Promise<void>;
   deleteRun: (runId: string) => Promise<void>;
@@ -82,9 +79,7 @@ const generateUUID = (): string => {
   });
 };
 
-export const SessionProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const SessionProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [favoriteConfigs, setFavoriteConfigs] = useState<FavoriteConfig[]>([]);
@@ -119,9 +114,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       } catch (error) {
         console.error("Error loading data from IndexedDB:", error);
         if (error instanceof IndexedDBError) {
-          alert(
-            `Failed to load data: ${error.message}. The app may not work correctly.`
-          );
+          alert(`Failed to load data: ${error.message}. The app may not work correctly.`);
         } else {
           alert("Failed to load data. Please refresh the page.");
         }
@@ -199,9 +192,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Failed to save session config:", err);
       });
 
-      setSessions((prev) =>
-        prev.map((s) => (s.id === current.id ? updatedSession : s))
-      );
+      setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
 
       return updatedSession;
     });
@@ -221,9 +212,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Failed to save session images:", err);
       });
 
-      setSessions((prev) =>
-        prev.map((s) => (s.id === current.id ? updatedSession : s))
-      );
+      setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
 
       return updatedSession;
     });
@@ -243,9 +232,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Failed to save session preview:", err);
       });
 
-      setSessions((prev) =>
-        prev.map((s) => (s.id === current.id ? updatedSession : s))
-      );
+      setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
 
       return updatedSession;
     });
@@ -265,9 +252,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
             return current;
           }
           if (!current.currentConfig) {
-            reject(
-              new Error("Optical config not setted up in the current session")
-            );
+            reject(new Error("Optical config not setted up in the current session"));
             return current;
           }
 
@@ -296,9 +281,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
                 console.error("Failed to save analysis run:", err);
               });
 
-              setSessions((prev) =>
-                prev.map((s) => (s.id === current.id ? updatedSession : s))
-              );
+              setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
               setCurrentSession(updatedSession);
 
               resolve(run);
@@ -343,9 +326,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Failed to save continued run config:", err);
       });
 
-      setSessions((prev) =>
-        prev.map((s) => (s.id === current.id ? updatedSession : s))
-      );
+      setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
 
       return updatedSession;
     });
@@ -378,9 +359,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Failed to save reset config:", err);
       });
 
-      setSessions((prev) =>
-        prev.map((s) => (s.id === current.id ? updatedSession : s))
-      );
+      setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
 
       return updatedSession;
     });
@@ -400,9 +379,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
         console.error("Failed to save after deleting run:", err);
       });
 
-      setSessions((prev) =>
-        prev.map((s) => (s.id === current.id ? updatedSession : s))
-      );
+      setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
 
       return updatedSession;
     });
@@ -447,14 +424,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
             if (currentImageCount > favorite.imageCount) {
               // More images now - pad with last value or 0
               const lastValue =
-                currentDefocZ.length > 0
-                  ? currentDefocZ[currentDefocZ.length - 1]
-                  : 0;
+                currentDefocZ.length > 0 ? currentDefocZ[currentDefocZ.length - 1] : 0;
               configToApply.defoc_z = [
                 ...currentDefocZ,
-                ...Array(currentImageCount - favorite.imageCount).fill(
-                  lastValue
-                ),
+                ...Array(currentImageCount - favorite.imageCount).fill(lastValue),
               ];
             } else {
               // Fewer images now - truncate
@@ -472,9 +445,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
             console.error("Failed to save loaded favorite config:", err);
           });
 
-          setSessions((prev) =>
-            prev.map((s) => (s.id === current.id ? updatedSession : s))
-          );
+          setSessions((prev) => prev.map((s) => (s.id === current.id ? updatedSession : s)));
 
           return updatedSession;
         });
@@ -498,9 +469,7 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `session_${
-        session.name
-      }_${new Date().toISOString()}.json`;
+      link.download = `session_${session.name}_${new Date().toISOString()}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -584,11 +553,10 @@ export const SessionProvider: React.FC<{ children: ReactNode }> = ({
     exportAllSessions,
   };
 
-  return (
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
-  );
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSession = (): SessionContextType => {
   const context = useContext(SessionContext);
   if (!context) {

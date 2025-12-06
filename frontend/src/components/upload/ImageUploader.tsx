@@ -8,19 +8,13 @@ import { type ParsedImages } from "../../types/session";
 import LoadingState from "../common/LoadingState";
 import EmptyState from "../common/EmptyState";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Delete01Icon,
-  FileUploadIcon,
-  Upload01Icon,
-} from "@hugeicons/core-free-icons";
+import { Delete01Icon, FileUploadIcon, Upload01Icon } from "@hugeicons/core-free-icons";
 
 interface ImageUploaderProps {
   onUploadComplete: (data: ParsedImages) => void;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({
-  onUploadComplete,
-}) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ onUploadComplete }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,11 +52,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   }
 
   return (
-    <Card className="flex flex-col h-full">
+    <Card className="flex h-full flex-col">
       <CardHeader>
         <CardTitle>Upload Images</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col space-y-4 overflow-auto p-6">
+      <CardContent className="flex flex-1 flex-col space-y-4 overflow-auto p-6">
         {error && (
           <Alert variant="error">
             <strong>Upload Error:</strong> {error}
@@ -70,16 +64,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         )}
 
         {files.length === 0 && (
-          <Alert variant="info" className="flex-shrink-0">
-            <strong>NumPy arrays:</strong> If you&apos;re interested in importing or
-            pasting NumPy arrays directly, let me know!
+          <Alert variant="info" className="shrink-0">
+            <strong>NumPy arrays:</strong> If you&apos;re interested in importing or pasting NumPy
+            arrays directly, let me know!
           </Alert>
         )}
 
         {files.length > 0 && (
-          <Card className="border-accent-cyan/30 bg-accent-cyan/5 flex-shrink-0">
+          <Card className="border-accent-cyan/30 bg-accent-cyan/5 shrink-0">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-accent-cyan">
+              <CardTitle className="text-accent-cyan text-sm">
                 Selected Files ({files.length})
               </CardTitle>
             </CardHeader>
@@ -87,11 +81,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               {files.map((file, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-2 bg-card rounded-md border border-border"
+                  className="bg-card border-border flex items-center justify-between rounded-md border p-2"
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-mono truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-sm">{file.name}</p>
+                    <p className="text-muted-foreground text-xs">
                       {(file.size / 1024).toFixed(1)} KB
                     </p>
                   </div>
@@ -115,7 +109,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             color="primary"
             size="lg"
             icon={Upload01Icon}
-            className="w-full flex-shrink-0"
+            className="w-full shrink-0"
           >
             Upload All ({files.length} file{files.length > 1 ? "s" : ""})
           </Button>
@@ -130,14 +124,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
             "application/octet-stream": [".fits", ".fit"],
           }}
           src={undefined}
-          className="flex-1 min-h-0"
+          className="min-h-0 flex-1"
         >
           <DropzoneEmptyState>
             <EmptyState
               icon={
                 <HugeiconsIcon
                   icon={FileUploadIcon}
-                  className="h-16 w-16 text-muted-foreground/50"
+                  className="text-muted-foreground/50 h-16 w-16"
                 />
               }
               title={files.length > 0 ? "Add more files" : "Upload images"}

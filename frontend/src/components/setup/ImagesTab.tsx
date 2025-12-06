@@ -11,10 +11,7 @@ interface ImagesTabProps {
     N: ValidationResult;
     defoc_z: ValidationResult;
   };
-  updateConfig: <K extends keyof OpticalConfig>(
-    key: K,
-    value: OpticalConfig[K]
-  ) => void;
+  updateConfig: <K extends keyof OpticalConfig>(key: K, value: OpticalConfig[K]) => void;
   updateDefocZ: (index: number, value: number) => void;
 }
 
@@ -39,9 +36,7 @@ const ImagesTab: React.FC<ImagesTabProps> = ({
           <ParamInput
             label="Center X"
             value={config.xc ?? ""}
-            onChange={(val) =>
-              updateConfig("xc", val === "" ? undefined : (val as number))
-            }
+            onChange={(val) => updateConfig("xc", val === "" ? undefined : (val as number))}
             type="number"
             unit="px"
             tooltip="X coordinate of image center. Leave empty for auto-center."
@@ -51,9 +46,7 @@ const ImagesTab: React.FC<ImagesTabProps> = ({
           <ParamInput
             label="Center Y"
             value={config.yc ?? ""}
-            onChange={(val) =>
-              updateConfig("yc", val === "" ? undefined : (val as number))
-            }
+            onChange={(val) => updateConfig("yc", val === "" ? undefined : (val as number))}
             type="number"
             unit="px"
             tooltip="Y coordinate of image center. Leave empty for auto-center."
@@ -64,9 +57,7 @@ const ImagesTab: React.FC<ImagesTabProps> = ({
       <ParamInput
         label="Computation Size"
         value={config.N ?? ""}
-        onChange={(val) =>
-          updateConfig("N", val === "" ? undefined : (val as number))
-        }
+        onChange={(val) => updateConfig("N", val === "" ? undefined : (val as number))}
         type="number"
         unit="px"
         placeholder="Auto (largest square)"
@@ -74,29 +65,25 @@ const ImagesTab: React.FC<ImagesTabProps> = ({
         validation={validations.N}
       />
 
-      <div className="border-t border-border pt-4 mt-4 space-y-3">
-        <h4 className="text-sm font-semibold text-foreground mb-3">
-          Defocus Values
-        </h4>
+      <div className="border-border mt-4 space-y-3 border-t pt-4">
+        <h4 className="text-foreground mb-3 text-sm font-semibold">Defocus Values</h4>
 
-        {Array.from({ length: parsedImages?.images.length || 0 }).map(
-          (_, index) => (
-            <ParamInput
-              key={index}
-              label={`Defocus Image ${index + 1}`}
-              tooltip={`Defocus for image ${index + 1} (${
-                parsedImages?.image_info[index].source_file
-              }). Positive = downstream, negative = upstream of focal plane.`}
-              value={config.defoc_z[index]}
-              onChange={(val) => updateDefocZ(index, val as number)}
-              unit="m"
-              type="number"
-              step={0.0001}
-              placeholder="0.0"
-              required
-            />
-          )
-        )}
+        {Array.from({ length: parsedImages?.images.length || 0 }).map((_, index) => (
+          <ParamInput
+            key={index}
+            label={`Defocus Image ${index + 1}`}
+            tooltip={`Defocus for image ${index + 1} (${
+              parsedImages?.image_info[index].source_file
+            }). Positive = downstream, negative = upstream of focal plane.`}
+            value={config.defoc_z[index]}
+            onChange={(val) => updateDefocZ(index, val as number)}
+            unit="m"
+            type="number"
+            step={0.0001}
+            placeholder="0.0"
+            required
+          />
+        ))}
 
         {/* Display defocus array validation */}
         {validations.defoc_z.error && (

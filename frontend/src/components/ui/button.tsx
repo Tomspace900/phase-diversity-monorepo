@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { HugeiconsIcon, IconSvgElement } from "@hugeicons/react";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Loading03Icon } from "@hugeicons/core-free-icons";
 
 type CTAColor =
@@ -94,8 +94,7 @@ const colorStyles: Record<
   },
 };
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: IconSvgElement;
   iconPosition?: "left" | "right";
   color?: CTAColor;
@@ -171,14 +170,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "group inline-flex items-center justify-center",
+          "group inline-flex cursor-pointer items-center justify-center",
           "rounded-md font-semibold transition-all duration-200",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
           variantClasses[variant],
           sizeClasses[size],
           icon && !isIconOnly && "flex-nowrap",
-          (disabled || loading) &&
-            "opacity-50 cursor-not-allowed pointer-events-none",
+          (disabled || loading) && "pointer-events-none cursor-not-allowed opacity-50",
           className
         )}
         {...props}
@@ -208,7 +206,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 className={cn(
                   iconSizeClasses[size],
                   iconClasses[variant],
-                  "transition-transform group-hover:scale-110 flex-shrink-0",
+                  "shrink-0 transition-transform group-hover:scale-110",
                   loading && "animate-spin"
                 )}
               />
@@ -216,7 +214,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             {children && (
               <span
                 className={cn(
-                  "font-medium inline-flex flex-nowrap items-center space-x-2",
+                  "inline-flex flex-nowrap items-center space-x-2 font-medium",
                   textClasses[variant]
                 )}
               >
@@ -229,7 +227,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
                 className={cn(
                   iconSizeClasses[size],
                   iconClasses[variant],
-                  "transition-transform group-hover:scale-110 group-hover:translate-x-0.5 flex-shrink-0",
+                  "shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:scale-110",
                   loading && "animate-spin"
                 )}
               />

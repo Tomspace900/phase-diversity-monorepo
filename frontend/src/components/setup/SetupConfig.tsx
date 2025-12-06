@@ -1,10 +1,5 @@
 import { useMemo } from "react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { type OpticalConfig } from "../../types/session";
 import { useSession } from "../../contexts/SessionContext";
 import {
@@ -28,10 +23,7 @@ const SetupConfig = ({
   updateConfig,
 }: {
   config: OpticalConfig;
-  updateConfig: <K extends keyof OpticalConfig>(
-    key: K,
-    value: OpticalConfig[K]
-  ) => void;
+  updateConfig: <K extends keyof OpticalConfig>(key: K, value: OpticalConfig[K]) => void;
 }) => {
   const { currentSession } = useSession();
   const expectedImagesCount = currentSession?.images?.images.length ?? 0;
@@ -50,11 +42,7 @@ const SetupConfig = ({
       Jmax: validateJmax(config.Jmax, config.basis),
       objectFWHM: validateObjectFWHM(config.object_fwhm_pix),
       flattening: validateFlattening(config.flattening),
-      shannon: checkShannonSampling(
-        config.wvl,
-        config.fratio,
-        config.pixelSize
-      ),
+      shannon: checkShannonSampling(config.wvl, config.fratio, config.pixelSize),
     };
   }, [
     config.wvl,
@@ -120,7 +108,7 @@ const SetupConfig = ({
   return (
     <div className="h-full overflow-auto p-6">
       <Tabs defaultValue="images">
-        <TabsList className="grid w-full grid-cols-5 mb-6">
+        <TabsList className="mb-6 grid w-full grid-cols-5">
           <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="pupil">Pupil</TabsTrigger>
           <TabsTrigger value="optics">Optics</TabsTrigger>

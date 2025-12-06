@@ -14,10 +14,7 @@ interface PupilTabProps {
     flattening: ValidationResult;
     edgeblur: ValidationResult;
   };
-  updateConfig: <K extends keyof OpticalConfig>(
-    key: K,
-    value: OpticalConfig[K]
-  ) => void;
+  updateConfig: <K extends keyof OpticalConfig>(key: K, value: OpticalConfig[K]) => void;
   updateSpiderArms: (index: number, value: number) => void;
   addSpiderArm: () => void;
   removeSpiderArm: () => void;
@@ -41,9 +38,9 @@ const PupilTab: React.FC<PupilTabProps> = ({
     <div className="space-y-4">
       {/* Pupil Type - Radio Buttons */}
       <div className="mb-6">
-        <Label className="block text-sm font-medium mb-3">Pupil Type</Label>
+        <Label className="mb-3 block text-sm font-medium">Pupil Type</Label>
         <RadioGroup
-          className="flex flex-row w-full justify-evenly space-x-4"
+          className="flex w-full flex-row justify-evenly space-x-4"
           value={String(config.pupilType)}
           onValueChange={(value) => updateConfig("pupilType", parseInt(value))}
         >
@@ -160,8 +157,8 @@ const PupilTab: React.FC<PupilTabProps> = ({
 
       {/* Spider Arms - Dynamic */}
       {config.pupilType !== 2 && (
-        <div className="border-t border-border pt-4 mt-4">
-          <div className="flex items-center justify-between mb-3">
+        <div className="border-border mt-4 border-t pt-4">
+          <div className="mb-3 flex items-center justify-between">
             <Label className="block text-sm font-medium">
               Spider Arms ({config.spiderArms.length})
             </Label>
@@ -181,9 +178,7 @@ const PupilTab: React.FC<PupilTabProps> = ({
           </div>
 
           {config.spiderArms.length === 0 && (
-            <p className="text-sm text-muted-foreground italic mb-2">
-              No spider arms configured
-            </p>
+            <p className="text-muted-foreground mb-2 text-sm italic">No spider arms configured</p>
           )}
 
           {config.spiderArms.map((width, i) => (
@@ -223,8 +218,8 @@ const PupilTab: React.FC<PupilTabProps> = ({
       )}
 
       {/* Illumination Zernike Coefficients - Dynamic */}
-      <div className="border-t border-border pt-4 mt-4">
-        <div className="flex items-center justify-between mb-3">
+      <div className="border-border mt-4 border-t pt-4">
+        <div className="mb-3 flex items-center justify-between">
           <Label className="block text-sm font-medium">
             Illumination Zernike Coefficients ({config.illum.length})
           </Label>
@@ -246,9 +241,7 @@ const PupilTab: React.FC<PupilTabProps> = ({
         {config.illum.map((coeff, idx) => (
           <div key={idx} className="mb-3">
             <ParamInput
-              label={
-                idx === 0 ? "Piston (flat illumination)" : `Zernike ${idx + 1}`
-              }
+              label={idx === 0 ? "Piston (flat illumination)" : `Zernike ${idx + 1}`}
               value={coeff}
               onChange={(val) => updateIllum(idx, val as number)}
               type="number"

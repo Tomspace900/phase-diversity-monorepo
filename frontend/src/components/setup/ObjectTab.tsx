@@ -8,17 +8,10 @@ interface ObjectTabProps {
   validations: {
     objectFWHM: ValidationResult;
   };
-  updateConfig: <K extends keyof OpticalConfig>(
-    key: K,
-    value: OpticalConfig[K]
-  ) => void;
+  updateConfig: <K extends keyof OpticalConfig>(key: K, value: OpticalConfig[K]) => void;
 }
 
-const ObjectTab: React.FC<ObjectTabProps> = ({
-  config,
-  validations,
-  updateConfig,
-}) => {
+const ObjectTab: React.FC<ObjectTabProps> = ({ config, validations, updateConfig }) => {
   return (
     <div className="space-y-4">
       <ParamInput
@@ -38,9 +31,7 @@ const ObjectTab: React.FC<ObjectTabProps> = ({
       <ParamInput
         label="Object Shape"
         value={config.object_shape}
-        onChange={(val) =>
-          updateConfig("object_shape", val as "gaussian" | "disk" | "square")
-        }
+        onChange={(val) => updateConfig("object_shape", val as "gaussian" | "disk" | "square")}
         type="select"
         options={["gaussian", "disk", "square"]}
         tooltip="Shape of the object being observed"

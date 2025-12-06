@@ -1,11 +1,7 @@
 import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { StatsGrid, DataTable, SquarePlot, ColorbarLegend } from "../common";
-import {
-  transpose,
-  createPhaseMapLayout,
-  scientificPlotConfig,
-} from "../../lib/plotUtils";
+import { transpose, createPhaseMapLayout, scientificPlotConfig } from "../../lib/plotUtils";
 import type { PhaseResults, ConfigInfo } from "../../types/session";
 
 interface PhaseMapPlotProps {
@@ -13,24 +9,21 @@ interface PhaseMapPlotProps {
   configInfo: ConfigInfo;
 }
 
-export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
-  results,
-  configInfo,
-}) => {
+export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({ results, configInfo }) => {
   const hasData = results.phase_map_notilt && results.phase_map_notilt.length > 0;
 
   const phaseNotiltT = useMemo(
-    () => hasData ? transpose(results.phase_map_notilt) : [],
+    () => (hasData ? transpose(results.phase_map_notilt) : []),
     [hasData, results.phase_map_notilt]
   );
 
   const phaseNotiltdefT = useMemo(
-    () => hasData ? transpose(results.phase_map_notiltdef) : [],
+    () => (hasData ? transpose(results.phase_map_notiltdef) : []),
     [hasData, results.phase_map_notiltdef]
   );
 
   const N = useMemo(
-    () => hasData ? results.phase_map_notilt.length : 0,
+    () => (hasData ? results.phase_map_notilt.length : 0),
     [hasData, results.phase_map_notilt]
   );
 
@@ -47,22 +40,22 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
   }, [hasData, phaseNotiltdefT]);
 
   const minValNotilt = useMemo(
-    () => notiltValues.length > 0 ? Math.min(...notiltValues) : 0,
+    () => (notiltValues.length > 0 ? Math.min(...notiltValues) : 0),
     [notiltValues]
   );
 
   const maxValNotilt = useMemo(
-    () => notiltValues.length > 0 ? Math.max(...notiltValues) : 0,
+    () => (notiltValues.length > 0 ? Math.max(...notiltValues) : 0),
     [notiltValues]
   );
 
   const minValNotiltdef = useMemo(
-    () => notiltdefValues.length > 0 ? Math.min(...notiltdefValues) : 0,
+    () => (notiltdefValues.length > 0 ? Math.min(...notiltdefValues) : 0),
     [notiltdefValues]
   );
 
   const maxValNotiltdef = useMemo(
-    () => notiltdefValues.length > 0 ? Math.max(...notiltdefValues) : 0,
+    () => (notiltdefValues.length > 0 ? Math.max(...notiltdefValues) : 0),
     [notiltdefValues]
   );
 
@@ -93,7 +86,7 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
 
   if (!hasData) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
+      <div className="text-muted-foreground flex h-64 items-center justify-center">
         No phase data available
       </div>
     );
@@ -110,7 +103,7 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
                 <br />({results.rms_stats.weighted_notilt.toFixed(1)} nm rms)
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 flex flex-col gap-4">
+            <CardContent className="flex flex-col gap-4 p-4">
               <SquarePlot
                 data={[heatmapData(phaseNotiltT)]}
                 layout={phaseCardLayout}
@@ -136,7 +129,7 @@ export const PhaseMapPlot: React.FC<PhaseMapPlotProps> = ({
                 <br />({results.rms_stats.weighted_notiltdef.toFixed(1)} nm rms)
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 flex flex-col gap-4">
+            <CardContent className="flex flex-col gap-4 p-4">
               <SquarePlot
                 data={[heatmapData(phaseNotiltdefT)]}
                 layout={phaseCardLayout}
