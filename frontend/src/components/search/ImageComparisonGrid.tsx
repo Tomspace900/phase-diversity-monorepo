@@ -1,9 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { applyFFTShift, scientificPlotConfig } from "../../lib/plotUtils";
 import type { AnalysisRun } from "../../types/session";
 import { SquarePlot } from "../common";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Slider } from "../ui/slider";
+import { Switch } from "../ui/switch";
+import { Label } from "../ui/label";
 
 interface ImageComparisonGridProps {
   run: AnalysisRun;
@@ -14,6 +16,18 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({ run })
     run.response.results;
 
   const [alpha, setAlpha] = useState(0.5);
+  const [blinkMode, setBlinkMode] = useState(false);
+  const [blinkImageIndex, setBlinkImageIndex] = useState(0);
+
+  // Blink mode cycling
+  useEffect(() => {
+    if (blinkMode && origin_images.length > 1) {
+      const interval = setInterval(() => {
+        setBlinkImageIndex((prev) => (prev + 1) % origin_images.length);
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [blinkMode, origin_images.length]);
 
   const baseLayout = useMemo(
     () => ({
@@ -43,6 +57,33 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({ run })
     hovertemplate: "x: %{x}<br>y: %{y}<br>Value: %{z:.2f}<extra></extra>",
   });
 
+  // Calculate per-image metrics
+  const calculateImageRMS = (diff: number[][]) => {
+    let sumSquared = 0;
+    let count = 0;
+    diff.forEach((row) =>
+      row.forEach((val) => {
+        sumSquared += val * val;
+        count++;
+      })
+    );
+    return Math.sqrt(sumSquared / count);
+  };
+
+  const calculatePeakDiff = (diff: number[][]) => {
+    let max = 0;
+    diff.forEach((row) =>
+      row.forEach((val) => {
+        const abs = Math.abs(val);
+        if (abs > max) max = abs;
+      })
+    );
+    return max;
+  };
+
+  // Determine which images to render
+  const imagesToRender = blinkMode ? [blinkImageIndex] : origin_images.map((_, idx) => idx);
+
   return (
     <div className="space-y-4">
       <div className="bg-muted/30 space-y-3 rounded p-4">
@@ -68,6 +109,15 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({ run })
             className="flex-1"
           />
         </div>
+
+        {origin_images.length > 1 && (
+          <div className="flex items-center gap-2">
+            <Switch id="blink-mode" checked={blinkMode} onCheckedChange={setBlinkMode} />
+            <Label htmlFor="blink-mode" className="cursor-pointer text-sm">
+              Blink Mode (500ms)
+            </Label>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -75,7 +125,7 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({ run })
         <div className="text-center font-semibold">Model</div>
         <div className="text-center font-semibold">Difference</div>
 
-        {origin_images.map((_, idx) => {
+        {imagesToRender.map((idx) => {
           const observedShifted = applyFFTShift(
             origin_images[idx].map((row) => row.map((val) => val - background[idx])),
             alpha
@@ -142,6 +192,10 @@ export const ImageComparisonGrid: React.FC<ImageComparisonGridProps> = ({ run })
                     layout={layoutWithAnnotation}
                     config={plotConfig}
                   />
+                  <div className="text-muted-foreground mt-2 grid grid-cols-2 gap-2 text-xs">
+                    <div>RMS: {calculateImageRMS(image_differences[idx]).toFixed(2)}</div>
+                    <div>Peak: {calculatePeakDiff(image_differences[idx]).toFixed(2)}</div>
+                  </div>
                 </CardContent>
               </Card>
             </React.Fragment>

@@ -1,17 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Alert } from "../ui/alert";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { EmptyState, StatsGrid, DataTable, LoadingState } from "../common";
 import { ScrollArea } from "../ui/scroll-area";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { useSession } from "../../contexts/SessionContext";
 import { PhaseMapPlot } from "./PhaseMapPlot";
 import { ImageComparisonGrid } from "./ImageComparisonGrid";
 import { IlluminationPlot } from "./IlluminationPlot";
+import { ZernikeBarChart } from "./ZernikeBarChart";
 import type { AnalysisRun } from "../../types/session";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Chart03Icon } from "@hugeicons/core-free-icons";
+import { Chart03Icon, ChevronDownIcon } from "@hugeicons/core-free-icons";
 
 interface VisualizationPanelProps {
   run: AnalysisRun | null;
@@ -19,6 +22,7 @@ interface VisualizationPanelProps {
 
 export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({ run }) => {
   const { isAnalysisLoading } = useSession();
+  const [showCoeffTable, setShowCoeffTable] = useState(false);
 
   if (isAnalysisLoading)
     return <LoadingState message="Analysis running..." className="h-full justify-center" />;
@@ -51,33 +55,46 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({ run }) =
             <TabsContent value="phase" className="space-y-4 pr-4">
               <PhaseMapPlot results={run.response.results} configInfo={run.response.config_info} />
 
-              <div>
-                <h3 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wide uppercase">
-                  Modal Coefficients
-                </h3>
-                <DataTable
-                  columns={[
-                    {
-                      key: "mode",
-                      label: "Mode",
-                      type: "number",
-                      precision: 0,
-                    },
-                    {
-                      key: "coefficient",
-                      label: "Coefficient",
-                      type: "scientific",
-                      precision: 3,
-                      unit: "rad",
-                    },
-                  ]}
-                  data={run.response.results.phase.map((coef, idx) => ({
-                    mode: idx + 1,
-                    coefficient: coef,
-                  }))}
-                  compact
-                />
-              </div>
+              <ZernikeBarChart
+                coefficients={run.response.results.phase}
+                basis={run.response.config_info.basis_type}
+              />
+
+              <Collapsible open={showCoeffTable} onOpenChange={setShowCoeffTable}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full justify-between">
+                    Show Coefficient Table
+                    <HugeiconsIcon
+                      icon={ChevronDownIcon}
+                      className={`h-4 w-4 transition-transform ${showCoeffTable ? "rotate-180" : ""}`}
+                    />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <DataTable
+                    columns={[
+                      {
+                        key: "mode",
+                        label: "Mode",
+                        type: "number",
+                        precision: 0,
+                      },
+                      {
+                        key: "coefficient",
+                        label: "Coefficient",
+                        type: "scientific",
+                        precision: 3,
+                        unit: "rad",
+                      },
+                    ]}
+                    data={run.response.results.phase.map((coef, idx) => ({
+                      mode: idx + 1,
+                      coefficient: coef,
+                    }))}
+                    compact
+                  />
+                </CollapsibleContent>
+              </Collapsible>
             </TabsContent>
 
             <TabsContent value="pupil" className="space-y-4 pr-4">
