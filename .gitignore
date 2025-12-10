@@ -221,6 +221,3 @@ samples/
 
 # Docker volumes
 .docker-data/
-
-# Claude
-*CLAUDE.md
