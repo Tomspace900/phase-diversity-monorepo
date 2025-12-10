@@ -1,14 +1,24 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import React, { useState, useMemo } from "react";
+import { CardHeader, CardTitle } from "../ui/card";
 import { ScrollArea } from "../ui/scroll-area";
-import { Separator } from "../ui/separator";
 import { useSession } from "../../contexts/SessionContext";
 import { EmptyState, ConfirmDialog } from "../common";
 import type { AnalysisRun } from "../../types/session";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Clock01Icon, Clock04Icon, Delete01Icon, PlayIcon } from "@hugeicons/core-free-icons";
+import { Clock04Icon } from "@hugeicons/core-free-icons";
+import { RunCard } from "./RunCard";
+import { RunFilters } from "./RunFilters";
+import { SessionStats } from "./SessionStats";
+import {
+  buildRunTree,
+  flattenRunTree,
+  filterRuns,
+  sortRuns,
+  calculateSessionStats,
+  type RunFilters as RunFiltersType,
+  type RunSortKey,
+  type RunSortOrder,
+} from "../../lib/runUtils";
 
 interface RunsHistoryPanelProps {
   runs: AnalysisRun[];
@@ -23,13 +33,44 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
 }) => {
   const { continueFromRun, deleteRun } = useSession();
 
+  // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [runToDelete, setRunToDelete] = useState<string | null>(null);
 
-  const sortedRuns = [...runs].reverse(); // Show newest first
+  // Filter and sort state
+  const [filters, setFilters] = useState<RunFiltersType>({
+    searchTerm: "",
+    status: "all",
+    minChiSquared: null,
+    maxChiSquared: null,
+    minRMS: null,
+    maxRMS: null,
+    minDuration: null,
+    maxDuration: null,
+    activeFlags: [],
+  });
+  const [sortKey, setSortKey] = useState<RunSortKey>("time");
+  const [sortOrder, setSortOrder] = useState<RunSortOrder>("desc");
 
-  const handleDeleteRun = (e: React.MouseEvent, runId: string) => {
-    e.stopPropagation();
+  // Build hierarchy
+  const runTree = useMemo(() => buildRunTree(runs), [runs]);
+  const flatTree = useMemo(() => flattenRunTree(runTree), [runTree]);
+
+  // Apply filters and sort
+  const filteredNodes = useMemo(
+    () => filterRuns(flatTree, filters),
+    [flatTree, filters]
+  );
+  const sortedNodes = useMemo(
+    () => sortRuns(filteredNodes, sortKey, sortOrder),
+    [filteredNodes, sortKey, sortOrder]
+  );
+
+  // Calculate stats
+  const sessionStats = useMemo(() => calculateSessionStats(runs), [runs]);
+
+  // Handlers
+  const handleDeleteRun = (runId: string) => {
     setRunToDelete(runId);
     setIsDeleteDialogOpen(true);
   };
@@ -39,6 +80,11 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
       await deleteRun(runToDelete);
       setRunToDelete(null);
     }
+  };
+
+  const handleSortChange = (key: RunSortKey, order: RunSortOrder) => {
+    setSortKey(key);
+    setSortOrder(order);
   };
 
   if (runs.length === 0) {
@@ -58,91 +104,43 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
     <div className="flex h-full flex-col">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg">Runs History</CardTitle>
-        <p className="text-muted-foreground mt-1 text-xs">{runs.length} total run(s)</p>
       </CardHeader>
 
-      <ScrollArea className="flex-1">
-        <CardContent className="space-y-3">
-          {sortedRuns.map((run, index) => {
-            const isSelected = selectedRunId === run.id || (selectedRunId === null && index === 0);
-            const runNumber = runs.length - index;
+      <div className="space-y-2 px-4">
+        <SessionStats
+          stats={sessionStats}
+          onClickBestChi={(runId) => onSelectRun(runId)}
+          onClickBestRMS={(runId) => onSelectRun(runId)}
+        />
+        <RunFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          sortKey={sortKey}
+          sortOrder={sortOrder}
+          onSortChange={handleSortChange}
+        />
+      </div>
 
-            const activeFlags = Object.entries(run.flags)
-              .filter(([, value]) => typeof value === "boolean" && value)
-              .map(([key]) => key.replace("_flag", ""));
+      <ScrollArea className="flex-1 px-4">
+        <div className="space-y-3 py-4">
+          {sortedNodes.map((node, index) => {
+            const isSelected = selectedRunId === node.run.id;
+            // Calculate run number based on original position in runs array
+            const runNumber = runs.findIndex((r) => r.id === node.run.id) + 1;
 
             return (
-              <Card
-                key={run.id}
-                className={`cursor-pointer transition-colors ${
-                  isSelected ? "border-primary bg-primary/5" : "hover:bg-muted/50"
-                }`}
-                onClick={() => onSelectRun(isSelected ? null : run.id)}
-              >
-                <CardContent className="space-y-2 p-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-sm font-semibold">Run #{runNumber}</div>
-                      <div className="text-muted-foreground mt-0.5 flex items-center gap-1 text-xs">
-                        <HugeiconsIcon icon={Clock01Icon} className="h-3 w-3" />
-                        {new Date(run.timestamp).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-muted-foreground text-xs">Duration</div>
-                      <div className="font-mono text-sm">
-                        {(run.response.duration_ms / 1000).toFixed(1)}s
-                      </div>
-                    </div>
-                  </div>
-
-                  {run.parent_run_id && (
-                    <Badge variant="outline" className="text-xs">
-                      Continued from previous
-                    </Badge>
-                  )}
-
-                  {activeFlags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {activeFlags.map((flag) => (
-                        <Badge key={flag} variant="outline" className="text-xs">
-                          {flag.replace("_", " ")}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  {isSelected && (
-                    <>
-                      <Separator className="my-2" />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            await continueFromRun(run.id);
-                          }}
-                          icon={PlayIcon}
-                        >
-                          Continue
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="icon"
-                          color="error"
-                          icon={Delete01Icon}
-                          onClick={(e) => handleDeleteRun(e, run.id)}
-                        />
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+              <RunCard
+                key={node.run.id}
+                node={node}
+                runNumber={runNumber}
+                isSelected={isSelected}
+                onSelect={() => onSelectRun(isSelected ? null : node.run.id)}
+                onContinue={async () => await continueFromRun(node.run.id)}
+                onDelete={() => handleDeleteRun(node.run.id)}
+              />
             );
           })}
-        </CardContent>
+        </div>
       </ScrollArea>
 
       <ConfirmDialog
