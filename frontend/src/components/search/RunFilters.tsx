@@ -1,17 +1,13 @@
+import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import React, { useState } from "react";
+import type { RunFilters as RunFiltersType, RunSortKey, RunSortOrder } from "../../lib/runUtils";
+import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Button } from "../ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ChevronDownIcon } from "@hugeicons/core-free-icons";
-import type {
-  RunFilters as RunFiltersType,
-  RunSortKey,
-  RunSortOrder,
-} from "../../lib/runUtils";
 
 interface RunFiltersProps {
   filters: RunFiltersType;
@@ -50,7 +46,7 @@ export const RunFilters: React.FC<RunFiltersProps> = ({
         <Button variant="outline" size="sm" className="w-full justify-between">
           Filters & Sort
           <HugeiconsIcon
-            icon={ChevronDownIcon}
+            icon={ArrowDown01Icon}
             className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
           />
         </Button>
@@ -67,10 +63,7 @@ export const RunFilters: React.FC<RunFiltersProps> = ({
                 id="search"
                 placeholder="Filter by timestamp..."
                 value={filters.searchTerm}
-                onChange={(e) =>
-                  onFiltersChange({ ...filters, searchTerm: e.target.value })
-                }
-                size="sm"
+                onChange={(e) => onFiltersChange({ ...filters, searchTerm: e.target.value })}
               />
             </div>
 
@@ -88,7 +81,7 @@ export const RunFilters: React.FC<RunFiltersProps> = ({
                   })
                 }
               >
-                <SelectTrigger id="status" size="sm">
+                <SelectTrigger id="status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -117,7 +110,6 @@ export const RunFilters: React.FC<RunFiltersProps> = ({
                       minRMS: e.target.value ? parseFloat(e.target.value) : null,
                     })
                   }
-                  size="sm"
                 />
               </div>
               <div>
@@ -135,7 +127,6 @@ export const RunFilters: React.FC<RunFiltersProps> = ({
                       maxRMS: e.target.value ? parseFloat(e.target.value) : null,
                     })
                   }
-                  size="sm"
                 />
               </div>
             </div>
@@ -148,11 +139,9 @@ export const RunFilters: React.FC<RunFiltersProps> = ({
                 </Label>
                 <Select
                   value={sortKey}
-                  onValueChange={(value) =>
-                    onSortChange(value as RunSortKey, sortOrder)
-                  }
+                  onValueChange={(value) => onSortChange(value as RunSortKey, sortOrder)}
                 >
-                  <SelectTrigger id="sortKey" size="sm">
+                  <SelectTrigger id="sortKey">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -169,11 +158,9 @@ export const RunFilters: React.FC<RunFiltersProps> = ({
                 </Label>
                 <Select
                   value={sortOrder}
-                  onValueChange={(value) =>
-                    onSortChange(sortKey, value as RunSortOrder)
-                  }
+                  onValueChange={(value) => onSortChange(sortKey, value as RunSortOrder)}
                 >
-                  <SelectTrigger id="sortOrder" size="sm">
+                  <SelectTrigger id="sortOrder">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

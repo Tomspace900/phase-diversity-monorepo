@@ -1,15 +1,15 @@
-import React, { useState, useMemo } from "react";
+import { ArrowLeft01Icon, PlayIcon, RotateClockwiseIcon } from "@hugeicons/core-free-icons";
+import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSession } from "../../contexts/SessionContext";
+import { DEFAULT_SEARCH_FLAGS, type SearchFlags } from "../../types/session";
+import { Alert } from "../ui/alert";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Label } from "../ui/label";
-import { Switch } from "../ui/switch";
-import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
-import { Alert } from "../ui/alert";
-import { DEFAULT_SEARCH_FLAGS, type SearchFlags } from "../../types/session";
-import { ArrowLeft01Icon, PlayIcon, RotateClockwiseIcon } from "@hugeicons/core-free-icons";
-import { useNavigate } from "react-router-dom";
+import { Switch } from "../ui/switch";
 import { LogScaleSlider } from "./LogScaleSlider";
 
 interface ConfigPanelProps {
@@ -19,7 +19,12 @@ interface ConfigPanelProps {
 
 export const ConfigPanel: React.FC<ConfigPanelProps> = ({ hasContinuation, parentRunId }) => {
   const navigate = useNavigate();
-  const { runAnalysis, resetToInitialConfig, isAnalysisLoading: isLoading, currentSession } = useSession();
+  const {
+    runAnalysis,
+    resetToInitialConfig,
+    isAnalysisLoading: isLoading,
+    currentSession,
+  } = useSession();
   const [flags, setFlags] = useState<SearchFlags>(DEFAULT_SEARCH_FLAGS);
   const [tolerance, setTolerance] = useState<number>(1e-5); // Default tolerance
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +65,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ hasContinuation, paren
           illum_flag: false,
           objsize_flag: false,
           estimate_snr: false,
+          verbose: false,
+          tolerance: tolerance,
         });
         break;
       case "full":
@@ -73,6 +80,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ hasContinuation, paren
           illum_flag: true,
           objsize_flag: true,
           estimate_snr: false,
+          verbose: false,
+          tolerance: tolerance,
         });
         break;
       case "phase-only":
@@ -86,6 +95,8 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ hasContinuation, paren
           illum_flag: false,
           objsize_flag: false,
           estimate_snr: false,
+          verbose: false,
+          tolerance: tolerance,
         });
         break;
       case "illumination":
@@ -99,18 +110,20 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ hasContinuation, paren
           focscale_flag: false,
           objsize_flag: false,
           estimate_snr: false,
+          verbose: false,
+          tolerance: tolerance,
         });
         break;
     }
   };
 
   // Contextual warnings
-  const activeFlags = Object.entries(flags).filter(([, value]) => typeof value === "boolean" && value);
-  const warnings = useMemo(() => {
+  const { warnings } = useMemo(() => {
+    const aFlags = Object.entries(flags).filter(([, value]) => typeof value === "boolean" && value);
     const w: string[] = [];
 
     // Many flags active
-    if (activeFlags.length > 6) {
+    if (aFlags.length > 6) {
       w.push("Many flags active (>6) - may slow convergence");
     }
 
@@ -120,14 +133,18 @@ export const ConfigPanel: React.FC<ConfigPanelProps> = ({ hasContinuation, paren
       if (parentRun) {
         const parentRMS = parentRun.response.results.rms_stats.weighted_notiltdef;
         if (parentRMS < 50) {
-          w.push(`Parent run has excellent RMS (${parentRMS.toFixed(1)} nm) - consider fewer flags for fine-tuning`);
+          w.push(
+            `Parent run has excellent RMS (${parentRMS.toFixed(1)} nm) - consider fewer flags for fine-tuning`
+          );
         } else if (parentRMS > 200) {
-          w.push(`Parent run has high RMS (${parentRMS.toFixed(1)} nm) - consider enabling more flags`);
+          w.push(
+            `Parent run has high RMS (${parentRMS.toFixed(1)} nm) - consider enabling more flags`
+          );
         }
       }
     }
 
-    return w;
+    return { activeFlags: aFlags, warnings: w };
   }, [flags, hasContinuation, parentRunId, currentSession]);
 
   return (

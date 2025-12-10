@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
+import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ChevronDownIcon } from "@hugeicons/core-free-icons";
+import React, { useState } from "react";
 import type { SessionStats as SessionStatsType } from "../../lib/runUtils";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 
 interface SessionStatsProps {
   stats: SessionStatsType;
@@ -26,7 +26,7 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
         <Button variant="outline" size="sm" className="w-full justify-between">
           Session Stats
           <HugeiconsIcon
-            icon={ChevronDownIcon}
+            icon={ArrowDown01Icon}
             className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
           />
         </Button>
@@ -41,8 +41,8 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
 
             {stats.bestChiSquared && (
               <div
-                className="text-muted-foreground -m-1 flex cursor-pointer items-center justify-between rounded p-1 text-xs hover:bg-muted/50"
-                onClick={() => onClickBestChi?.(stats.bestChiSquared!.runId)}
+                className="text-muted-foreground hover:bg-muted/50 -m-1 flex cursor-pointer items-center justify-between rounded p-1 text-xs"
+                onClick={() => stats.bestChiSquared && onClickBestChi?.(stats.bestChiSquared.runId)}
               >
                 <span className="text-muted-foreground">Best χ²:</span>
                 <span className="text-accent-cyan font-mono">
@@ -53,8 +53,8 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
 
             {stats.bestRMS && (
               <div
-                className="text-muted-foreground -m-1 flex cursor-pointer items-center justify-between rounded p-1 text-xs hover:bg-muted/50"
-                onClick={() => onClickBestRMS?.(stats.bestRMS!.runId)}
+                className="text-muted-foreground hover:bg-muted/50 -m-1 flex cursor-pointer items-center justify-between rounded p-1 text-xs"
+                onClick={() => stats.bestRMS && onClickBestRMS?.(stats.bestRMS.runId)}
               >
                 <span className="text-muted-foreground">Best RMS:</span>
                 <span className="text-accent-green font-mono">
@@ -72,9 +72,7 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
 
             <div className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground">Avg Duration:</span>
-              <span className="text-accent-orange font-mono">
-                {stats.avgDuration.toFixed(1)}s
-              </span>
+              <span className="text-accent-orange font-mono">{stats.avgDuration.toFixed(1)}s</span>
             </div>
           </CardContent>
         </Card>

@@ -1,24 +1,24 @@
-import React, { useState, useMemo } from "react";
-import { CardHeader, CardTitle } from "../ui/card";
-import { ScrollArea } from "../ui/scroll-area";
-import { useSession } from "../../contexts/SessionContext";
-import { EmptyState, ConfirmDialog } from "../common";
-import type { AnalysisRun } from "../../types/session";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Clock04Icon } from "@hugeicons/core-free-icons";
-import { RunCard } from "./RunCard";
-import { RunFilters } from "./RunFilters";
-import { SessionStats } from "./SessionStats";
+import { HugeiconsIcon } from "@hugeicons/react";
+import React, { useMemo, useState } from "react";
+import { useSession } from "../../contexts/SessionContext";
 import {
   buildRunTree,
-  flattenRunTree,
-  filterRuns,
-  sortRuns,
   calculateSessionStats,
+  filterRuns,
+  flattenRunTree,
+  sortRuns,
   type RunFilters as RunFiltersType,
   type RunSortKey,
   type RunSortOrder,
 } from "../../lib/runUtils";
+import type { AnalysisRun } from "../../types/session";
+import { ConfirmDialog, EmptyState } from "../common";
+import { CardHeader, CardTitle } from "../ui/card";
+import { ScrollArea } from "../ui/scroll-area";
+import { RunCard } from "./RunCard";
+import { RunFilters } from "./RunFilters";
+import { SessionStats } from "./SessionStats";
 
 interface RunsHistoryPanelProps {
   runs: AnalysisRun[];
@@ -57,10 +57,7 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
   const flatTree = useMemo(() => flattenRunTree(runTree), [runTree]);
 
   // Apply filters and sort
-  const filteredNodes = useMemo(
-    () => filterRuns(flatTree, filters),
-    [flatTree, filters]
-  );
+  const filteredNodes = useMemo(() => filterRuns(flatTree, filters), [flatTree, filters]);
   const sortedNodes = useMemo(
     () => sortRuns(filteredNodes, sortKey, sortOrder),
     [filteredNodes, sortKey, sortOrder]
@@ -123,7 +120,7 @@ export const RunsHistoryPanel: React.FC<RunsHistoryPanelProps> = ({
 
       <ScrollArea className="flex-1 px-4">
         <div className="space-y-3 py-4">
-          {sortedNodes.map((node, index) => {
+          {sortedNodes.map((node, _index) => {
             const isSelected = selectedRunId === node.run.id;
             // Calculate run number based on original position in runs array
             const runNumber = runs.findIndex((r) => r.id === node.run.id) + 1;

@@ -65,7 +65,8 @@ export function buildRunTree(runs: AnalysisRun[]): RunNode[] {
 
   // Phase 2: Build relationships & calculate metrics
   runs.forEach((run) => {
-    const node = nodeMap.get(run.id)!;
+    const node = nodeMap.get(run.id);
+    if (!node) return;
 
     if (run.parent_run_id) {
       const parentNode = nodeMap.get(run.parent_run_id);
@@ -147,9 +148,7 @@ function getChiSquared(run: AnalysisRun): number | null {
  * - Yellow: Neutral (-5% to +5%)
  * - Red: Degraded (> +5%)
  */
-function getRunBorderColor(
-  chiSquaredDelta: number
-): "green" | "yellow" | "red" {
+function getRunBorderColor(chiSquaredDelta: number): "green" | "yellow" | "red" {
   if (chiSquaredDelta < -5) return "green";
   if (chiSquaredDelta > 5) return "red";
   return "yellow";
@@ -163,10 +162,7 @@ function getRunBorderColor(
  * Filter runs based on criteria
  * Applies search, status, metrics, and flags filters
  */
-export function filterRuns(
-  nodes: RunNode[],
-  filters: RunFilters
-): RunNode[] {
+export function filterRuns(nodes: RunNode[], filters: RunFilters): RunNode[] {
   return nodes.filter((node) => {
     const { run, chiSquaredDelta } = node;
 
@@ -183,20 +179,15 @@ export function filterRuns(
 
       if (filters.status === "improved" && chiSquaredDelta >= -5) return false;
       if (filters.status === "degraded" && chiSquaredDelta <= 5) return false;
-      if (
-        filters.status === "neutral" &&
-        (chiSquaredDelta < -5 || chiSquaredDelta > 5)
-      )
+      if (filters.status === "neutral" && (chiSquaredDelta < -5 || chiSquaredDelta > 5))
         return false;
     }
 
     // Chi² range
     const chi = getChiSquared(run);
     if (chi !== null) {
-      if (filters.minChiSquared !== null && chi < filters.minChiSquared)
-        return false;
-      if (filters.maxChiSquared !== null && chi > filters.maxChiSquared)
-        return false;
+      if (filters.minChiSquared !== null && chi < filters.minChiSquared) return false;
+      if (filters.maxChiSquared !== null && chi > filters.maxChiSquared) return false;
     }
 
     // RMS range
@@ -206,10 +197,8 @@ export function filterRuns(
 
     // Duration range
     const duration = run.response.duration_ms / 1000;
-    if (filters.minDuration !== null && duration < filters.minDuration)
-      return false;
-    if (filters.maxDuration !== null && duration > filters.maxDuration)
-      return false;
+    if (filters.minDuration !== null && duration < filters.minDuration) return false;
+    if (filters.maxDuration !== null && duration > filters.maxDuration) return false;
 
     // Active flags filter
     if (filters.activeFlags.length > 0) {
@@ -217,9 +206,7 @@ export function filterRuns(
         .filter(([, value]) => typeof value === "boolean" && value)
         .map(([key]) => key);
 
-      const hasAllFlags = filters.activeFlags.every((flag) =>
-        runFlags.includes(flag)
-      );
+      const hasAllFlags = filters.activeFlags.every((flag) => runFlags.includes(flag));
       if (!hasAllFlags) return false;
     }
 
@@ -234,11 +221,7 @@ export function filterRuns(
 /**
  * Sort runs by specified key and order
  */
-export function sortRuns(
-  nodes: RunNode[],
-  key: RunSortKey,
-  order: RunSortOrder
-): RunNode[] {
+export function sortRuns(nodes: RunNode[], key: RunSortKey, order: RunSortOrder): RunNode[] {
   const sorted = [...nodes].sort((a, b) => {
     let aVal: number;
     let bVal: number;
@@ -331,8 +314,7 @@ export function calculateSessionStats(runs: AnalysisRun[]): SessionStats {
     totalRuns: runs.length,
     bestChiSquared: bestChi,
     bestRMS: bestRMS,
-    convergenceRate:
-      totalWithParent > 0 ? (improvedCount / totalWithParent) * 100 : 0,
+    convergenceRate: totalWithParent > 0 ? (improvedCount / totalWithParent) * 100 : 0,
     avgDuration: totalDuration / runs.length / 1000, // Convert to seconds
   };
 }

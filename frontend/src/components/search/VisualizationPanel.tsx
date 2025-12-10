@@ -1,20 +1,20 @@
+import { ArrowDown01Icon, Chart03Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { useSession } from "../../contexts/SessionContext";
+import type { AnalysisRun } from "../../types/session";
+import { DataTable, EmptyState, LoadingState, StatsGrid } from "../common";
 import { Alert } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { EmptyState, StatsGrid, DataTable, LoadingState } from "../common";
-import { ScrollArea } from "../ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { useSession } from "../../contexts/SessionContext";
-import { PhaseMapPlot } from "./PhaseMapPlot";
-import { ImageComparisonGrid } from "./ImageComparisonGrid";
+import { ScrollArea } from "../ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { IlluminationPlot } from "./IlluminationPlot";
+import { ImageComparisonGrid } from "./ImageComparisonGrid";
+import { PhaseMapPlot } from "./PhaseMapPlot";
 import { ZernikeBarChart } from "./ZernikeBarChart";
-import type { AnalysisRun } from "../../types/session";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Chart03Icon, ChevronDownIcon } from "@hugeicons/core-free-icons";
 
 interface VisualizationPanelProps {
   run: AnalysisRun | null;
@@ -65,7 +65,7 @@ export const VisualizationPanel: React.FC<VisualizationPanelProps> = ({ run }) =
                   <Button variant="outline" size="sm" className="w-full justify-between">
                     Show Coefficient Table
                     <HugeiconsIcon
-                      icon={ChevronDownIcon}
+                      icon={ArrowDown01Icon}
                       className={`h-4 w-4 transition-transform ${showCoeffTable ? "rotate-180" : ""}`}
                     />
                   </Button>

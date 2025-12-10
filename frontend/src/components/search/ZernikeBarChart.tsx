@@ -1,21 +1,17 @@
-import React, { useState, useMemo } from "react";
+import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
+import React, { useMemo, useState } from "react";
 import Plot from "react-plotly.js";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ChevronDownIcon, ChevronUpIcon } from "@hugeicons/core-free-icons";
 import { scientificPlotConfig } from "../../lib/plotUtils";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface ZernikeBarChartProps {
   coefficients: number[]; // Modal coefficients array from results.phase
   basis: string; // e.g., 'zernike', 'eigen', etc.
 }
 
-export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({
-  coefficients,
-  basis,
-}) => {
+export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({ coefficients, basis }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [hoveredMode, setHoveredMode] = useState<number | null>(null);
 
@@ -40,9 +36,7 @@ export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({
             val >= 0 ? "rgba(52, 211, 153, 0.6)" : "rgba(248, 113, 113, 0.6)"
           ),
           line: {
-            color: values.map((val) =>
-              val >= 0 ? "rgb(52, 211, 153)" : "rgb(248, 113, 113)"
-            ),
+            color: values.map((val) => (val >= 0 ? "rgb(52, 211, 153)" : "rgb(248, 113, 113)")),
             width: 1,
           },
         },
@@ -80,19 +74,18 @@ export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({
   );
 
   // Mode shape image URL (if available)
-  const modeShapeUrl =
-    hoveredMode && basis === "zernike" && hoveredMode <= 55
+  const modeShapeUrl = useMemo(() => {
+    return hoveredMode && basis === "zernike" && hoveredMode <= 55
       ? `/zernike-modes/Z${hoveredMode.toString().padStart(2, "0")}.png`
       : null;
+  }, [hoveredMode, basis]);
 
   return (
     <Card className="border-accent-pink/20">
       <CardHeader className="bg-accent-pink/5 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-accent-pink text-sm">
-              Modal Coefficients
-            </CardTitle>
+            <CardTitle className="text-accent-pink text-sm">Modal Coefficients</CardTitle>
             {basis === "zernike" && (
               <Badge variant="outline" className="text-xs">
                 Noll indexing
@@ -104,11 +97,9 @@ export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({
               size="sm"
               variant="ghost"
               onClick={() => setIsExpanded(!isExpanded)}
-              icon={isExpanded ? ChevronUpIcon : ChevronDownIcon}
+              icon={isExpanded ? ArrowUp01Icon : ArrowDown01Icon}
             >
-              {isExpanded
-                ? "Show Z1-Z21"
-                : `Expand to Z${Math.min(coefficients.length, 55)}`}
+              {isExpanded ? "Show Z1-Z21" : `Expand to Z${Math.min(coefficients.length, 55)}`}
             </Button>
           )}
         </div>
@@ -116,7 +107,7 @@ export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({
       <CardContent className="p-4">
         <div className="grid grid-cols-3 gap-4">
           {/* Bar Chart */}
-          <div className="col-span-2">
+          <div className="col-span-2 h-full w-full">
             <Plot
               data={barData}
               layout={layout}
@@ -135,7 +126,7 @@ export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({
           {/* Mode Shape Preview */}
           <div className="flex flex-col items-center justify-center rounded border p-2">
             {modeShapeUrl ? (
-              <>
+              <div className="h-full w-full">
                 <img
                   src={modeShapeUrl}
                   alt={`Zernike Mode ${hoveredMode}`}
@@ -145,9 +136,9 @@ export const ZernikeBarChart: React.FC<ZernikeBarChartProps> = ({
                   }}
                 />
                 <p className="text-muted-foreground mt-2 text-xs">
-                  Z{hoveredMode} - {getZernikeName(hoveredMode!)}
+                  Z{hoveredMode} - {hoveredMode ? getZernikeName(hoveredMode) : ""}
                 </p>
-              </>
+              </div>
             ) : (
               <p className="text-muted-foreground text-center text-xs">
                 Hover over a mode to see its shape
